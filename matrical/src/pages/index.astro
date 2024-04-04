@@ -1,0 +1,72 @@
+---
+import BaseHead from "../components/BaseHead.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  </head>
+  <body>
+    <Header />
+    <main>
+      <section class="intro">
+        <h1>Welcome to Tuition Scheduler @ MiUni</h1>
+        <p>Crafting Your Academic Journey, Seamlessly</p>
+      </section>
+
+      <section class="our-genesis">
+        <h2>Our Genesis</h2>
+        <p>
+          We will save students at the University of Puerto Rico at Mayagüez
+          (UPRM) time every single academic term by redefining the cumbersome
+          pre-registration process that has long been a source of frustration
+          for students.
+        </p>
+      </section>
+
+      <section class="revolution">
+        <h2>An Innovation in Pre-Registration</h2>
+        <p>
+          Aimed at slashing pre-registration time to less than 10 minutes,
+          Tuition Scheduler offers a lifeline to students drowning in scheduling
+          conflicts when trying to make their schedule for an upcoming academic
+          term. Imagine a world where selecting courses is the only step you
+          take, and the cumbersome task of piecing together a conflict-free
+          schedule is handled with grace by our sophisticated algorithm.
+        </p>
+      </section>
+
+      <section class="beyond-scheduling">
+        <h2>Beyond UPRM</h2>
+        <p>
+          Tuition Scheduler is tightly coupled with UPRM (this has allowed us to
+          develop quickly and ship our solution to students for feedback), but
+          we have identified that many college's course enrollment landscapes
+          would greatly benefit from our solution. S
+        </p>
+
+        <section class="join-us">
+          <h2>Try it out!</h2>
+          <p>
+            Tuition Scheduler is available on the App Store and the Play Store
+            as part of the MiUni application.
+          </p>
+          <p>
+            Welcome to the new way to prepare your schedule every academic term.
+            Welcome to Tuition Scheduler @ MiUni.
+          </p>
+          <p>
+            <strong
+              >Alejandro M. Cruzado-Ruiz & Kelvin G. Gonzalez-Cortes</strong
+            >
+          </p>
+        </section>
+      </section>
+      <Footer />
+    </main>
+  </body>
+</html>
