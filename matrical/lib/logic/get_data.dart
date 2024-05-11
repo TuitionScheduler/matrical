@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:miuni/features/matrical/data/model/course_filters.dart';
 import 'package:miuni/features/matrical/data/model/department_course.dart';
 import 'package:miuni/features/matrical/data/course_service.dart';
+import 'package:miuni/features/matrical/data/model/blacklist.dart';
 
 Future<List<Course>> getCourseSearch(
     String search, String term, int year, CourseFilters filters) async {
@@ -97,15 +98,14 @@ Course applyFilters(Course course, CourseFilters filters) {
   return copy;
 }
 
-Course applyBlacklist(Course course, List<Professor> professorBlacklist,
-    Map<String, List<String>> sectionBlacklist) {
+Course applyBlacklist(Course course, Blacklist blacklist) {
   var copy = course.copy();
   copy.sections.removeWhere((section) => section.professors.any((professor) =>
-      professorBlacklist
+      blacklist.professors
           .any((blockedProfessor) => professor.name == blockedProfessor.name)));
-  if (sectionBlacklist[copy.courseCode] != null) {
+  if (blacklist.sections[copy.courseCode] != null) {
     copy.sections.removeWhere((section) =>
-        sectionBlacklist[copy.courseCode]!.contains(section.sectionCode));
+        blacklist.sections[copy.courseCode]!.contains(section.sectionCode));
   }
   return copy;
 }

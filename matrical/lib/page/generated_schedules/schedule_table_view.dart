@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:miuni/config/injection_dependecies.dart';
 import 'package:miuni/features/matrical/data/model/course_filters.dart';
 import 'package:miuni/features/matrical/data/model/generated_schedule.dart';
+import 'package:miuni/features/matrical/logic/matrical_cubit.dart';
+import 'package:miuni/features/matrical/page/matrical.dart';
 
 class ScheduleTableView extends StatelessWidget {
   final GeneratedSchedule schedule;
@@ -31,26 +34,25 @@ class ScheduleTableView extends StatelessWidget {
           ),
         ),
       ),
-      actionsOverflowAlignment: OverflowBarAlignment.start,
-      actionsOverflowDirection: VerticalDirection.down,
       buttonPadding: const EdgeInsets.symmetric(horizontal: 3.0),
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.white,
-
       actions: [
         TextButton(
           style: TextButton.styleFrom(
             textStyle:
                 const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
           ),
-          onPressed: () => {
-            Navigator.of(context).pop(schedule.courses
+          onPressed: () {
+            sl<MatricalCubit>().updateCourses(schedule.courses
                 .map(
                   (e) => CourseWithFilters.withoutFilters(
                       courseCode: e.course.courseCode,
                       sectionCode: e.sectionCode),
                 )
-                .toList())
+                .toList());
+            Navigator.of(context).pop(); // dismiss the modal
+            sl<MatricalCubit>().setPage(MatricalPage.courseSelect);
           },
           child: const Text("Editar"),
         )

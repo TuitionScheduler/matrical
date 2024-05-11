@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:miuni/features/matrical/data/model/blacklist.dart';
 import 'package:miuni/features/matrical/data/model/department_course.dart';
 import 'package:miuni/features/matrical/data/model/generated_schedule.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CourseView extends StatelessWidget {
   final CourseSectionPair pair;
-  final List<Professor>? professorBlacklist;
-  final Map<String, List<String>>? sectionBlacklist;
+  final Blacklist? blacklist;
   final Function? regenerateSchedules;
   final Function? isLocked;
   final Function? applyLock;
@@ -16,8 +16,7 @@ class CourseView extends StatelessWidget {
   const CourseView(
       {super.key,
       required this.pair,
-      this.professorBlacklist,
-      this.sectionBlacklist,
+      this.blacklist,
       this.regenerateSchedules,
       this.isLocked,
       this.applyLock,
@@ -130,17 +129,20 @@ class CourseView extends StatelessWidget {
                                                             TextDecoration
                                                                 .underline)),
                                               ),
-                                        if (!isStatic) const SizedBox(width: 4),
                                         if (!isStatic)
                                           InkWell(
                                             onTap: () {
-                                              professorBlacklist!
+                                              blacklist?.professors
                                                   .add(professor);
                                               regenerateSchedules!();
                                               Navigator.of(context).pop();
                                             },
-                                            child: const Icon(Icons.close,
-                                                size: 16),
+                                            customBorder: const CircleBorder(),
+                                            child: const Padding(
+                                              padding: EdgeInsets.all(4.0),
+                                              child:
+                                                  Icon(Icons.close, size: 16),
+                                            ),
                                           )
                                       ],
                                     ),
@@ -154,11 +156,11 @@ class CourseView extends StatelessWidget {
                         children: [
                           IconButton(
                               onPressed: () {
-                                if (sectionBlacklist?[course.courseCode] ==
+                                if (blacklist?.sections[course.courseCode] ==
                                     null) {
-                                  sectionBlacklist?[course.courseCode] = [];
+                                  blacklist?.sections[course.courseCode] = [];
                                 }
-                                sectionBlacklist?[course.courseCode]
+                                blacklist?.sections[course.courseCode]
                                     ?.add(section.sectionCode);
                                 regenerateSchedules!();
                                 Navigator.of(context).pop();

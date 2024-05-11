@@ -1,10 +1,11 @@
 import 'dart:isolate';
 
 import 'package:collection/collection.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:miuni/features/matrical/data/model/generated_schedule_preferences.dart';
 import 'package:miuni/features/matrical/logic/get_data.dart';
+import 'package:pair/pair.dart';
 
+import '../data/model/blacklist.dart';
 import '../data/model/course_filters.dart';
 import '../data/model/department_course.dart';
 import '../data/model/generated_schedule.dart';
@@ -14,8 +15,7 @@ Future<List<GeneratedSchedule>> generateSchedules(
     List<CourseWithFilters> courses,
     String term,
     int year,
-    List<Professor> professorBlacklist,
-    Map<String, List<String>> sectionBlacklist,
+    Blacklist blacklist,
     CourseFilters globalFilters,
     GeneratedSchedulePreferences preferences) async {
   final CourseService cs = CourseService.getInstance();
@@ -31,8 +31,7 @@ Future<List<GeneratedSchedule>> generateSchedules(
         ? applyBlacklist(
             applyFilters(
                 applyFilters(course, courseWithFilters.filters), globalFilters),
-            professorBlacklist,
-            sectionBlacklist)
+            blacklist)
         : filterCourseBySection(course, courseWithFilters.sectionCode);
   }).toList());
 
@@ -41,21 +40,28 @@ Future<List<GeneratedSchedule>> generateSchedules(
   filteredCourses = filteredCourses
       .map((course) => course.sections.length > 1 &&
               course.sections.any((section) => section.modality == "L")
-          ? applyBlacklist(applyFilters(course, globalFilters),
-              professorBlacklist, sectionBlacklist)
+          ? applyBlacklist(applyFilters(course, globalFilters), blacklist)
           : course)
       .toList();
 
   filteredCourses.forEach((course) {
     var preferencesProfessors =
-        preferences.professorRankings[course.courseCode]!.value;
+        preferences.professorRankings[course.courseCode]?.value ?? [];
+    preferencesProfessors.forEachIndexed((i, p) {
+      preferencesProfessors[i] = Pair(p.key, false);
+    });
+  });
+  filteredCourses.forEach((course) {
+    var preferencesProfessors =
+        preferences.professorRankings[course.courseCode]?.value ?? [];
     var courseProfessors = course.sections.expand((e) => e.professors).toSet();
-    var preferencesProfessorsSet = preferencesProfessors.toSet();
-    var addedProfessors = courseProfessors.difference(preferencesProfessorsSet);
-    var removedProfessors =
-        preferencesProfessorsSet.difference(courseProfessors);
-    preferencesProfessors.addAll(addedProfessors);
-    preferencesProfessors.removeWhere((e) => removedProfessors.contains(e));
+    preferencesProfessors.forEachIndexed((i, p) {
+      if (courseProfessors.any((e) => e == p.key)) {
+        preferencesProfessors[i] = Pair(p.key, true);
+      }
+    });
+    preferencesProfessors.addAll(courseProfessors.expand((e) =>
+        !preferencesProfessors.any((p) => p.key == e) ? [Pair(e, true)] : []));
   });
 
   sortCourses(filteredCourses, preferences);
@@ -142,35 +148,6 @@ void generateSchedulesAux(
   });
 }
 
-// class GenerateSchedulesState {
-//   final List<CourseSectionPair> pairs;
-//   final int index;
-//
-//   const GenerateSchedulesState({required this.pairs, required this.index});
-// }
-//
-// void generateSchedulesAux(String term, int year, List<Course> courses,
-//     List<GeneratedSchedule> schedules) {
-//   var stack = <GenerateSchedulesState>[
-//     GenerateSchedulesState(pairs: [], index: 0)
-//   ];
-//   while (stack.isNotEmpty && schedules.length < 2500) {
-//     var state = stack.removeLast();
-//     if (state.index == courses.length) {
-//       schedules
-//           .add(GeneratedSchedule(term: term, year: year, courses: state.pairs));
-//       continue;
-//     }
-//     courses[state.index].sections.reversed.forEach((section) {
-//       final pair = CourseSectionPair(
-//           course: courses[state.index].copyWithoutSections(), section: section);
-//       if (pair.checkConflict(state.pairs)) return;
-//       stack.add(GenerateSchedulesState(
-//           pairs: state.pairs + [pair], index: state.index + 1));
-//     });
-//   }
-// }
-
 void sortCourses(
     List<Course> courses, GeneratedSchedulePreferences preferences) {
   courses.forEach((course) => sortSections(course, preferences));
@@ -197,24 +174,30 @@ void sortSections(Course course, GeneratedSchedulePreferences preferences) {
   var sections = course.sections;
   if (sections.isEmpty) return;
   var maxAverageTime = sections.map(getAverageTime).max;
-  var professorRankings = preferences.professorRankings[course.courseCode]!;
+  var professorRankings = preferences.professorRankings[course.courseCode];
 
   double getSortValue(Section section) {
-    return [
-      if (preferences.averageTime != null && section.meetings.isNotEmpty)
-        1 - getAverageTime(section) / maxAverageTime,
-      (preferences.preferOnline && section.meetings.isEmpty) ||
-              (!preferences.preferOnline && section.meetings.isNotEmpty)
-          ? 1.0
-          : 0.0,
-      if (professorRankings.key && professorRankings.value.length > 1)
-        2 *
+    final averageTimeScore =
+        (preferences.averageTime != null && section.meetings.isNotEmpty)
+            ? 1 - getAverageTime(section) / maxAverageTime
+            : 0.0;
+    final modalityScore =
+        (preferences.preferOnline && section.meetings.isEmpty) ||
+                (!preferences.preferOnline && section.meetings.isNotEmpty)
+            ? 1.0
+            : 0.0;
+    final professorScore = ((professorRankings?.key ?? false) &&
+            professorRankings!.value.length > 1)
+        ? 2 *
             (1 -
                 section.professors
-                        .map((e) => professorRankings.value.indexOf(e))
+                        .map((e) => professorRankings.value
+                            .indexWhere((p) => p.key == e))
                         .min /
                     (professorRankings.value.length - 1))
-    ].sum;
+        : 0.0;
+
+    return [averageTimeScore, modalityScore, professorScore].sum;
   }
 
   sections.sort((a, b) => getSortValue(b).compareTo(getSortValue(a)));

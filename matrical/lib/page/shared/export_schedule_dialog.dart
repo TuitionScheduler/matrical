@@ -266,7 +266,7 @@ Future<bool> saveScheduleToGallery(List<CourseSectionPair> notPresencial,
 Future<bool> exportScheduleAsIcal(GeneratedSchedule currentSchedule) async {
   String icsContent = parseScheduleAsIcal(currentSchedule);
   final tempDir = await getTemporaryDirectory();
-  final term = Term.fromString(currentSchedule.term) ?? Term.getCurrent();
+  final term = Term.fromString(currentSchedule.term) ?? Term.getPredictedTerm();
   final year = currentSchedule.year;
   final icsPath = "${tempDir.path}/horario-${term.displayName}-$year.ics";
   File icsFile = File(icsPath);

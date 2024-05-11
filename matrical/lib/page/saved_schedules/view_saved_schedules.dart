@@ -1,14 +1,17 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:miuni/config/injection_dependecies.dart';
 import 'package:miuni/features/matrical/data/model/course_filters.dart';
 import 'package:miuni/features/matrical/data/model/generated_schedule.dart';
 import 'package:miuni/features/matrical/data/model/saved_schedule.dart';
 import 'package:miuni/features/matrical/Logic/save_schedule.dart';
+import 'package:miuni/features/matrical/data/model/saved_schedules_options.dart';
+import 'package:miuni/features/matrical/logic/matrical_cubit.dart';
 import 'package:miuni/features/matrical/page/generated_schedules/save_schedule_dialog.dart';
+import 'package:miuni/features/matrical/page/matrical.dart';
 import 'package:miuni/features/matrical/page/shared/export_schedule_dialog.dart';
 import 'package:miuni/features/matrical/page/shared/import_schedule_dialog.dart';
 import 'package:miuni/features/matrical/page/saved_schedules/schedule_view.dart';
-import 'package:miuni/features/matrical/page/shared/bug_report.dart';
 import 'package:miuni/features/matrical/page/generated_schedules/schedule_table_view.dart';
 
 import '../../data/model/schedule_generation_options.dart';
@@ -57,7 +60,6 @@ class ViewSavedSchedules extends StatefulWidget {
 
 class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
   Future<List<SavedSchedule>> schedules = Future.value([]);
-  TextEditingController controller = TextEditingController();
   List<int> years = [(DateTime.now().year - 1), DateTime.now().year];
   Map<String, int Function(SavedSchedule, SavedSchedule)> sorting = {
     "Más Reciente": (a, b) => b.dateCreated.compareTo(a.dateCreated),
@@ -65,244 +67,214 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
         a.name.toLowerCase().compareTo(b.name.toLowerCase()),
     "Menos Reciente": (a, b) => a.dateCreated.compareTo(b.dateCreated),
   };
-  Term? selectedTerm;
-  int? selectedYear;
-  var sortingController = TextEditingController();
+
+  late SavedSchedulesOptions options;
 
   @override
   void initState() {
     super.initState();
+    options = sl<MatricalCubit>().state.savedSchedulesOptions;
     schedules = getSavedSchedules();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-            backgroundColor: const Color.fromRGBO(9, 144, 45, 1),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            title: const Text(
-              "Horarios Guardados",
-              style: TextStyle(color: Colors.white),
-            ),
-            centerTitle: false,
-            actions: const [BugReport(pageName: "Saved Schedules")]),
-        body: Theme(
-          data: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.green,
-            ),
-          ),
-          child: FutureBuilder(
-              future: schedules,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  // While waiting for the Future to complete, show a loading indicator
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  // If an error occurred, display an error message
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text("${snapshot.error}"),
-                    ));
-                  });
-                  return const Center(child: CircularProgressIndicator());
-                } else {
-                  return Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: TextField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Nombre de Horario',
-                                ),
-                                controller: controller,
-                                onChanged: (text) {
-                                  setState(() {});
-                                },
-                              ),
-                            ),
+    return FutureBuilder(
+        future: schedules,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // While waiting for the Future to complete, show a loading indicator
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            // If an error occurred, display an error message
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text("${snapshot.error}"),
+              ));
+            });
+            return const Center(child: CircularProgressIndicator());
+          } else {
+            return Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            labelText: 'Nombre de Horario',
                           ),
-                          IconButton(
-                            iconSize: 30,
-                            icon: const Icon(Icons.save_alt),
-                            onPressed: () {
-                              showDialog<String?>(
-                                  context: context,
-                                  useRootNavigator: false,
-                                  builder: (innerContext) =>
-                                      ImportScheduleModal()).then(
-                                  (encodedSchedule) => saveImportedSchedule(
-                                      context, encodedSchedule));
-                            },
-                          ),
-                          IconButton(
-                            iconSize: 30,
-                            onPressed: () {
-                              showDialog(
-                                  context: context,
-                                  useRootNavigator: false,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      contentPadding: const EdgeInsets.fromLTRB(
-                                          24, 0, 24, 24),
-                                      backgroundColor: Colors.white,
-                                      surfaceTintColor: Colors.white,
-                                      title: const Text("Opciones"),
-                                      content: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Divider(),
-                                          Padding(
-                                            padding: const EdgeInsets.all(4.0),
-                                            child: DropdownMenu<Term?>(
-                                                expandedInsets:
-                                                    const EdgeInsets.all(0),
-                                                initialSelection: selectedTerm,
-                                                requestFocusOnTap: false,
-                                                label: const Text('Término'),
-                                                onSelected: (term) {
-                                                  setState(() {
-                                                    selectedTerm = term;
-                                                  });
-                                                },
-                                                dropdownMenuEntries: [
-                                                      const DropdownMenuEntry<
-                                                          Term?>(
-                                                        value: null,
-                                                        label: "Cualquiera",
-                                                      )
-                                                    ] +
-                                                    Term.values.map((term) {
-                                                      return DropdownMenuEntry<
-                                                          Term?>(
-                                                        value: term,
-                                                        label: term.displayName,
-                                                      );
-                                                    }).toList()),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.all(4.0),
-                                            child: DropdownMenu<int?>(
-                                                expandedInsets:
-                                                    const EdgeInsets.all(0),
-                                                initialSelection: selectedYear,
-                                                requestFocusOnTap: false,
-                                                label: const Text('Año'),
-                                                onSelected: (year) {
-                                                  setState(() {
-                                                    selectedYear = year;
-                                                  });
-                                                },
-                                                dropdownMenuEntries: [
-                                                      const DropdownMenuEntry<
-                                                          int?>(
-                                                        value: null,
-                                                        label: "Cualquiera",
-                                                      )
-                                                    ] +
-                                                    years.map<
-                                                        DropdownMenuEntry<
-                                                            int?>>((year) {
-                                                      return DropdownMenuEntry<
-                                                          int?>(
-                                                        value: year,
-                                                        label: year.toString(),
-                                                      );
-                                                    }).toList()),
-                                          ),
-                                          const Divider(),
-                                          Padding(
-                                            padding: const EdgeInsets.all(4.0),
-                                            child: DropdownMenu<String>(
-                                                expandedInsets:
-                                                    const EdgeInsets.all(0),
-                                                initialSelection:
-                                                    sortingController
-                                                            .text.isNotEmpty
-                                                        ? sortingController.text
-                                                        : sorting.keys.first,
-                                                requestFocusOnTap: false,
-                                                label: const Text('Orden'),
-                                                controller: sortingController,
-                                                onSelected: (sort) {
-                                                  setState(() {});
-                                                },
-                                                dropdownMenuEntries:
-                                                    sorting.keys.map<
-                                                        DropdownMenuEntry<
-                                                            String>>((sort) {
-                                                  return DropdownMenuEntry<
-                                                      String>(
-                                                    value: sort,
-                                                    label: sort,
-                                                  );
-                                                }).toList()),
-                                          )
-                                        ],
-                                      ),
-                                    );
-                                  });
-                            },
-                            icon: const Icon(Icons.settings),
-                          ),
-                        ],
-                      ),
-                      const Divider(),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child:
-                              Column(mainAxisSize: MainAxisSize.min, children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: splitScheduleCards(
-                                  snapshot.data!
-                                      .where((element) =>
-                                          element.name
-                                              .trim()
-                                              .toLowerCase()
-                                              .startsWith(controller.text
-                                                  .trim()
-                                                  .toLowerCase()) &&
-                                          (selectedTerm == null ||
-                                              element.schedule.term ==
-                                                  selectedTerm?.databaseKey) &&
-                                          (selectedYear == null ||
-                                              element.schedule.year ==
-                                                  selectedYear))
-                                      .map((e) => SavedScheduleCard(
-                                            schedule: e,
-                                            deleteSchedule: (name) {
-                                              deleteSavedSchedule(name)
-                                                  .then((value) {
-                                                setState(() {
-                                                  schedules =
-                                                      getSavedSchedules();
-                                                });
-                                              });
-                                            },
-                                          ))
-                                      .toList(),
-                                  2,
-                                  sorting[sortingController.text] ??
-                                      sorting.values.first),
-                            )
-                          ]),
+                          controller: options.searchController,
+                          onChanged: (text) {
+                            setState(() {});
+                          },
                         ),
                       ),
-                    ],
-                  );
-                }
-              }),
-        ));
+                    ),
+                    IconButton(
+                      iconSize: 30,
+                      icon: const Icon(Icons.save_alt),
+                      onPressed: () {
+                        showDialog<String?>(
+                            context: context,
+                            useRootNavigator: false,
+                            builder: (innerContext) =>
+                                ImportScheduleModal()).then((encodedSchedule) =>
+                            saveImportedSchedule(context, encodedSchedule));
+                      },
+                    ),
+                    IconButton(
+                      iconSize: 30,
+                      onPressed: () {
+                        showDialog(
+                            context: context,
+                            useRootNavigator: false,
+                            builder: (context) {
+                              return AlertDialog(
+                                contentPadding:
+                                    const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                                backgroundColor: Colors.white,
+                                surfaceTintColor: Colors.white,
+                                title: const Text("Opciones"),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Divider(),
+                                    Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: DropdownMenu<Term?>(
+                                          expandedInsets:
+                                              const EdgeInsets.all(0),
+                                          initialSelection: options.term,
+                                          requestFocusOnTap: false,
+                                          label: const Text('Término'),
+                                          onSelected: (term) {
+                                            setState(() {
+                                              options.term = term;
+                                            });
+                                          },
+                                          dropdownMenuEntries: [
+                                                const DropdownMenuEntry<Term?>(
+                                                  value: null,
+                                                  label: "Cualquiera",
+                                                )
+                                              ] +
+                                              Term.values.map((term) {
+                                                return DropdownMenuEntry<Term?>(
+                                                  value: term,
+                                                  label: term.displayName,
+                                                );
+                                              }).toList()),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: DropdownMenu<int?>(
+                                          expandedInsets:
+                                              const EdgeInsets.all(0),
+                                          initialSelection: options.year,
+                                          requestFocusOnTap: false,
+                                          label: const Text('Año'),
+                                          onSelected: (year) {
+                                            setState(() {
+                                              options.year = year;
+                                            });
+                                          },
+                                          dropdownMenuEntries: [
+                                                const DropdownMenuEntry<int?>(
+                                                  value: null,
+                                                  label: "Cualquiera",
+                                                )
+                                              ] +
+                                              years
+                                                  .map<DropdownMenuEntry<int?>>(
+                                                      (year) {
+                                                return DropdownMenuEntry<int?>(
+                                                  value: year,
+                                                  label: "$year-${year + 1}",
+                                                );
+                                              }).toList()),
+                                    ),
+                                    const Divider(),
+                                    Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: DropdownMenu<String>(
+                                          expandedInsets:
+                                              const EdgeInsets.all(0),
+                                          initialSelection: options
+                                                  .sortingController
+                                                  .text
+                                                  .isNotEmpty
+                                              ? options.sortingController.text
+                                              : sorting.keys.first,
+                                          requestFocusOnTap: false,
+                                          label: const Text('Orden'),
+                                          controller: options.sortingController,
+                                          onSelected: (sort) {
+                                            setState(() {});
+                                          },
+                                          dropdownMenuEntries: sorting.keys
+                                              .map<DropdownMenuEntry<String>>(
+                                                  (sort) {
+                                            return DropdownMenuEntry<String>(
+                                              value: sort,
+                                              label: sort,
+                                            );
+                                          }).toList()),
+                                    )
+                                  ],
+                                ),
+                              );
+                            });
+                      },
+                      icon: const Icon(Icons.settings),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: splitScheduleCards(
+                            snapshot.data!
+                                .where((element) =>
+                                    element.name
+                                        .trim()
+                                        .toLowerCase()
+                                        .startsWith(options
+                                            .searchController.text
+                                            .trim()
+                                            .toLowerCase()) &&
+                                    (options.term == null ||
+                                        element.schedule.term ==
+                                            options.term?.databaseKey) &&
+                                    (options.year == null ||
+                                        element.schedule.year == options.year))
+                                .map((e) => SavedScheduleCard(
+                                      schedule: e,
+                                      deleteSchedule: (name) {
+                                        deleteSavedSchedule(name).then((value) {
+                                          setState(() {
+                                            schedules = getSavedSchedules();
+                                          });
+                                        });
+                                      },
+                                    ))
+                                .toList(),
+                            2,
+                            sorting[options.sortingController.text] ??
+                                sorting.values.first),
+                      )
+                    ]),
+                  ),
+                ),
+              ],
+            );
+          }
+        });
   }
 
   void saveImportedSchedule(BuildContext context, String? encodedSchedule) {
@@ -392,6 +364,9 @@ class SavedScheduleCard extends StatelessWidget {
                           "${Term.fromString(schedule.schedule.term)?.displayName ?? ''}, ${schedule.schedule.year}",
                           style: const TextStyle(fontSize: 12)),
                       Text(
+                          "Total de Créditos: ${schedule.schedule.getTotalCredits()}",
+                          style: const TextStyle(fontSize: 12)),
+                      Text(
                           "Fecha: ${schedule.dateCreated.day}/${schedule.dateCreated.month}/${schedule.dateCreated.year}",
                           style: const TextStyle(fontSize: 12)),
                       const Divider(),
@@ -444,48 +419,71 @@ Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
         ),
       ),
     ),
-    actionsAlignment: MainAxisAlignment.start,
-    actionsOverflowAlignment: OverflowBarAlignment.start,
-    actionsOverflowDirection: VerticalDirection.down,
     buttonPadding: const EdgeInsets.symmetric(horizontal: 3.0),
     backgroundColor: Colors.white,
     surfaceTintColor: Colors.white,
     actions: [
-      TextButton(
-        style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-        ),
-        onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => ScheduleView(schedule: schedule)));
-        },
-        child: const Text("Ver en Semana"),
-      ),
-      TextButton(
-        style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-        ),
-        onPressed: () => {Navigator.of(context).pop(schedule.schedule)},
-        child: const Text("Editar"),
-      ),
-      TextButton(
-        style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-        ),
-        onPressed: () {
-          showDialog(
-            useRootNavigator: false,
-            context: context,
-            builder: (BuildContext innerContext) {
-              return ExportScheduleDialog(
-                notPresencialCourses: schedule.schedule
-                    .getCourseSectionPairsByModality(Modality.byagreement),
-                schedule: schedule.schedule,
-              );
-            },
-          );
-        },
-        child: const Text("Exportar"),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: TextButton(
+              style: TextButton.styleFrom(
+                textStyle:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              ),
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => ScheduleView(schedule: schedule)));
+              },
+              child: const Text("Ver en Semana"),
+            ),
+          ),
+          Flexible(
+            child: TextButton(
+              style: TextButton.styleFrom(
+                textStyle:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                sl<MatricalCubit>().updateCourses(schedule.schedule.courses
+                    .map((csp) => CourseWithFilters.withoutFilters(
+                        courseCode: csp.course.courseCode,
+                        sectionCode: csp.sectionCode))
+                    .toList());
+                sl<MatricalCubit>()
+                    .updateTerm(Term.fromString(schedule.schedule.term)!);
+                sl<MatricalCubit>().updateYear(schedule.schedule.year);
+                sl<MatricalCubit>().setPage(MatricalPage.courseSelect);
+              },
+              child: const Text("Editar"),
+            ),
+          ),
+          Flexible(
+            child: TextButton(
+              style: TextButton.styleFrom(
+                textStyle:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              ),
+              onPressed: () {
+                showDialog(
+                  useRootNavigator: false,
+                  context: context,
+                  builder: (BuildContext innerContext) {
+                    return ExportScheduleDialog(
+                      notPresencialCourses: schedule.schedule
+                          .getCourseSectionPairsByModality(
+                              Modality.byagreement),
+                      schedule: schedule.schedule,
+                    );
+                  },
+                );
+              },
+              child: const Text("Exportar"),
+            ),
+          ),
+        ],
       ),
     ],
   );

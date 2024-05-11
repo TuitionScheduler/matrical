@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:info_widget/info_widget.dart';
 import 'package:miuni/features/matrical/data/model/course_filters.dart';
 
+enum CourseFilterPopupResponse {
+  deleted(),
+  saved();
+}
+
 class CourseFilterPopup extends StatefulWidget {
   const CourseFilterPopup({super.key, required this.filters});
   final CourseFilters filters;
@@ -141,6 +146,7 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                     labelText: 'Salon(es)',
                     hintText: 'ie. S 113, CH 403, I 202',
                   ),
+                  keyboardType: TextInputType.visiblePassword,
                 ),
               ),
               Padding(
@@ -173,7 +179,8 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                         widget.filters.latestTime = "";
                         widget.filters.days = "";
                         widget.filters.modality = Modality.any;
-                        Navigator.pop(context);
+                        Navigator.pop(
+                            context, CourseFilterPopupResponse.deleted);
                       },
                       child: const Text('Borrar Filtros'),
                     ),
@@ -197,7 +204,7 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                                 daySelected ? daysString[index] : "")
                             .join();
                         widget.filters.modality = modality;
-                        Navigator.pop(context);
+                        Navigator.pop(context, CourseFilterPopupResponse.saved);
                       },
                       child: const Text('Guardar Filtros'),
                     ),

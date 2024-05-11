@@ -27,7 +27,7 @@ int getFirstMonday(int month, int year) {
 }
 
 String parseScheduleAsIcal(GeneratedSchedule schedule) {
-  Term term = Term.fromString(schedule.term) ?? Term.getCurrent();
+  Term term = Term.fromString(schedule.term) ?? Term.getPredictedTerm();
   final year = schedule.year + term.getYearOffset();
   final ical = ICalendar(
     productIdentifier: ProductIdentifierProperty(

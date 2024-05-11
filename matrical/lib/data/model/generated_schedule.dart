@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:calendar_view/calendar_view.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:miuni/features/matrical/data/model/blacklist.dart';
 import 'package:miuni/features/matrical/data/model/course_filters.dart';
 import 'package:miuni/features/matrical/data/model/department_course.dart';
 import 'package:miuni/features/matrical/data/model/generated_schedule_preferences.dart';
@@ -174,12 +175,8 @@ class GeneratedSchedule {
     return result;
   }
 
-  bool matchesFilters(
-      CourseFilters filters,
-      List<Professor> professorBlacklist,
-      Map<String, List<String>> sectionBlacklist,
-      Function isLocked,
-      Function courseHasLock) {
+  bool matchesFilters(CourseFilters filters, Blacklist blacklist,
+      Function isLocked, Function courseHasLock) {
     return !courses.any((pair) {
       var course = pair.course.copy();
       var section = pair.getSection();
@@ -187,8 +184,7 @@ class GeneratedSchedule {
         return !isLocked(course.courseCode, section.sectionCode);
       }
       course.sections = [section];
-      course = applyBlacklist(
-          applyFilters(course, filters), professorBlacklist, sectionBlacklist);
+      course = applyBlacklist(applyFilters(course, filters), blacklist);
       return course.sections.isEmpty;
     });
   }
@@ -276,7 +272,8 @@ class GeneratedSchedule {
     double totalTimeInLectures = 0.0;
     double totalTimeInUniversity = 0.0;
     int daysWithoutClass = 0;
-    int days = timesPerDay.length;
+    int daysMinusOne = timesPerDay.length -
+        1; // To allow max density to be achieved 1 day of presencial class
     for (var daySchedule in timesPerDay) {
       if (daySchedule.isEmpty) {
         daysWithoutClass++;
@@ -290,7 +287,8 @@ class GeneratedSchedule {
     final lectureTimeRatio = totalTimeInUniversity != 0
         ? totalTimeInLectures / totalTimeInUniversity
         : 1;
-    return lectureTimeRatio * 0.6 + (daysWithoutClass / days) * 0.4;
+    return lectureTimeRatio * 0.6 +
+        min(1, (daysWithoutClass / daysMinusOne)) * 0.4;
   }
 
   double getAverageTime(double? targetTime) {
@@ -326,5 +324,13 @@ class GeneratedSchedule {
     }
 
     schedules.sort((a, b) => getSortValue(b).compareTo(getSortValue(a)));
+  }
+
+  int getTotalCredits() {
+    return courses
+        .map((e) => e.sectionCode.length > 3 && e.sectionCode.endsWith("L")
+            ? 0
+            : e.course.credits)
+        .sum;
   }
 }

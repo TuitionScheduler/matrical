@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:miuni/config/injection_dependecies.dart';
 import 'package:miuni/features/matrical/data/model/generated_schedule_preferences.dart';
-import 'package:miuni/features/matrical/data/model/generated_schedule.dart';
+import 'package:miuni/features/matrical/logic/matrical_cubit.dart';
 
 class PreferencesView extends StatefulWidget {
   final GeneratedSchedulePreferences preferences;
@@ -12,41 +13,8 @@ class PreferencesView extends StatefulWidget {
 }
 
 class _PreferencesViewState extends State<PreferencesView> {
-  var averageTimeController = TextEditingController(text: "");
-
-  Future<void> _selectTime(
-      BuildContext context, TextEditingController controller) async {
-    List<int?> hourAndMinute =
-        controller.text.split(":").map(int.tryParse).toList();
-    int? hour = hourAndMinute.firstOrNull;
-    int? minute = hourAndMinute.lastOrNull;
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      useRootNavigator: false,
-      initialTime: (hour != null && minute != null)
-          ? TimeOfDay(hour: hour, minute: minute)
-          : TimeOfDay(hour: TimeOfDay.now().hour, minute: 0),
-    );
-    if (picked != null) {
-      setState(() {
-        controller.text =
-            '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
-      });
-    }
-  }
-
-  String fromTimeValue(double? time) {
-    if (time == null) return "";
-    var timeAsSeconds = time * 60;
-    int hour = timeAsSeconds ~/ 60;
-    int minute = (timeAsSeconds % 60).toInt();
-    return "${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}";
-  }
-
   @override
   Widget build(BuildContext context) {
-    averageTimeController.text = fromTimeValue(widget.preferences.averageTime);
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -79,9 +47,12 @@ class _PreferencesViewState extends State<PreferencesView> {
             ),
             Switch(
                 value: widget.preferences.preferDense,
-                onChanged: (value) => setState(() {
-                      widget.preferences.preferDense = value;
-                    })),
+                onChanged: (value) {
+                  setState(() {
+                    widget.preferences.preferDense = value;
+                    sl<MatricalCubit>().updatePreferences(widget.preferences);
+                  });
+                }),
           ],
         ),
         Row(
@@ -113,45 +84,42 @@ class _PreferencesViewState extends State<PreferencesView> {
             ),
             Switch(
                 value: widget.preferences.preferOnline,
-                onChanged: (value) => setState(() {
-                      widget.preferences.preferOnline = value;
-                    })),
+                onChanged: (value) {
+                  setState(() {
+                    widget.preferences.preferOnline = value;
+                    sl<MatricalCubit>().updatePreferences(widget.preferences);
+                  });
+                }),
           ],
         ),
-        Row(
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0),
-              child: Text("Hora promedio:  ",
-                  style: TextStyle(
-                    fontSize: 18,
-                  )),
-            ),
-            Expanded(
-              child: TextFormField(
-                decoration: const InputDecoration(
-                  hintText: 'HH:MM',
-                ),
-                controller: averageTimeController,
-                readOnly: true,
-                onTap: () =>
-                    _selectTime(context, averageTimeController).then((value) {
-                  widget.preferences.averageTime =
-                      averageTimeController.text.isNotEmpty
-                          ? GeneratedSchedule.getTimeAsDouble(
-                              averageTimeController.text)
-                          : null;
-                }),
+        DropdownMenu<double?>(
+            expandedInsets: const EdgeInsets.all(0),
+            initialSelection: widget.preferences.averageTime,
+            requestFocusOnTap: false,
+            label: const Text('Tiempo Preferido para Cursos'),
+            inputDecorationTheme: const InputDecorationTheme(),
+            onSelected: (time) async {
+              widget.preferences.averageTime = time;
+              sl<MatricalCubit>().updatePreferences(widget.preferences);
+            },
+            dropdownMenuEntries: const [
+              DropdownMenuEntry<double?>(
+                value: null,
+                label: "Sin Preferencia",
               ),
-            ),
-            IconButton(
-                onPressed: () => setState(() {
-                      averageTimeController.text = "";
-                      widget.preferences.averageTime = null;
-                    }),
-                icon: const Icon(Icons.rotate_left))
-          ],
-        )
+              DropdownMenuEntry<double?>(
+                value: 8,
+                label: "Mañana",
+              ),
+              DropdownMenuEntry<double?>(
+                value: 12,
+                label: "Mediodía",
+              ),
+              DropdownMenuEntry<double?>(
+                value: 16,
+                label: "Tarde",
+              ),
+            ])
       ],
     );
   }
