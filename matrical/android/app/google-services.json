@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1083530238668",
+    "project_id": "tuitionscheduler-b9897",
+    "storage_bucket": "tuitionscheduler-b9897.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1083530238668:android:0171f9a5a757dbbced0069",
+        "android_client_info": {
+          "package_name": "com.example.matrical"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpsKwKTW8sSUQHSBLt6teNQ0RiM2UQH-Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1083530238668:android:257624fa8e47589ded0069",
+        "android_client_info": {
+          "package_name": "com.example.matrical_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpsKwKTW8sSUQHSBLt6teNQ0RiM2UQH-Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

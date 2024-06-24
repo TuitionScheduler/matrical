@@ -1,0 +1,22 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "tuitionscheduler-b9897",
+          "appId": "1:1083530238668:android:0171f9a5a757dbbced0069",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "tuitionscheduler-b9897",
+          "configurations": {
+            "android": "1:1083530238668:android:0171f9a5a757dbbced0069",
+            "web": "1:1083530238668:web:867d79eaf2c8d8cced0069"
+          }
+        }
+      }
+    }
+  }
+}
