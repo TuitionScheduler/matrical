@@ -43,5 +43,5 @@ jobs:
         with:
           commit_message: "[Actions] Publish updated build artifacts"
           push_options: "--force"
-          branch: gh-pages
+          branch: web-builds
           create_branch: true
