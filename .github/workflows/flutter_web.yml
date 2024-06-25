@@ -2,9 +2,6 @@ name: Deploy to GitHub Pages
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 permissions:
   contents: write
@@ -34,12 +31,19 @@ jobs:
         run: |
           cd matrical
           flutter build web
+          cp -avr ./build/web ../
+
+      - name: Commit build
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "[Actions] Publish updated build artifacts"
+          file_pattern: "web/*"
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./matrical/build/web
+          publish_dir: ./web
           force_orphan: true
           user_name: "github-ci[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"
