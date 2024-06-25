@@ -1,0 +1,10 @@
+{
+  "overrides": [
+    {
+      "files": "flutter_bootstrap.js",
+      "options": {
+        "prettier.disable": true
+      }
+    }
+  ]
+}

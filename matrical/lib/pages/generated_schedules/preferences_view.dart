@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:matrical/globals/cubits.dart';
 import 'package:matrical/models/generated_schedule_preferences.dart';
-import 'package:matrical/models/matrical_cubit.dart';
 
 class PreferencesView extends StatefulWidget {
   final GeneratedSchedulePreferences preferences;
@@ -15,7 +14,6 @@ class PreferencesView extends StatefulWidget {
 class _PreferencesViewState extends State<PreferencesView> {
   @override
   Widget build(BuildContext context) {
-    final matricalCubit = BlocProvider.of<MatricalCubit>(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -51,7 +49,8 @@ class _PreferencesViewState extends State<PreferencesView> {
                 onChanged: (value) {
                   setState(() {
                     widget.preferences.preferDense = value;
-                    matricalCubit.updatePreferences(widget.preferences);
+                    matricalCubitSingleton
+                        .updatePreferences(widget.preferences);
                   });
                 }),
           ],
@@ -88,7 +87,8 @@ class _PreferencesViewState extends State<PreferencesView> {
                 onChanged: (value) {
                   setState(() {
                     widget.preferences.preferOnline = value;
-                    matricalCubit.updatePreferences(widget.preferences);
+                    matricalCubitSingleton
+                        .updatePreferences(widget.preferences);
                   });
                 }),
           ],
@@ -101,7 +101,7 @@ class _PreferencesViewState extends State<PreferencesView> {
             inputDecorationTheme: const InputDecorationTheme(),
             onSelected: (time) async {
               widget.preferences.averageTime = time;
-              matricalCubit.updatePreferences(widget.preferences);
+              matricalCubitSingleton.updatePreferences(widget.preferences);
             },
             dropdownMenuEntries: const [
               DropdownMenuEntry<double?>(

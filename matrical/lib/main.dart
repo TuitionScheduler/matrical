@@ -23,11 +23,11 @@ Future<void> setUp() async {
 }
 
 final GoRouter router = GoRouter(
-  initialLocation: "/matrical",
+  initialLocation: "/",
   routes: <RouteBase>[
     GoRoute(
       name: 'Matrical',
-      path: '/matrical',
+      path: '/',
       builder: (BuildContext context, GoRouterState state) {
         return MultiBlocProvider(providers: [
           BlocProvider.value(value: matricalCubitSingleton),
