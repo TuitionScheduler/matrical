@@ -1,6 +1,9 @@
 name: Deploy to GitHub Pages
 
 on:
+  push:
+    branches:
+      - "main"
   workflow_dispatch:
 
 permissions:
@@ -10,7 +13,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          ref: "main"
 
       - uses: subosito/flutter-action@v2.16.0
         with:
@@ -38,13 +43,6 @@ jobs:
         with:
           commit_message: "[Actions] Publish updated build artifacts"
           file_pattern: "web/*"
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./web
-          force_orphan: true
-          user_name: "github-ci[bot]"
-          user_email: "github-actions[bot]@users.noreply.github.com"
-          commit_message: "Publish to gh-pages"
+          push_options: "--force"
+          branch: gh-pages
+          create_branch: true
