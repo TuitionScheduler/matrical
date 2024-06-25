@@ -35,7 +35,7 @@ jobs:
       - name: Build
         run: |
           cd matrical
-          flutter build web
+          flutter build web --web-renderer canvaskit
           cp -avr ./build/web/* ../
 
       - name: Commit build
