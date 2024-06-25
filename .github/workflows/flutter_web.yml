@@ -36,13 +36,12 @@ jobs:
         run: |
           cd matrical
           flutter build web
-          cp -avr ./build/web ../
+          cp -avr ./build/web/* ../
 
       - name: Commit build
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "[Actions] Publish updated build artifacts"
-          file_pattern: "web/*"
           push_options: "--force"
           branch: gh-pages
           create_branch: true
