@@ -35,7 +35,7 @@ jobs:
       - name: Build
         run: |
           cd matrical
-          flutter build web --web-renderer canvaskit
+          flutter build web --web-renderer canvaskit --base-href "/Matrical/"
           cp -avr ./build/web/* ../
 
       - name: Commit build
