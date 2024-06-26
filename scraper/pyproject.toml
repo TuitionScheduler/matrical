@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "matrical"
+version = "0.1.0"
+description = ""
+authors = ["Kelvin Gonzalez <kelvin.gonzalez11@upr.edu>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+beautifulsoup4 = "^4.12.3"
+requests = "^2.31.0"
+firebase-admin = "^6.4.0"
+pypdf2 = "^3.0.1"
+pdfminer = "^20191125"
+pdfminer-six = "^20231228"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

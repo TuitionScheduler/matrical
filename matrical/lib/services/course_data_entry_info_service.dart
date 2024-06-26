@@ -18,8 +18,8 @@ class CourseDataEntryInfoService {
   Future<void> _initializeData() async {
     try {
       _firestore
-          .collection('Data Entry Information')
-          .doc('Department Course')
+          .collection('DataEntryInformation')
+          .doc('DepartmentCourses')
           .snapshots()
           .listen((snapshot) {
         if (snapshot.exists) {

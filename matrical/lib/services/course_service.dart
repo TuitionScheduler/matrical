@@ -64,7 +64,7 @@ class CourseService {
         return deptCacheResult.data;
       case CacheResultType.foundExpired:
         final document = await FirebaseFirestore.instance
-            .collection("Department Courses")
+            .collection("DepartmentCourses")
             .doc(documentKey)
             .get();
         if (document.exists) {
@@ -81,7 +81,7 @@ class CourseService {
               await dataEntryInfoService.getDepartments(term, year);
           if (departments.contains(department)) {
             final document = await FirebaseFirestore.instance
-                .collection("Department Courses")
+                .collection("DepartmentCourses")
                 .doc(documentKey)
                 .get();
 
@@ -113,7 +113,7 @@ class CourseService {
         return deptCacheResult.data.courses[courseCode]?.copy();
       case CacheResultType.foundExpired:
         final document = await FirebaseFirestore.instance
-            .collection("Department Courses")
+            .collection("DepartmentCourses")
             .doc(documentKey)
             .get();
         if (document.exists) {
@@ -130,7 +130,7 @@ class CourseService {
               await dataEntryInfoService.getDepartments(term, year);
           if (departments.contains(department)) {
             final document = await FirebaseFirestore.instance
-                .collection("Department Courses")
+                .collection("DepartmentCourses")
                 .doc(documentKey)
                 .get();
 
