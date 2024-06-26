@@ -45,6 +45,10 @@ class CourseFilters {
       rooms: List<String>.from(json['rooms']),
     );
   }
+
+  CourseFilters copy() {
+    return CourseFilters.fromJson(toJson());
+  }
 }
 
 class CourseWithFilters {

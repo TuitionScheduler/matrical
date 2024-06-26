@@ -40,7 +40,8 @@ enum SaveScheduleResult {
   hitScheduleLimit(
       "Límite de horarios alcanzado (300).\nBorra algunos horarios."),
   failedWrite("Hubo un problema guardando el horario.\nIntente otra vez."),
-  alreadyExists("Ya hay un horario con este nombre.");
+  alreadyExists("Ya hay un horario con este nombre."),
+  emptyName("Horario debe tener un nombre.");
 
   final String message;
 

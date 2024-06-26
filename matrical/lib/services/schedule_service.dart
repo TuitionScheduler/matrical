@@ -343,9 +343,13 @@ Future<SaveScheduleResult> saveSchedule(
   if (mySchedules.length >= 300) {
     return SaveScheduleResult.hitScheduleLimit;
   }
+  final trimmedName = name.trim();
+  if (trimmedName.isEmpty) {
+    return SaveScheduleResult.emptyName;
+  }
   SavedSchedule newSchedule = SavedSchedule(
-      name: name, dateCreated: DateTime.now(), schedule: schedule);
-  if (mySchedules.any((element) => element.name == name)) {
+      name: trimmedName, dateCreated: DateTime.now(), schedule: schedule);
+  if (mySchedules.any((element) => element.name == trimmedName)) {
     return SaveScheduleResult.alreadyExists;
   }
   mySchedules.add(newSchedule);

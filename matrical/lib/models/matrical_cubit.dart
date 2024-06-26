@@ -7,6 +7,7 @@ import 'package:matrical/models/generated_schedule_preferences.dart';
 import 'package:matrical/models/matrical_page.dart';
 import 'package:matrical/models/saved_schedules_options.dart';
 import 'package:matrical/models/schedule_generation_options.dart';
+import 'package:matrical/services/course_service.dart';
 
 class MatricalCubit extends Cubit<MatricalState> {
   MatricalCubit()
@@ -73,12 +74,13 @@ class MatricalCubit extends Cubit<MatricalState> {
   }
 
   // Adds new courses to the existing list
-  void addCourse(String courseCode, String sectionCode) {
+  void addCourse(String courseCode, String sectionCode,
+      {CourseFilters? filters}) {
     final copy = List.of(state.selectedCourses);
-    final courseWithFilters = CourseWithFilters.withoutFilters(
-      courseCode: courseCode,
-      sectionCode: sectionCode,
-    );
+    final courseWithFilters = CourseWithFilters(
+        courseCode: courseCode,
+        sectionCode: sectionCode,
+        filters: filters?.copy() ?? CourseFilters.empty());
     for (final (i, element) in copy.indexed) {
       if (element.courseCode == courseCode) {
         bool isLab = sectionCode.isNotEmpty &&
@@ -98,9 +100,27 @@ class MatricalCubit extends Cubit<MatricalState> {
     emit(state.copyWith(selectedCourses: copy));
   }
 
-  // Clears all selected courses
-  void clearCourses() {
-    emit(state.copyWith(selectedCourses: []));
+  // Clears courses and sections that do not belong to the new term/year
+  Future<bool> onTermYearChanged() async {
+    final courses = <CourseWithFilters>[];
+    bool removedAny = false;
+    final courseService = CourseService.getInstance();
+    for (var c in state.selectedCourses) {
+      final course = await courseService.getCourse(
+          c.courseCode, state.term.databaseKey, state.year);
+      if (course == null) {
+        removedAny = true;
+      } else if (c.sectionCode.isNotEmpty &&
+          !course.sections.any((s) => c.sectionCode == s.sectionCode)) {
+        courses.add(CourseWithFilters(
+            courseCode: c.courseCode, sectionCode: "", filters: c.filters));
+        removedAny = true;
+      } else {
+        courses.add(c);
+      }
+    }
+    emit(state.copyWith(selectedCourses: courses));
+    return removedAny;
   }
 
   void removeCourse(int index) {

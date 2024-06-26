@@ -2,6 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:info_widget/info_widget.dart';
 import 'package:matrical/models/course_filters.dart';
+import 'package:matrical/models/course_filters_popup_response.dart';
 
 class CourseFilterPopup extends StatefulWidget {
   const CourseFilterPopup({super.key, required this.filters});
@@ -173,7 +174,8 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                         widget.filters.latestTime = "";
                         widget.filters.days = "";
                         widget.filters.modality = Modality.any;
-                        Navigator.pop(context);
+                        Navigator.pop(
+                            context, CourseFilterPopupResponse.deleted);
                       },
                       child: const Text('Borrar Filtros'),
                     ),
@@ -197,7 +199,7 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                                 daySelected ? daysString[index] : "")
                             .join();
                         widget.filters.modality = modality;
-                        Navigator.pop(context);
+                        Navigator.pop(context, CourseFilterPopupResponse.saved);
                       },
                       child: const Text('Guardar Filtros'),
                     ),

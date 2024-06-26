@@ -33,6 +33,71 @@ class _CourseSelectState extends State<CourseSelect> {
   final yearController = TextEditingController();
   var dataEntryInfoService = CourseDataEntryInfoService();
 
+  Future<void> _addCourse(BuildContext context, MatricalState matricalState,
+      InternetState internetState) async {
+    FocusManager.instance.primaryFocus?.unfocus(); // close keyboard
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    final matricalCubit = BlocProvider.of<MatricalCubit>(context);
+    if (!isCourseCode(matricalState.courseController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Curso no tiene el formato esperado (DEPT####).'),
+      ));
+      return;
+    }
+    if (matricalState.sectionController.text.isNotEmpty &&
+        !isSectionCode(matricalState.sectionController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Sección no tiene el formato esperado.'),
+      ));
+      return;
+    }
+
+    var courseCode = matricalState.courseController.text;
+    final term = matricalState.term.databaseKey;
+    final year = matricalState.year;
+    var course = await CourseService().getCourse(courseCode, term, year);
+    if (internetState.connected!) {
+      if (course == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Curso no disponible para este semestre según nuestra base de datos.'),
+        ));
+        return;
+      }
+      final section = matricalState.sectionController.text;
+      if (section.isNotEmpty &&
+          course.sections.none((s) => s.sectionCode == section)) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Sección no disponible para este semestre según nuestra base de datos.'),
+        ));
+        return;
+      }
+
+      matricalCubit.addCourse(matricalState.courseController.text,
+          matricalState.sectionController.text);
+    } else {
+      if (course == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'No se pudo encontrar el curso en la memoria local. Intente otra vez una vez esté conectado al Internet.'),
+        ));
+        return;
+      }
+      final section = matricalState.sectionController.text;
+      if (section.isNotEmpty &&
+          course.sections.none((s) => s.sectionCode == section)) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'No se pudo encontrar esa sección para el curso en la memoria local. Intente otra vez una vez esté conectado al Internet.'),
+        ));
+        return;
+      }
+      matricalCubit.addCourse(matricalState.courseController.text,
+          matricalState.sectionController.text);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -67,10 +132,18 @@ class _CourseSelectState extends State<CourseSelect> {
                               onSelected: (term) async {
                                 if (term != null) {
                                   await setSelectedAcademicTerm(term);
-                                  setState(() {
-                                    matricalCubit.updateTerm(term);
-                                    matricalCubit.clearCourses();
-                                  });
+                                  matricalCubit.updateTerm(term);
+                                  final removedAny =
+                                      await matricalCubit.onTermYearChanged();
+                                  if (removedAny) {
+                                    ScaffoldMessenger.of(context)
+                                      ..hideCurrentSnackBar()
+                                      ..showSnackBar(const SnackBar(
+                                        content: Text(
+                                            'Algunos cursos y/o secciones no pertenecen a este término y/o año.'),
+                                      ));
+                                  }
+                                  setState(() {});
                                 }
                               },
                               dropdownMenuEntries: Term.values.map((term) {
@@ -95,10 +168,18 @@ class _CourseSelectState extends State<CourseSelect> {
                                 if (year != null) {
                                   await setSelectedAcademicYear(
                                       int.parse(year));
-                                  setState(() {
-                                    matricalCubit.updateYear(int.parse(year));
-                                    matricalCubit.clearCourses();
-                                  });
+                                  matricalCubit.updateYear(int.parse(year));
+                                  final removedAny =
+                                      await matricalCubit.onTermYearChanged();
+                                  if (removedAny) {
+                                    ScaffoldMessenger.of(context)
+                                      ..hideCurrentSnackBar()
+                                      ..showSnackBar(const SnackBar(
+                                        content: Text(
+                                            'Algunos cursos y/o secciones no pertenecen a este término y/o año.'),
+                                      ));
+                                  }
+                                  setState(() {});
                                 }
                               },
                               dropdownMenuEntries:
@@ -196,32 +277,50 @@ class _CourseSelectState extends State<CourseSelect> {
                                       ))
                                 ],
                               ),
-                              Row(
-                                children: [
-                                  Expanded(
-                                      child: TextField(
-                                    controller: matricalState.courseController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Curso',
-                                      hintText: 'ie. CIIC3015',
-                                    ),
-                                    textCapitalization:
-                                        TextCapitalization.characters,
-                                    inputFormatters: [UpperCaseTextFormatter()],
-                                  )),
-                                  const Text("  —  "),
-                                  Expanded(
-                                      child: TextField(
-                                    controller: matricalState.sectionController,
-                                    decoration: const InputDecoration(
-                                      hintText: 'ie. 070, 001D',
-                                      labelText: 'Sección',
-                                    ),
-                                    textCapitalization:
-                                        TextCapitalization.characters,
-                                    inputFormatters: [UpperCaseTextFormatter()],
-                                  )),
-                                ],
+                              FocusScope(
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                        child: TextField(
+                                      controller:
+                                          matricalState.courseController,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Curso*',
+                                        hintText: 'ie. CIIC3015',
+                                      ),
+                                      textCapitalization:
+                                          TextCapitalization.characters,
+                                      keyboardType:
+                                          TextInputType.visiblePassword,
+                                      inputFormatters: [
+                                        UpperCaseTextFormatter()
+                                      ],
+                                      textInputAction: TextInputAction.next,
+                                    )),
+                                    const Text("  —  "),
+                                    Expanded(
+                                        child: TextField(
+                                      controller:
+                                          matricalState.sectionController,
+                                      decoration: const InputDecoration(
+                                        hintText: 'ie. 070, 001D',
+                                        labelText: 'Sección',
+                                      ),
+                                      textCapitalization:
+                                          TextCapitalization.characters,
+                                      keyboardType:
+                                          TextInputType.visiblePassword,
+                                      inputFormatters: [
+                                        UpperCaseTextFormatter()
+                                      ],
+                                      textInputAction: TextInputAction.done,
+                                      onSubmitted: (value) => _addCourse(
+                                          innerContext,
+                                          matricalState,
+                                          internetState),
+                                    )),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -230,89 +329,8 @@ class _CourseSelectState extends State<CourseSelect> {
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: ElevatedButton(
-                          onPressed: () async {
-                            FocusManager.instance.primaryFocus
-                                ?.unfocus(); // close keyboard
-                            ScaffoldMessenger.of(innerContext)
-                                .hideCurrentSnackBar();
-                            if (!isCourseCode(
-                                matricalState.courseController.text)) {
-                              ScaffoldMessenger.of(innerContext)
-                                  .showSnackBar(const SnackBar(
-                                content: Text(
-                                    'Curso no tiene el formato esperado (DEPT####).'),
-                              ));
-                              return;
-                            }
-                            if (matricalState
-                                    .sectionController.text.isNotEmpty &&
-                                !isSectionCode(
-                                    matricalState.sectionController.text)) {
-                              ScaffoldMessenger.of(innerContext)
-                                  .showSnackBar(const SnackBar(
-                                content: Text(
-                                    'Sección no tiene el formato esperado.'),
-                              ));
-                              return;
-                            }
-
-                            var courseCode =
-                                matricalState.courseController.text;
-                            final term = matricalState.term.databaseKey;
-                            final year = matricalState.year;
-                            var course = await CourseService()
-                                .getCourse(courseCode, term, year);
-                            if (internetState.connected!) {
-                              if (course == null) {
-                                ScaffoldMessenger.of(innerContext)
-                                    .showSnackBar(const SnackBar(
-                                  content: Text(
-                                      'Curso no disponible para este semestre según nuestra base de datos.'),
-                                ));
-                                return;
-                              }
-                              final section =
-                                  matricalState.sectionController.text;
-                              if (section.isNotEmpty &&
-                                  course.sections
-                                      .none((s) => s.sectionCode == section)) {
-                                ScaffoldMessenger.of(innerContext)
-                                    .showSnackBar(const SnackBar(
-                                  content: Text(
-                                      'Sección no disponible para este semestre según nuestra base de datos.'),
-                                ));
-                                return;
-                              }
-
-                              matricalCubit.addCourse(
-                                  matricalState.courseController.text,
-                                  matricalState.sectionController.text);
-                            } else {
-                              if (course == null) {
-                                ScaffoldMessenger.of(innerContext)
-                                    .showSnackBar(const SnackBar(
-                                  content: Text(
-                                      'No se pudo encontrar el curso en la memoria local. Intente otra vez una vez esté conectado al Internet.'),
-                                ));
-                                return;
-                              }
-                              final section =
-                                  matricalState.sectionController.text;
-                              if (section.isNotEmpty &&
-                                  course.sections
-                                      .none((s) => s.sectionCode == section)) {
-                                ScaffoldMessenger.of(innerContext)
-                                    .showSnackBar(const SnackBar(
-                                  content: Text(
-                                      'No se pudo encontrar esa sección para el curso en la memoria local. Intente otra vez una vez esté conectado al Internet.'),
-                                ));
-                                return;
-                              }
-                              matricalCubit.addCourse(
-                                  matricalState.courseController.text,
-                                  matricalState.sectionController.text);
-                            }
-                          },
+                          onPressed: () => _addCourse(
+                              innerContext, matricalState, internetState),
                           child: const Icon(Icons.add),
                         ),
                       )

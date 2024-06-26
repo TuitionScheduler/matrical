@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:matrical/globals/cubits.dart';
 import 'package:matrical/models/course_filters.dart';
 import 'package:matrical/models/generated_schedule.dart';
-import 'package:matrical/models/matrical_cubit.dart';
 import 'package:matrical/models/matrical_page.dart';
 
 class ScheduleTableView extends StatelessWidget {
@@ -12,7 +11,6 @@ class ScheduleTableView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final matricalCubit = BlocProvider.of<MatricalCubit>(context);
     return AlertDialog(
       title: const Text(
         "Cursos en horario:",
@@ -35,8 +33,6 @@ class ScheduleTableView extends StatelessWidget {
           ),
         ),
       ),
-      actionsOverflowAlignment: OverflowBarAlignment.start,
-      actionsOverflowDirection: VerticalDirection.down,
       buttonPadding: const EdgeInsets.symmetric(horizontal: 3.0),
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.white,
@@ -47,7 +43,7 @@ class ScheduleTableView extends StatelessWidget {
                 const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
           ),
           onPressed: () {
-            matricalCubit.updateCourses(schedule.courses
+            matricalCubitSingleton.updateCourses(schedule.courses
                 .map(
                   (e) => CourseWithFilters.withoutFilters(
                       courseCode: e.course.courseCode,
@@ -55,7 +51,7 @@ class ScheduleTableView extends StatelessWidget {
                 )
                 .toList());
             Navigator.of(context).pop(); // dismiss the modal
-            matricalCubit.setPage(MatricalPage.courseSelect);
+            matricalCubitSingleton.setPage(MatricalPage.courseSelect);
           },
           child: const Text("Editar"),
         )

@@ -129,7 +129,6 @@ class CourseView extends StatelessWidget {
                                                             TextDecoration
                                                                 .underline)),
                                               ),
-                                        if (!isStatic) const SizedBox(width: 4),
                                         if (!isStatic)
                                           InkWell(
                                             onTap: () {
@@ -138,8 +137,12 @@ class CourseView extends StatelessWidget {
                                               regenerateSchedules!();
                                               Navigator.of(context).pop();
                                             },
-                                            child: const Icon(Icons.close,
-                                                size: 16),
+                                            customBorder: const CircleBorder(),
+                                            child: const Padding(
+                                              padding: EdgeInsets.all(4.0),
+                                              child:
+                                                  Icon(Icons.close, size: 16),
+                                            ),
                                           )
                                       ],
                                     ),

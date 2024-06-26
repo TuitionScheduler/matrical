@@ -1091,7 +1091,6 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
                                                                       TextDecoration
                                                                           .underline)),
                                                         ),
-                                                  const SizedBox(width: 4),
                                                   InkWell(
                                                     onTap: () {
                                                       setState(() {
@@ -1118,8 +1117,14 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
                                                         });
                                                       });
                                                     },
-                                                    child: const Icon(Icons.add,
-                                                        size: 16),
+                                                    customBorder:
+                                                        const CircleBorder(),
+                                                    child: const Padding(
+                                                      padding:
+                                                          EdgeInsets.all(4.0),
+                                                      child: Icon(Icons.add,
+                                                          size: 16),
+                                                    ),
                                                   )
                                                 ],
                                               ),
@@ -1153,7 +1158,6 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
                                                   Text("$key-$value",
                                                       style: const TextStyle(
                                                           fontSize: 16)),
-                                                  const SizedBox(width: 4),
                                                   InkWell(
                                                     onTap: () {
                                                       setState(() {
@@ -1162,8 +1166,14 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
                                                             .remove(value);
                                                       });
                                                     },
-                                                    child: const Icon(Icons.add,
-                                                        size: 16),
+                                                    customBorder:
+                                                        const CircleBorder(),
+                                                    child: const Padding(
+                                                      padding:
+                                                          EdgeInsets.all(4.0),
+                                                      child: Icon(Icons.add,
+                                                          size: 16),
+                                                    ),
                                                   )
                                                 ],
                                               )))

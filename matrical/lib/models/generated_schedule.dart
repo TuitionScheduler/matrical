@@ -326,4 +326,12 @@ class GeneratedSchedule {
 
     schedules.sort((a, b) => getSortValue(b).compareTo(getSortValue(a)));
   }
+
+  int getTotalCredits() {
+    return courses
+        .map((e) => e.sectionCode.length > 3 && e.sectionCode.endsWith("L")
+            ? 0
+            : e.course.credits)
+        .sum;
+  }
 }

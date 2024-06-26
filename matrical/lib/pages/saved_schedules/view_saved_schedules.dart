@@ -364,6 +364,9 @@ class SavedScheduleCard extends StatelessWidget {
                           "${Term.fromString(schedule.schedule.term)?.displayName ?? ''}, ${schedule.schedule.year}",
                           style: const TextStyle(fontSize: 12)),
                       Text(
+                          "Total de Créditos: ${schedule.schedule.getTotalCredits()}",
+                          style: const TextStyle(fontSize: 12)),
+                      Text(
                           "Fecha: ${schedule.dateCreated.day}/${schedule.dateCreated.month}/${schedule.dateCreated.year}",
                           style: const TextStyle(fontSize: 12)),
                       const Divider(),
@@ -417,58 +420,71 @@ Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
         ),
       ),
     ),
-    actionsAlignment: MainAxisAlignment.start,
-    actionsOverflowAlignment: OverflowBarAlignment.start,
-    actionsOverflowDirection: VerticalDirection.down,
     buttonPadding: const EdgeInsets.symmetric(horizontal: 3.0),
     backgroundColor: Colors.white,
     surfaceTintColor: Colors.white,
     actions: [
-      TextButton(
-        style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-        ),
-        onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => ScheduleView(schedule: schedule)));
-        },
-        child: const Text("Ver en Semana"),
-      ),
-      TextButton(
-        style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-        ),
-        onPressed: () {
-          Navigator.of(context).pop();
-          matricalCubit.updateCourses(schedule.schedule.courses
-              .map((csp) => CourseWithFilters.withoutFilters(
-                  courseCode: csp.course.courseCode,
-                  sectionCode: csp.sectionCode))
-              .toList());
-          matricalCubit.updateTerm(Term.fromString(schedule.schedule.term)!);
-          matricalCubit.updateYear(schedule.schedule.year);
-          matricalCubit.setPage(MatricalPage.courseSelect);
-        },
-        child: const Text("Editar"),
-      ),
-      TextButton(
-        style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-        ),
-        onPressed: () {
-          showDialog(
-            useRootNavigator: false,
-            context: context,
-            builder: (BuildContext innerContext) {
-              return ExportScheduleDialog(
-                notPresencialCourses: schedule.schedule
-                    .getCourseSectionPairsByModality(Modality.byagreement),
-                schedule: schedule.schedule,
-              );
-            },
-          );
-        },
-        child: const Text("Exportar"),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: TextButton(
+              style: TextButton.styleFrom(
+                textStyle:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              ),
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => ScheduleView(schedule: schedule)));
+              },
+              child: const Text("Ver en Semana"),
+            ),
+          ),
+          Flexible(
+            child: TextButton(
+              style: TextButton.styleFrom(
+                textStyle:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                matricalCubit.updateCourses(schedule.schedule.courses
+                    .map((csp) => CourseWithFilters.withoutFilters(
+                        courseCode: csp.course.courseCode,
+                        sectionCode: csp.sectionCode))
+                    .toList());
+                matricalCubit
+                    .updateTerm(Term.fromString(schedule.schedule.term)!);
+                matricalCubit.updateYear(schedule.schedule.year);
+                matricalCubit.setPage(MatricalPage.courseSelect);
+              },
+              child: const Text("Editar"),
+            ),
+          ),
+          Flexible(
+            child: TextButton(
+              style: TextButton.styleFrom(
+                textStyle:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              ),
+              onPressed: () {
+                showDialog(
+                  useRootNavigator: false,
+                  context: context,
+                  builder: (BuildContext innerContext) {
+                    return ExportScheduleDialog(
+                      notPresencialCourses: schedule.schedule
+                          .getCourseSectionPairsByModality(
+                              Modality.byagreement),
+                      schedule: schedule.schedule,
+                    );
+                  },
+                );
+              },
+              child: const Text("Exportar"),
+            ),
+          ),
+        ],
       ),
     ],
   );

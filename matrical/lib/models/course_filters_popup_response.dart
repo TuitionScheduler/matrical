@@ -1,0 +1,4 @@
+enum CourseFilterPopupResponse {
+  deleted(),
+  saved();
+}
