@@ -1,7 +1,6 @@
-import 'dart:isolate';
-
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:icalendar/icalendar.dart';
 import 'package:matrical/models/blacklist.dart';
 import 'package:matrical/models/course_filters.dart';
@@ -156,12 +155,11 @@ Future<List<GeneratedSchedule>> generateSchedules(
 
   sortCourses(filteredCourses, preferences);
 
-  var result = await Isolate.run(() {
-    var schedules = <GeneratedSchedule>[];
-    generateSchedulesAux(term, year, filteredCourses, schedules, [], 0);
-    schedules.removeWhere((e) => e.courses.isEmpty);
-    GeneratedSchedule.sortGeneratedSchedules(schedules, preferences);
-    return schedules;
+  var result = await compute(generateSchedulesAux, {
+    'term': term,
+    'year': year,
+    'filteredCourses': filteredCourses,
+    'preferences': preferences,
   });
   return result;
 }
@@ -217,7 +215,20 @@ Future<void> gatherIntegratedLabs(
   }
 }
 
-void generateSchedulesAux(
+List<GeneratedSchedule> generateSchedulesAux(Map<String, dynamic> params) {
+  String term = params['term'];
+  int year = params['year'];
+  List<Course> filteredCourses = params['filteredCourses'];
+  GeneratedSchedulePreferences preferences = params['preferences'];
+
+  var schedules = <GeneratedSchedule>[];
+  generateSchedulesRecursive(term, year, filteredCourses, schedules, [], 0);
+  schedules.removeWhere((e) => e.courses.isEmpty);
+  GeneratedSchedule.sortGeneratedSchedules(schedules, preferences);
+  return schedules;
+}
+
+void generateSchedulesRecursive(
     String term,
     int year,
     List<Course> courses,
@@ -233,7 +244,7 @@ void generateSchedulesAux(
     final pair = CourseSectionPair(
         course: courses[index].copyWithoutSections(), section: section);
     if (pair.checkConflict(pairs)) continue;
-    generateSchedulesAux(
+    generateSchedulesRecursive(
         term, year, courses, schedules, pairs + [pair], index + 1);
   }
 }
@@ -297,12 +308,13 @@ void sortSections(Course course, GeneratedSchedulePreferences preferences) {
 
 Future<List<SavedSchedule>> getSavedSchedules() async {
   var cache = await SharedPreferences.getInstance();
-  return await Isolate.run(() =>
-      cache
-          .getStringList("MySchedules")
-          ?.map((scheduleString) => SavedSchedule.fromString(scheduleString))
-          .toList() ??
-      []);
+  return await compute((_) {
+    return cache
+            .getStringList("MySchedules")
+            ?.map((scheduleString) => SavedSchedule.fromString(scheduleString))
+            .toList() ??
+        [];
+  }, null);
 }
 
 Future<SaveScheduleResult> writeSavedSchedules(

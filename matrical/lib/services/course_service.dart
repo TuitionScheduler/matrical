@@ -1,6 +1,5 @@
-import 'dart:isolate';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:matrical/models/blacklist.dart';
 import 'package:matrical/models/cache_service.dart';
@@ -169,7 +168,7 @@ Future<List<Course>> getCourseSearch(
     var formatted = courseOrDept.trim().toUpperCase();
     switch (formatted.length) {
       case 0:
-        //Empty string was passed in
+        // Empty string was passed in
         break;
       case 4:
         var dept = await cs.getDepartment(formatted, term, year);
@@ -187,12 +186,13 @@ Future<List<Course>> getCourseSearch(
         throw Exception("Value is not course or department");
     }
   }
-  return await Isolate.run(() {
-    return applyFiltersToAll(courses, filters);
-  });
+  return await compute(
+      applyFiltersToAll, {'courses': courses, 'filters': filters});
 }
 
-List<Course> applyFiltersToAll(List<Course> courses, CourseFilters filters) {
+List<Course> applyFiltersToAll(Map<String, dynamic> params) {
+  List<Course> courses = params['courses'] as List<Course>;
+  CourseFilters filters = params['filters'] as CourseFilters;
   List<Course> result =
       courses.map((course) => applyFilters(course, filters)).toList();
   result.removeWhere((course) => course.sections.isEmpty);
