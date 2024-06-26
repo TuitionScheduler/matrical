@@ -141,10 +141,21 @@ class GeneratedSchedule {
           Map<String, int> dayMap = {"L": 1, "M": 2, "W": 3, "J": 4, "V": 5};
           List<String> startTime = meeting.startTime.split(":");
           List<String> endTime = meeting.endTime.split(":");
+          int startHour = int.parse(startTime[0]);
+          int startMinutes = int.parse(startTime[1]);
+          int endHour = int.parse(endTime[0]);
+          int endMinutes = int.parse(endTime[1]);
+          String title =
+              "${isLocked(course.courseCode, section.sectionCode) ? "🔒" : ""}${course.courseCode}\nsec. ${section.sectionCode}";
+          int duration =
+              endHour * 60 + endMinutes - (startHour * 60 + startMinutes);
+          if (duration >= 90) {
+            title += "\nRoom: ${meeting.room}";
+          }
           eventController.add(CalendarEventData(
-              title:
-                  "${isLocked(course.courseCode, section.sectionCode) ? "🔒" : ""}${course.courseCode}-${section.sectionCode}\nRoom: ${meeting.room}",
+              title: title,
               date: DateTime(2024, 1, dayMap[day]!),
+              titleStyle: const TextStyle(fontSize: 10, color: Colors.white),
               startTime: DateTime(2024, 1, dayMap[day]!,
                   int.parse(startTime[0]), int.parse(startTime[1])),
               endTime: DateTime(2024, 1, dayMap[day]!, int.parse(endTime[0]),

@@ -4,6 +4,7 @@ import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:matrical/models/course_filters.dart';
 import 'package:matrical/models/saved_schedule.dart';
+import 'package:matrical/models/weekday.dart';
 import 'package:matrical/pages/generated_schedules/course_view.dart';
 import 'package:matrical/pages/generated_schedules/generated_schedules.dart';
 import 'package:matrical/services/widgets_service.dart';
@@ -83,15 +84,18 @@ class ScheduleView extends StatelessWidget {
                       child: CalendarControllerProvider(
                         controller: eventController,
                         child: WeekView(
-                          minDay: DateTime(2024, 1, 1),
-                          maxDay: DateTime(2024, 1, 5),
+                          weekNumberBuilder: (_) => null,
+                          weekDayBuilder: (date) =>
+                              Center(child: Text(weekday[date.weekday])),
                           headerStyle: const HeaderStyle(
                             leftIconVisible: false,
                             rightIconVisible: false,
                             headerTextStyle: TextStyle(fontSize: 0),
                           ),
+                          minDay: DateTime(2024, 1, 1),
+                          maxDay: DateTime(2024, 1, 5),
                           showWeekends: false,
-                          heightPerMinute: 1,
+                          heightPerMinute: 1.1,
                           minuteSlotSize: MinuteSlotSize.minutes30,
                           scrollOffset: scrollOffset,
                           timeLineWidth: 56,

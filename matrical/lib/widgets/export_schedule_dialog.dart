@@ -7,6 +7,7 @@ import 'package:gal/gal.dart';
 import 'package:info_widget/info_widget.dart';
 import 'package:matrical/models/generated_schedule.dart';
 import 'package:matrical/models/schedule_generation_options.dart';
+import 'package:matrical/models/weekday.dart';
 import 'package:matrical/services/schedule_service.dart';
 import 'package:matrical/services/widgets_service.dart';
 import 'package:open_file/open_file.dart';
@@ -160,7 +161,7 @@ Future<bool> saveScheduleToGallery(List<CourseSectionPair> notPresencial,
   const calendarWidth = 600.0;
   final copiedController = EventController();
   const scheduleHeaderHeight = 60.0;
-  const minuteHeight = 1.0;
+  const minuteHeight = 1.1;
   final scrollOffset = schedule.getEarliestHour().floor() * minuteHeight * 60;
   final hoursBetweenFirstAndLastCourse =
       schedule.getLatestHour().ceil() - schedule.getEarliestHour().floor();
@@ -225,6 +226,9 @@ Future<bool> saveScheduleToGallery(List<CourseSectionPair> notPresencial,
                             controller: copiedController,
                             minDay: DateTime(2024, 1, 1),
                             maxDay: DateTime(2024, 1, 5),
+                            weekNumberBuilder: (_) => null,
+                            weekDayBuilder: (date) =>
+                                Center(child: Text(weekday[date.weekday])),
                             headerStyle: const HeaderStyle(
                               leftIconVisible: false,
                               rightIconVisible: false,

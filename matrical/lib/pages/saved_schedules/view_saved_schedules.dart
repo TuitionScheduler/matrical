@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:matrical/globals/cubits.dart';
 import 'package:matrical/models/course_filters.dart';
 import 'package:matrical/models/generated_schedule.dart';
 import 'package:matrical/models/matrical_cubit.dart';
@@ -396,7 +397,6 @@ class SavedScheduleCard extends StatelessWidget {
 }
 
 Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
-  final matricalCubit = BlocProvider.of<MatricalCubit>(context);
   return AlertDialog(
     title: const Text(
       "Cursos en horario:",
@@ -448,15 +448,15 @@ Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
               ),
               onPressed: () {
                 Navigator.of(context).pop();
-                matricalCubit.updateCourses(schedule.schedule.courses
+                matricalCubitSingleton.updateCourses(schedule.schedule.courses
                     .map((csp) => CourseWithFilters.withoutFilters(
                         courseCode: csp.course.courseCode,
                         sectionCode: csp.sectionCode))
                     .toList());
-                matricalCubit
+                matricalCubitSingleton
                     .updateTerm(Term.fromString(schedule.schedule.term)!);
-                matricalCubit.updateYear(schedule.schedule.year);
-                matricalCubit.setPage(MatricalPage.courseSelect);
+                matricalCubitSingleton.updateYear(schedule.schedule.year);
+                matricalCubitSingleton.setPage(MatricalPage.courseSelect);
               },
               child: const Text("Editar"),
             ),

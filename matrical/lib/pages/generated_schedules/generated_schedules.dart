@@ -16,6 +16,7 @@ import 'package:matrical/models/matrical_cubit.dart';
 import 'package:matrical/models/matrical_page.dart';
 import 'package:matrical/models/saved_schedule.dart';
 import 'package:matrical/models/schedule_generation_options.dart';
+import 'package:matrical/models/weekday.dart';
 import 'package:matrical/pages/generated_schedules/course_view.dart';
 import 'package:matrical/pages/generated_schedules/preferences_view.dart';
 import 'package:matrical/pages/generated_schedules/save_schedule_dialog.dart';
@@ -696,13 +697,16 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                   key: weekViewKey,
                                   minDay: DateTime(2024, 1, 1),
                                   maxDay: DateTime(2024, 1, 5),
+                                  weekNumberBuilder: (_) => null,
+                                  weekDayBuilder: (date) => Center(
+                                      child: Text(weekday[date.weekday])),
                                   headerStyle: const HeaderStyle(
                                     leftIconVisible: false,
                                     rightIconVisible: false,
                                     headerTextStyle: TextStyle(fontSize: 0),
                                   ),
                                   showWeekends: false,
-                                  heightPerMinute: 1,
+                                  heightPerMinute: 1.1,
                                   onEventTap: (events, date) {
                                     final sectionData =
                                         splitEvent(events.first.title);
@@ -724,7 +728,7 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                   },
                                   minuteSlotSize: MinuteSlotSize.minutes30,
                                   scrollOffset: scrollOffset,
-                                  timeLineWidth: 56,
+                                  timeLineWidth: 55,
                                 ),
                               ),
                             ),
