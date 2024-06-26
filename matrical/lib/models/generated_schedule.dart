@@ -155,11 +155,13 @@ class GeneratedSchedule {
           eventController.add(CalendarEventData(
               title: title,
               date: DateTime(2024, 1, dayMap[day]!),
-              titleStyle: const TextStyle(fontSize: 10, color: Colors.white),
-              startTime: DateTime(2024, 1, dayMap[day]!,
-                  int.parse(startTime[0]), int.parse(startTime[1])),
-              endTime: DateTime(2024, 1, dayMap[day]!, int.parse(endTime[0]),
-                  int.parse(endTime[1])),
+              titleStyle: const TextStyle(
+                  fontSize: 9,
+                  color: Colors
+                      .white), // TODO: Make this depend on screen resolution
+              startTime:
+                  DateTime(2024, 1, dayMap[day]!, startHour, startMinutes),
+              endTime: DateTime(2024, 1, dayMap[day]!, endHour, endMinutes),
               color: pair.getColor()));
         }
       }
