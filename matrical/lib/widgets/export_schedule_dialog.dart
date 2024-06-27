@@ -1,8 +1,7 @@
-import 'dart:convert';
-import 'dart:io' show Platform, File;
+import 'package:matrical/services/web_service.dart';
+import "package:universal_io/io.dart";
 import 'package:flutter/foundation.dart' show kIsWeb;
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+
 import 'dart:typed_data';
 
 import 'package:calendar_view/calendar_view.dart';
@@ -50,7 +49,7 @@ class ExportScheduleDialog extends StatelessWidget {
               showDialog(
                       context: context,
                       builder: (innerContext) => SaveAsImageProgressDialog(
-                              saveFuture: saveScheduleToGallery(
+                              saveFuture: exportImageAsSchedule(
                             notPresencialCourses,
                             schedule,
                             innerContext,
@@ -160,7 +159,7 @@ class _SaveAsImageProgressDialogState extends State<SaveAsImageProgressDialog> {
   }
 }
 
-Future<bool> saveScheduleToGallery(List<CourseSectionPair> notPresencial,
+Future<bool> exportImageAsSchedule(List<CourseSectionPair> notPresencial,
     GeneratedSchedule schedule, BuildContext context) async {
   const calendarWidth = 600.0;
   final copiedController = EventController();
@@ -178,6 +177,82 @@ Future<bool> saveScheduleToGallery(List<CourseSectionPair> notPresencial,
 
   schedule.overwriteEventController(copiedController, neverLock);
 
+  final imageName = "horario-${schedule.term}-${schedule.year}.png";
+  Uint8List pngBytes = await ScreenshotController().captureFromLongWidget(
+      MediaQuery(
+        data: MediaQuery.of(context),
+        child: Material(
+          child: CalendarControllerProvider(
+            controller: copiedController,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[] +
+                  splitWidgets(
+                          notPresencial
+                              .map((pair) => Flexible(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Container(
+                                        height: 48,
+                                        decoration: BoxDecoration(
+                                            color: pair.getColor(),
+                                            borderRadius:
+                                                BorderRadius.circular(8)),
+                                        child: Center(
+                                          child: Text(
+                                              "${pair.course.courseCode}-${pair.sectionCode}",
+                                              style: const TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.white)),
+                                        ),
+                                      ),
+                                    ),
+                                  ))
+                              .toList(),
+                          3)
+                      .map<Widget>(
+                          (row) => SizedBox(width: calendarWidth, child: row))
+                      .toList() +
+                  <Widget>[
+                    SizedBox(
+                      width: calendarWidth,
+                      height: calendarHeight,
+                      child: WeekView(
+                          scrollOffset: scrollOffset,
+                          controller: copiedController,
+                          minDay: DateTime(2024, 1, 1),
+                          maxDay: DateTime(2024, 1, 5),
+                          weekNumberBuilder: (_) => null,
+                          weekDayBuilder: (date) =>
+                              Center(child: Text(weekday[date.weekday])),
+                          headerStyle: const HeaderStyle(
+                            leftIconVisible: false,
+                            rightIconVisible: false,
+                            headerTextStyle: TextStyle(fontSize: 0),
+                          ),
+                          showWeekends: false,
+                          heightPerMinute: minuteHeight,
+                          minuteSlotSize: MinuteSlotSize.minutes30,
+                          timeLineWidth: 56),
+                    ),
+                  ],
+            ),
+          ),
+        ),
+      ),
+      pixelRatio: 3.0,
+      delay: const Duration(seconds: 1));
+  if (Platform.isAndroid) {
+    return await saveScheduleToGallery(imageName, pngBytes, context);
+  }
+  if (kIsWeb) {
+    return downloadFileOnWeb(imageName, pngBytes);
+  }
+  return false;
+}
+
+Future<bool> saveScheduleToGallery(
+    String fileName, Uint8List pngBytes, BuildContext context) async {
   try {
     final hasAccess = await Gal.requestAccess();
     if (!hasAccess) {
@@ -186,73 +261,8 @@ Future<bool> saveScheduleToGallery(List<CourseSectionPair> notPresencial,
     if (!context.mounted) {
       return false;
     }
-    Uint8List pngBytes = await ScreenshotController().captureFromLongWidget(
-        MediaQuery(
-          data: MediaQuery.of(context),
-          child: Material(
-            child: CalendarControllerProvider(
-              controller: copiedController,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[] +
-                    splitWidgets(
-                            notPresencial
-                                .map((pair) => Flexible(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Container(
-                                          height: 48,
-                                          decoration: BoxDecoration(
-                                              color: pair.getColor(),
-                                              borderRadius:
-                                                  BorderRadius.circular(8)),
-                                          child: Center(
-                                            child: Text(
-                                                "${pair.course.courseCode}-${pair.sectionCode}",
-                                                style: const TextStyle(
-                                                    fontSize: 14,
-                                                    color: Colors.white)),
-                                          ),
-                                        ),
-                                      ),
-                                    ))
-                                .toList(),
-                            3)
-                        .map<Widget>(
-                            (row) => SizedBox(width: calendarWidth, child: row))
-                        .toList() +
-                    <Widget>[
-                      SizedBox(
-                        width: calendarWidth,
-                        height: calendarHeight,
-                        child: WeekView(
-                            scrollOffset: scrollOffset,
-                            controller: copiedController,
-                            minDay: DateTime(2024, 1, 1),
-                            maxDay: DateTime(2024, 1, 5),
-                            weekNumberBuilder: (_) => null,
-                            weekDayBuilder: (date) =>
-                                Center(child: Text(weekday[date.weekday])),
-                            headerStyle: const HeaderStyle(
-                              leftIconVisible: false,
-                              rightIconVisible: false,
-                              headerTextStyle: TextStyle(fontSize: 0),
-                            ),
-                            showWeekends: false,
-                            heightPerMinute: minuteHeight,
-                            minuteSlotSize: MinuteSlotSize.minutes30,
-                            timeLineWidth: 56),
-                      ),
-                    ],
-              ),
-            ),
-          ),
-        ),
-        pixelRatio: 3.0,
-        delay: const Duration(seconds: 1));
     final tempDir = await getTemporaryDirectory();
-    final imagePath =
-        "${tempDir.path}/horario-${schedule.term}-${schedule.year}.png";
+    final imagePath = "${tempDir.path}/$fileName";
     File file = File(imagePath);
     await file.create();
     await file.writeAsBytes(pngBytes);
@@ -281,13 +291,7 @@ Future<bool> exportScheduleAsIcal(GeneratedSchedule currentSchedule) async {
   final year = currentSchedule.year;
   final icsName = "horario-${term.displayName}-$year.ics";
   if (kIsWeb) {
-    final bytes = base64Encode(icsContent.codeUnits);
-    final uri = Uri.parse("data:application/octet-stream;base64,$bytes");
-    final anchor = html.AnchorElement(href: uri.toString())
-      ..setAttribute("download", icsName)
-      ..click();
-    anchor.remove();
-    return true;
+    return downloadFileOnWeb(icsName, icsContent.codeUnits);
   } else if (Platform.isAndroid) {
     final tempDir = await getTemporaryDirectory();
 

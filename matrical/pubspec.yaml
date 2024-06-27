@@ -38,6 +38,7 @@ dependencies:
     git:
       url: https://gitlab.com/alejandrocruzadoruiz/icalendar-dart.git
       ref: main # branch name
+  universal_io: ^2.2.2
 
 dev_dependencies:
   flutter_test:
