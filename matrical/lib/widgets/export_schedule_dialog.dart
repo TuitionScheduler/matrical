@@ -268,7 +268,10 @@ Future<bool> saveScheduleToGallery(List<CourseSectionPair> notPresencial,
 }
 
 Future<bool> exportScheduleAsIcal(GeneratedSchedule currentSchedule) async {
-  String icsContent = parseScheduleAsIcal(currentSchedule);
+  String? icsContent = parseScheduleAsIcal(currentSchedule);
+  if (icsContent == null) {
+    return false;
+  }
   final tempDir = await getTemporaryDirectory();
   final term = Term.fromString(currentSchedule.term) ?? Term.getPredictedTerm();
   final year = currentSchedule.year;

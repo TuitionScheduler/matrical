@@ -152,13 +152,19 @@ class GeneratedSchedule {
           if (duration >= 90) {
             title += "\nRoom: ${meeting.room}";
           }
+          final descriptionMap = {
+            "courseCode": course.courseCode,
+            "sectionCode": section.sectionCode,
+            "room": meeting.room
+          };
           eventController.add(CalendarEventData(
               title: title,
+              description: jsonEncode(descriptionMap),
               date: DateTime(2024, 1, dayMap[day]!),
-              titleStyle: const TextStyle(
-                  fontSize: 9,
-                  color: Colors
-                      .white), // TODO: Make this depend on screen resolution
+              // titleStyle: const TextStyle(
+              //     fontSize: 9,
+              //     color: Colors
+              //         .white), // TODO: Make this depend on screen resolution
               startTime:
                   DateTime(2024, 1, dayMap[day]!, startHour, startMinutes),
               endTime: DateTime(2024, 1, dayMap[day]!, endHour, endMinutes),

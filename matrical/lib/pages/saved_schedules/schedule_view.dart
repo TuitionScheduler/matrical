@@ -100,10 +100,11 @@ class ScheduleView extends StatelessWidget {
                           scrollOffset: scrollOffset,
                           timeLineWidth: 56,
                           onEventTap: (events, date) {
-                            final sectionData = splitEvent(events.first.title);
+                            final sectionData =
+                                getEventDetails(events.first.description!);
                             final pair = schedule.schedule.getCourseSectionPair(
-                                sectionData["courseCode"]!,
-                                sectionData["sectionCode"]!)!;
+                                sectionData["courseCode"]! as String,
+                                sectionData["sectionCode"]! as String)!;
                             showDialog(
                                 useRootNavigator: false,
                                 context: context,

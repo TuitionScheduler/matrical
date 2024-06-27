@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:calendar_view/calendar_view.dart';
@@ -708,12 +709,14 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                   showWeekends: false,
                                   heightPerMinute: 1.1,
                                   onEventTap: (events, date) {
-                                    final sectionData =
-                                        splitEvent(events.first.title);
+                                    final sectionData = getEventDetails(
+                                        events.first.description!);
                                     final pair = snapshot.data![currentSchedule]
                                         .getCourseSectionPair(
-                                            sectionData["courseCode"]!,
-                                            sectionData["sectionCode"]!)!;
+                                            sectionData["courseCode"]!
+                                                as String,
+                                            sectionData["sectionCode"]!
+                                                as String)!;
                                     showDialog(
                                         useRootNavigator: false,
                                         context: context,
@@ -728,7 +731,7 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                   },
                                   minuteSlotSize: MinuteSlotSize.minutes30,
                                   scrollOffset: scrollOffset,
-                                  timeLineWidth: 55,
+                                  timeLineWidth: 56,
                                 ),
                               ),
                             ),
@@ -774,25 +777,12 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
   }
 }
 
-Map<String, String> splitEvent(event) {
-  RegExpMatch? match =
-      RegExp(r"(\w+)-(\w+)\nRoom:((\s*\w+)*)").firstMatch(event);
-  String courseCode = "";
-  String sectionCode = "";
-  String room = "";
-
-  if (match != null) {
-    // Extract the parts of the course information
-    courseCode = match.group(1)!;
-    sectionCode = match.group(2)!;
-    room = match.group(3) ?? ""; // Use "" if roomCode is not matched
-  }
-
-  return {
-    "courseCode": courseCode,
-    "sectionCode": sectionCode,
-    "room": room,
-  };
+Map<String, dynamic> getEventDetails(String event) {
+  final decodedEvent = jsonDecode(event) as Map<String, dynamic>;
+  assert(decodedEvent.containsKey("courseCode"));
+  assert(decodedEvent.containsKey("sectionCode"));
+  assert(decodedEvent.containsKey("room"));
+  return decodedEvent;
 }
 
 class SchedulePreferencesDialogStateModel {
