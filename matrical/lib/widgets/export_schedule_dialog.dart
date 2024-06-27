@@ -1,4 +1,8 @@
-import 'dart:io';
+import 'dart:convert';
+import 'dart:io' show Platform, File;
+import 'package:flutter/foundation.dart' show kIsWeb;
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 import 'dart:typed_data';
 
 import 'package:calendar_view/calendar_view.dart';
@@ -272,15 +276,29 @@ Future<bool> exportScheduleAsIcal(GeneratedSchedule currentSchedule) async {
   if (icsContent == null) {
     return false;
   }
-  final tempDir = await getTemporaryDirectory();
+
   final term = Term.fromString(currentSchedule.term) ?? Term.getPredictedTerm();
   final year = currentSchedule.year;
-  final icsPath = "${tempDir.path}/horario-${term.displayName}-$year.ics";
-  File icsFile = File(icsPath);
-  await icsFile.create();
-  await icsFile.writeAsString(icsContent);
-  final result = await OpenFile.open(icsPath, type: "text/calendar");
-  return result.type == ResultType.done;
+  final icsName = "horario-${term.displayName}-$year.ics";
+  if (kIsWeb) {
+    final bytes = base64Encode(icsContent.codeUnits);
+    final uri = Uri.parse("data:application/octet-stream;base64,$bytes");
+    final anchor = html.AnchorElement(href: uri.toString())
+      ..setAttribute("download", icsName)
+      ..click();
+    anchor.remove();
+    return true;
+  } else if (Platform.isAndroid) {
+    final tempDir = await getTemporaryDirectory();
+
+    final icsPath = "${tempDir.path}/$icsName";
+    File icsFile = File(icsPath);
+    await icsFile.create();
+    await icsFile.writeAsString(icsContent);
+    final result = await OpenFile.open(icsPath, type: "text/calendar");
+    return result.type == ResultType.done;
+  }
+  return false;
 }
 
 Widget _exportHelp() {
