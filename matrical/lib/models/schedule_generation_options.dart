@@ -15,19 +15,19 @@ enum Term {
       startWeek: 2),
   firstSummer(
       displayName: "Primer Verano",
-      databaseKey: "First_Summer",
+      databaseKey: "FirstSummer",
       startMonth: 6,
       durationInWeeks: 4,
       startWeek: 1),
   secondSummer(
       displayName: "Segundo Verano",
-      databaseKey: "Second_Summer",
+      databaseKey: "SecondSummer",
       startMonth: 7,
       durationInWeeks: 4,
       startWeek: 1),
   extendedSummer(
       displayName: "Verano Extendido",
-      databaseKey: "Extended_Summer",
+      databaseKey: "ExtendedSummer",
       startMonth: 6,
       durationInWeeks: 6,
       startWeek: 1);
