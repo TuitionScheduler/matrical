@@ -1,9 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-import sys
 import re
-import json
 from scraper_utils import apply_regex
+from constants import season_map
 
 
 def get_modality(section_code):
@@ -52,8 +51,6 @@ def get_professor_review(professor_ids: list[str], professors_ids_map: dict[str]
 def scrape_department(
     department: str, term: str, year: int, professor_ids_map: dict[str]
 ):
-    season_map = {"1": "First Summer", "2": "Fall", "3": "Spring", "4": "Second Summer", "5": "Extended Summer"}
-
     url = f"https://www.uprm.edu/registrar/sections/index.php?v1={department.lower()}&v2=&term={term}-{str(year)}&a=s&cmd1=Search"
     response = requests.get(url)
 

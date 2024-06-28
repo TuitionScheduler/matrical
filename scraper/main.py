@@ -1,4 +1,5 @@
 from scraper import scrape_department
+from constants import season_map, spanish_season_map
 import concurrent.futures
 import sys
 import time
@@ -59,7 +60,7 @@ def runner(department, term, year, professor_ids):
         else:
             if data is not None:
                 doc_ref.document(
-                    f"{data['department']}:{data['term'].replace(' ', '_')}:{data['year']}"
+                    f"{data['department']}:{data['term'].replace(' ','')}:{data['year']}"
                 ).set(data)
                 scraped_depts.append(department)
                 # print(data)
@@ -94,20 +95,6 @@ if __name__ == "__main__":
         for department in departments:
             executor.submit(runner, department, term, year, professor_ids)
 
-    season_map = {
-        "1": "FirstSummer",
-        "2": "Fall",
-        "3": "Spring",
-        "4": "SecondSummer",
-        "5": "ExtendedSummer",
-    }
-    spanish_season_map = {
-        "1": "primer verano",
-        "2": "primer semestre",
-        "3": "segundo semestre",
-        "4": "segundo verano",
-        "5": "verano extendido",
-    }
     departmentCoursesEntryInfo: dict = (
         db.collection("DataEntryInformation")
         .document("DepartmentCourses")
