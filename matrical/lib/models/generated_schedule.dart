@@ -1,5 +1,5 @@
 import 'dart:convert';
-import "package:universal_io/io.dart";
+import 'package:archive/archive.dart';
 import 'dart:math';
 
 import 'package:calendar_view/calendar_view.dart';
@@ -146,7 +146,7 @@ class GeneratedSchedule {
           int endHour = int.parse(endTime[0]);
           int endMinutes = int.parse(endTime[1]);
           String title =
-              "${isLocked(course.courseCode, section.sectionCode) ? "🔒" : ""}${course.courseCode}\nsec. ${section.sectionCode}";
+              "${isLocked(course.courseCode, section.sectionCode) ? "🔒" : ""}${course.courseCode}-${section.sectionCode}";
           int duration =
               endHour * 60 + endMinutes - (startHour * 60 + startMinutes);
           if (duration >= 90) {
@@ -231,15 +231,15 @@ class GeneratedSchedule {
 
   String toImportCode() {
     final bytes = utf8.encode(toString());
-    final compressedBytes = gzip.encode(bytes);
-    final base64String = base64.encode(compressedBytes);
+    final compressedBytes = GZipEncoder().encode(bytes) as List<int>;
+    final base64String = base64Encode(compressedBytes);
     return base64String;
   }
 
   static GeneratedSchedule? fromImportCode(String code) {
     try {
-      final decodedBytes = base64.decode(code);
-      final decompressedBytes = gzip.decode(decodedBytes);
+      final decodedBytes = base64Decode(code);
+      final decompressedBytes = GZipDecoder().decodeBytes(decodedBytes);
       final json = utf8.decode(decompressedBytes);
       return fromString(json);
     } catch (e) {

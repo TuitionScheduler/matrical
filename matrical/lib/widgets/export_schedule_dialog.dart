@@ -1,4 +1,5 @@
-import 'package:matrical/services/web_service.dart';
+import 'package:matrical/services/platform_service.dart'
+    if (dart.library.html) 'package:matrical/services/web_service.dart';
 import "package:universal_io/io.dart";
 import 'package:flutter/foundation.dart' show kIsWeb;
 
