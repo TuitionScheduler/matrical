@@ -707,7 +707,7 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                     headerTextStyle: TextStyle(fontSize: 0),
                                   ),
                                   showWeekends: false,
-                                  heightPerMinute: 1.1,
+                                  heightPerMinute: 1.0,
                                   onEventTap: (events, date) {
                                     final sectionData = getEventDetails(
                                         events.first.description!);

@@ -146,12 +146,7 @@ class GeneratedSchedule {
           int endHour = int.parse(endTime[0]);
           int endMinutes = int.parse(endTime[1]);
           String title =
-              "${isLocked(course.courseCode, section.sectionCode) ? "🔒" : ""}${course.courseCode}-${section.sectionCode}";
-          int duration =
-              endHour * 60 + endMinutes - (startHour * 60 + startMinutes);
-          if (duration >= 90) {
-            title += "\nRoom: ${meeting.room}";
-          }
+              "${isLocked(course.courseCode, section.sectionCode) ? "🔒" : ""}${course.courseCode}-${section.sectionCode}\nRoom: ${meeting.room}";
           final descriptionMap = {
             "courseCode": course.courseCode,
             "sectionCode": section.sectionCode,

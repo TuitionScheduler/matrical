@@ -165,7 +165,7 @@ Future<bool> exportScheduleAsImage(List<CourseSectionPair> notPresencial,
   const calendarWidth = 600.0;
   final copiedController = EventController();
   const scheduleHeaderHeight = 60.0;
-  const minuteHeight = 1.1;
+  const minuteHeight = 1.0;
   final scrollOffset = schedule.getEarliestHour().floor() * minuteHeight * 60;
   final hoursBetweenFirstAndLastCourse =
       schedule.getLatestHour().ceil() - schedule.getEarliestHour().floor();

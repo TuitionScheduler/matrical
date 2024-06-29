@@ -95,7 +95,7 @@ class ScheduleView extends StatelessWidget {
                           minDay: DateTime(2024, 1, 1),
                           maxDay: DateTime(2024, 1, 5),
                           showWeekends: false,
-                          heightPerMinute: 1.1,
+                          heightPerMinute: 1.0,
                           minuteSlotSize: MinuteSlotSize.minutes30,
                           scrollOffset: scrollOffset,
                           timeLineWidth: 56,
