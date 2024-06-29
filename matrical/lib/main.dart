@@ -2,7 +2,6 @@ import 'package:feedback/feedback.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:matrical/firebase_options.dart';
 import 'package:matrical/globals/cubits.dart';
 import 'package:matrical/models/internet_cubit.dart';
@@ -22,22 +21,6 @@ Future<void> setUp() async {
   );
 }
 
-final GoRouter router = GoRouter(
-  initialLocation: "/",
-  routes: <RouteBase>[
-    GoRoute(
-      name: 'Matrical',
-      path: '/',
-      builder: (BuildContext context, GoRouterState state) {
-        return MultiBlocProvider(providers: [
-          BlocProvider.value(value: matricalCubitSingleton),
-          BlocProvider.value(value: InternetCubit())
-        ], child: const Matrical());
-      },
-    ),
-  ],
-);
-
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -46,13 +29,12 @@ class MainApp extends StatelessWidget {
     return Sizer(
       builder: (context, orientation, deviceType) {
         return MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.noScaling, boldText: false),
-          child: MaterialApp.router(
-            debugShowCheckedModeBanner: false,
-            routerConfig: router,
-          ),
-        );
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.noScaling, boldText: false),
+            child: MultiBlocProvider(providers: [
+              BlocProvider.value(value: matricalCubitSingleton),
+              BlocProvider.value(value: InternetCubit())
+            ], child: const Matrical()));
       },
     );
   }
