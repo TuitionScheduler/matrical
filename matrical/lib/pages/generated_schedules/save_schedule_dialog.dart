@@ -34,14 +34,15 @@ class SaveScheduleDialog extends StatelessWidget {
         ),
         TextButton(
           child: const Text('Guardar'),
-          onPressed: () => _attemptSave(context, _scheduleNameController.text),
+          onPressed: () => _attemptSave(context, _scheduleNameController),
         ),
       ],
     );
   }
 
-  void _attemptSave(BuildContext context, String name) {
-    saveSchedule(currentSchedule, name).then((result) {
+  void _attemptSave(
+      BuildContext context, TextEditingController nameController) {
+    saveSchedule(currentSchedule, nameController.text).then((result) {
       Navigator.of(context).pop(result);
     });
   }
