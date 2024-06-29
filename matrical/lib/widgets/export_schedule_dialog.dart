@@ -50,7 +50,7 @@ class ExportScheduleDialog extends StatelessWidget {
               showDialog(
                       context: context,
                       builder: (innerContext) => SaveAsImageProgressDialog(
-                              saveFuture: exportImageAsSchedule(
+                              saveFuture: exportScheduleAsImage(
                             notPresencialCourses,
                             schedule,
                             innerContext,
@@ -160,7 +160,7 @@ class _SaveAsImageProgressDialogState extends State<SaveAsImageProgressDialog> {
   }
 }
 
-Future<bool> exportImageAsSchedule(List<CourseSectionPair> notPresencial,
+Future<bool> exportScheduleAsImage(List<CourseSectionPair> notPresencial,
     GeneratedSchedule schedule, BuildContext context) async {
   const calendarWidth = 600.0;
   final copiedController = EventController();
@@ -243,11 +243,11 @@ Future<bool> exportImageAsSchedule(List<CourseSectionPair> notPresencial,
       ),
       pixelRatio: 3.0,
       delay: const Duration(seconds: 1));
-  if (Platform.isAndroid) {
-    return await saveScheduleToGallery(imageName, pngBytes, context);
-  }
   if (kIsWeb) {
     return downloadFileOnWeb(imageName, pngBytes);
+  }
+  if (Platform.isAndroid) {
+    return await saveScheduleToGallery(imageName, pngBytes, context);
   }
   return false;
 }
