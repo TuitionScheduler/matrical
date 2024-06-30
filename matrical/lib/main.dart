@@ -28,13 +28,12 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Sizer(
       builder: (context, orientation, deviceType) {
-        return MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(textScaler: TextScaler.noScaling, boldText: false),
-            child: MultiBlocProvider(providers: [
-              BlocProvider.value(value: matricalCubitSingleton),
-              BlocProvider.value(value: InternetCubit())
-            ], child: const Matrical()));
+        return MaterialApp(
+          home: MultiBlocProvider(providers: [
+            BlocProvider.value(value: matricalCubitSingleton),
+            BlocProvider.value(value: InternetCubit())
+          ], child: const Matrical()),
+        );
       },
     );
   }
