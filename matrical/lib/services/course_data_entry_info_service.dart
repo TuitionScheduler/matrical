@@ -4,23 +4,36 @@ import 'package:pair/pair.dart';
 
 class CourseDataEntryInfoService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  bool _initialized = false; // Now private to prevent external modifications
+  bool _initialized = false;
 
-  // Private fields
+  // ignore: prefer_final_fields
   Map<String, Pair<DateTime, Set<String>>> _termYearScrapeInfo = {};
 
-  // Constructor
-  CourseDataEntryInfoService() {
-    _initializeData();
-  }
+  CourseDataEntryInfoService();
 
   // Method to initialize data from Firestore
   Future<void> _initializeData() async {
     try {
+      DocumentSnapshot snapshot = await _firestore
+          .collection('DataEntryInformation')
+          .doc('DepartmentCourses')
+          .get();
+
+      if (snapshot.exists) {
+        _termYearScrapeInfo = Map<String, Pair<DateTime, Set<String>>>.from(
+            ((snapshot.data() as Map<String, dynamic>)['termYearScrapeInfo'] ??
+                    {})
+                .map((key, value) => MapEntry(
+                    key as String,
+                    Pair<DateTime, Set<String>>(value['lastUpdated'].toDate(),
+                        Set.from(value['departments'])))));
+      }
+      _initialized = true;
       _firestore
           .collection('DataEntryInformation')
           .doc('DepartmentCourses')
           .snapshots()
+          .skip(1)
           .listen((snapshot) {
         if (snapshot.exists) {
           _termYearScrapeInfo = Map<String, Pair<DateTime, Set<String>>>.from(
@@ -29,7 +42,6 @@ class CourseDataEntryInfoService {
                       key as String,
                       Pair<DateTime, Set<String>>(value['lastUpdated'].toDate(),
                           Set.from(value['departments'])))));
-          _initialized = true;
         }
       });
     } catch (e) {
@@ -46,7 +58,6 @@ class CourseDataEntryInfoService {
     await _initializeData();
   }
 
-  // Public getters with reinitialization attempt
   Future<Set<String>> getDepartments(String term, int year) async {
     await _attemptReInitialization();
     return _termYearScrapeInfo["$term:$year"]?.value ?? {};
