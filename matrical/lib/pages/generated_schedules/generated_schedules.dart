@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:info_widget/info_widget.dart';
 import 'package:matrical/globals/cubits.dart';
+import 'package:matrical/globals/scaffold.dart';
 import 'package:matrical/models/blacklist.dart';
 import 'package:matrical/models/course_filters.dart';
 import 'package:matrical/models/department_course.dart';
@@ -447,7 +448,8 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                         const Duration(
                                                             seconds: 3),
                                                         () async {
-                                                  ScaffoldMessenger.of(context)
+                                                  ScaffoldMessenger.of(globalKey
+                                                          .currentContext!)
                                                       .hideCurrentMaterialBanner();
                                                 });
                                               });

@@ -1,6 +1,7 @@
 // nav_bar.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:matrical/globals/scaffold.dart';
 import 'package:matrical/models/matrical_cubit.dart';
 import 'package:matrical/models/matrical_page.dart';
 import 'package:matrical/pages/course_search/course_search.dart';
@@ -22,6 +23,7 @@ class Matrical extends StatelessWidget {
         return Theme(
           data: ThemeData(colorSchemeSeed: officialColor),
           child: Scaffold(
+            key: globalKey,
             appBar: AppBar(
               title: Text(
                 state.pageTitle,
