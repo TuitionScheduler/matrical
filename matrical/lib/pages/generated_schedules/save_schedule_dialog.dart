@@ -23,6 +23,14 @@ class _SaveScheduleDialogState extends State<SaveScheduleDialog> {
   String scheduleName = "";
 
   @override
+  void initState() {
+    super.initState();
+  _scheduleNameController.addListener((){
+    scheduleName = _scheduleNameController.text;
+  });
+
+  }
+  @override
   void dispose() {
     _scheduleNameController.dispose();
     super.dispose();
@@ -37,11 +45,6 @@ class _SaveScheduleDialogState extends State<SaveScheduleDialog> {
       content: TextField(
         controller: _scheduleNameController,
         decoration: const InputDecoration(hintText: "Nombre del horario"),
-        onChanged: (value) {
-          setState(() {
-            scheduleName = value;
-          });
-        },
         onSubmitted: (value) {
           FocusManager.instance.primaryFocus?.unfocus(); // close keyboard
         },
