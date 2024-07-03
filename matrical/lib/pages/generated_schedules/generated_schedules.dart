@@ -420,7 +420,7 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                           _savedScheduleBannerTimer
                                                               ?.cancel();
                                                           ScaffoldMessenger.of(
-                                                                  context)
+                                                                  globalKey.currentContext)
                                                               .hideCurrentMaterialBanner();
                                                           matricalCubit.setPage(
                                                               MatricalPage
@@ -432,7 +432,7 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                     TextButton(
                                                       onPressed: () {
                                                         ScaffoldMessenger.of(
-                                                                context)
+                                                                globalKey.currentContexts)
                                                             .hideCurrentMaterialBanner();
                                                       },
                                                       child: const Text(
