@@ -2,7 +2,7 @@
 name = "matrical"
 version = "0.1.0"
 description = ""
-authors = ["Kelvin Gonzalez <kelvin.gonzalez11@upr.edu>"]
+authors = ["Kelvin Gonzalez <kelvin.gonzalez11@upr.edu>", "Alejandro Cruzado <alejandro.cruzado@upr.edu>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -15,6 +15,8 @@ pdfminer = "^20191125"
 pdfminer-six = "^20231228"
 sqlalchemy = "^2.0.31"
 ply = "^3.11"
+aiohttp = "^3.9.5"
+aiosqlite = "^0.20.0"
 
 
 [build-system]

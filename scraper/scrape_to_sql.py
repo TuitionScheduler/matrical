@@ -34,7 +34,6 @@ def runner(department, term, year, professor_ids, session):
 
 
 def write_to_database(data, session):
-    print(list(data["courses"].keys()))
     for course_code, course_data in data["courses"].items():
         try:
             course = session.query(Course).filter_by(course_code=course_code).first()
@@ -90,13 +89,10 @@ def write_to_database(data, session):
                         section.schedules.append(schedule)
 
             session.merge(course)
-            session.commit()
         except IntegrityError as e:
             print(f"IntegrityError for course {course_code}: {str(e)}")
-            session.rollback()
         except Exception as e:
             print(f"Error processing course {course_code}: {str(e)}")
-            session.rollback()
 
 
 if __name__ == "__main__":
@@ -110,7 +106,7 @@ if __name__ == "__main__":
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
-
+    session.begin()
     start_time = time.time()
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         futures = [
@@ -118,7 +114,7 @@ if __name__ == "__main__":
             for department in departments
         ]
         concurrent.futures.wait(futures)
-
+    session.commit()
     session.close()
     print(
         f"Finished scraping and writing to database in {str(time.time() - start_time)} seconds"
