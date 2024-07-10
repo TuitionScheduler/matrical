@@ -50,7 +50,7 @@ def get_professor_review(professor_ids: list[str], professors_ids_map: dict[str]
 
 def scrape_department(
     department: str, term: str, year: int, professor_ids_map: dict[str]
-):
+) -> dict:
     url = f"https://www.uprm.edu/registrar/sections/index.php?v1={department.lower()}&v2=&term={term}-{str(year)}&a=s&cmd1=Search"
     response = requests.get(url)
 
@@ -149,11 +149,3 @@ def scrape_department(
         return department_obj
     else:
         raise Exception(f"Failed to retrieve data. Status Code: {response.status_code}")
-
-
-# if __name__ == "__main__":
-#     print(get_professor_ids(*split_professor("Gustavo G. Cortina Rodriguez")))
-#     print(get_professor_ids(*split_professor("William Navas Auger")))
-#     print(get_professor_ids(*split_professor("Jann Garcia")))
-#     print(get_professor_ids(*split_professor("Jesus L Cordero")))
-#     print(get_professor_ids(*split_professor("Adriana M. De Jesus Santori")))
