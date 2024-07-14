@@ -1,4 +1,4 @@
-from scraper import scrape_department
+from data_entry import scrape_department
 from constants import number_to_term, spanish_term_to_map
 import concurrent.futures
 import sys
@@ -7,7 +7,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 import datetime
-from stats import DeptStats
+from data_entry.stats import DeptStats
 import json
 from notification import send_notification
 import os
@@ -86,9 +86,9 @@ def runner(department, term, year, professor_ids):
 
 if __name__ == "__main__":
     term, year = sys.argv[1], sys.argv[2]
-    with open("professor_ids.txt") as file:
+    with open("../input_files/professor_ids.txt") as file:
         professor_ids = json.load(file)
-    with open("departments.txt") as file:
+    with open("../input_files/departments.txt") as file:
         departments = sorted(department.strip() for department in file)
     start_time = time.time()
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
     print(f"Finished scraping in {str(time.time() - start_time)} seconds")
 
-    with open("dept_stats.csv", "w") as file:
+    with open("../output_files/dept_stats.csv", "w") as file:
         file.write("Department,Bytes,CourseCount,SectionCount\n")
         for dept in dept_stats:
             file.write(

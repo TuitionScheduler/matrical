@@ -22,17 +22,19 @@ tokens = (
 )
 
 
-#
-def t_CREDIT_REQUIREMENT(t):
+# TODO: Parse this better
+def t_DEPARTMENT_CREDITS_REQUIREMENT(t):
     r"(\{[0-9]+\}\s*([\*A-Z]{4}([\*0-9]{4})?|\[([\*A-Z]{4}([\*0-9]{4})?,\s*)+[\*A-Z]{4}([\*0-9]{4})?\]))\
     |(([\*A-Z]{4}([\*0-9]{4})?|\[([\*A-Z]{4}([\*0-9]{4})?,\s*)+[\*A-Z]{4}([\*0-9]{4})?\])\s*\{[0-9]+\})"
-    t.value = {"type": "CREDIT_REQUIREMENT", "value": t.value}
+    t.value = {"type": "DEPARTMENT_CREDITS_REQUIREMENT", "value": t.value}
     return t
 
 
 def t_YEAR_REQUIREMENT(t):
     r"1ER|2DO|3RO|4TO|5TO|6TO|7MO|8VO|9NO"
-    t.value = {"type": "YEAR_REQUIREMENT", "value": t.value}
+    match = re.match(r"(\d+)", t.value)
+    if match:
+        t.value = {"type": "YEAR_REQUIREMENT", "value": int(match.group(1))}
     return t
 
 
@@ -62,11 +64,11 @@ def t_GRADUATION_STATUS_REQUIREMENT(t):
 
 def t_CREDITS_TO_GRADUATION_REQUIREMENT(t):
     r"MENOS\sDE\s\d+\sCRS?\sPARA\sGRADUACION"
-    credits = re.findall(r"\d+", t.value)[0]
+    credits = re.match(r"\d+", t.value)
     t.value = {
         "type": "CREDITS_TO_GRADUATION_REQUIREMENT",
         "value": int(
-            credits
+            credits.group()
         ),  # Read as: "You can graduate if you have fewer than these creds left"
     }
     return t
@@ -162,7 +164,7 @@ def p_grouped_term(p):
 def p_term(p):
     """prerequisite : CREDITS_TO_GRADUATION_REQUIREMENT
     | YEAR_REQUIREMENT
-    | CREDIT_REQUIREMENT
+    | DEPARTMENT_CREDITS_REQUIREMENT
     | COURSE
     | DIRECTOR_APPROVAL
     | DEPARTMENT_REQUIREMENT

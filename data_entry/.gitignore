@@ -2,4 +2,4 @@ credentials.json
 *.pyc
 curriculum_output.txt
 courses.db
-dept_stats.csv
+output_files/

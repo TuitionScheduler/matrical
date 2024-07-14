@@ -13,7 +13,9 @@ def parse_slug(slug):
     match = re.match(r"^([a-z]+(?:-[a-z]+)*)(?:-(\d+))?$", slug)
     if match:
         groups = match.groups()
-        main_part = apply_regex(groups[0].replace("-del-", "-"), r"\-[a-z]\-", lambda _: "-")
+        main_part = apply_regex(
+            groups[0].replace("-del-", "-"), r"\-[a-z]\-", lambda _: "-"
+        )
         additional_part = int(groups[1]) if groups[1] else None
         return main_part, additional_part
     return None, None
@@ -66,7 +68,7 @@ with concurrent.futures.ThreadPoolExecutor(
 
 # professors.update(a["href"][len("/professors/"):-1] for a in soup.find_all("a", href=re.compile("/professors/")))
 
-with open("professor_ids.txt", "w") as file:
+with open("../input_files/professor_ids.txt", "w") as file:
     json.dump(professors, file, indent=2)
 
 print(f"Scraped in {str(time.time() - start_time)} seconds")

@@ -1,7 +1,7 @@
 import json
 import sys
 import time
-from scraper import scrape_department
+from data_entry import scrape_department
 import concurrent.futures
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
@@ -104,9 +104,9 @@ def write_to_database(data, session):
 
 if __name__ == "__main__":
     term, year = sys.argv[1], sys.argv[2]
-    with open("professor_ids.txt") as file:
+    with open("../input_files/professor_ids.txt") as file:
         professor_ids = json.load(file)
-    with open("departments.txt") as file:
+    with open("../input_files/departments.txt") as file:
         departments = sorted(department.strip() for department in file)
 
     engine = create_engine("sqlite:///courses.db", echo=True)
