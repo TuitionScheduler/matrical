@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from scraper_utils import apply_regex
-from constants import season_map
+from constants import number_to_term
 
 
 def get_modality(section_code):
@@ -68,7 +68,7 @@ def scrape_department(
         courses: dict[str, dict] = {}
         department_obj = {
             "department": department,
-            "term": season_map[term],
+            "term": number_to_term[term],
             "year": int(year),
             "courses": courses,
         }
@@ -118,7 +118,7 @@ def scrape_department(
             if not courses.get(course_code, False):
                 courses[course_code] = {
                     "courseCode": course_code,
-                    "term": season_map[term],
+                    "term": number_to_term[term],
                     "year": int(year),
                     "courseName": course_name,
                     "department": department,

@@ -1,5 +1,5 @@
 from scraper import scrape_department
-from constants import season_map, spanish_season_map
+from constants import number_to_term, spanish_term_to_map
 import concurrent.futures
 import sys
 import time
@@ -108,7 +108,7 @@ if __name__ == "__main__":
         else departmentCoursesEntryInfo.get("termYearScrapeInfo", {})
     )
 
-    oldDepts = termYearScrapeInfo.get(f"{season_map[term]}:{year}", {}).get(
+    oldDepts = termYearScrapeInfo.get(f"{number_to_term[term]}:{year}", {}).get(
         "departments", []
     )
     # print(oldDepts)
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     # print(newDepts)
     termYearScrapeInfo.update(
         {
-            f"{season_map[term]}:{year}": {
+            f"{number_to_term[term]}:{year}": {
                 "lastUpdated": datetime.datetime.now(),
                 "departments": scraped_depts,
             }
@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
     if len(newDepts) > 0 and registration_token is not None:
         send_notification(
-            f"Departamentos nuevos para el {spanish_season_map[term]} de {year}",
+            f"Departamentos nuevos para el {spanish_term_to_map[term]} de {year}",
             generate_body(newDepts),
             registration_token,
         )

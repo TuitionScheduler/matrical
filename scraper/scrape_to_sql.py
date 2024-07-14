@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 from database import Course, Section, Schedule, Base
 from parsers.schedule_parser import parse_schedule
+from constants import term_to_number
 
 
 def runner(department, term, year, professor_ids, session):
@@ -34,61 +35,67 @@ def runner(department, term, year, professor_ids, session):
 
 
 def write_to_database(data, session):
+
     for course_code, course_data in data["courses"].items():
+        term = term_to_number[course_data["term"]]
+        year = course_data["year"]
         try:
-            course = session.query(Course).filter_by(course_code=course_code).first()
-            if not course:
-                course = Course(
-                    course_code=course_code,
-                    course_name=course_data["courseName"],
-                    year=course_data["year"],
-                    term=course_data["term"],
-                    credits=course_data["credits"],
-                    department=course_data["department"],
-                    prerequisites=course_data["prerequisites"],
-                    corequisites=course_data["corequisites"],
+            with session.no_autoflush:
+                course = (
+                    session.query(Course)
+                    .filter_by(course_code=course_code, year=year, term=term)
+                    .first()
                 )
-            else:
-                # Update existing course data
-                course.course_name = course_data["courseName"]
-                course.year = course_data["year"]
-                course.term = course_data["term"]
-                course.credits = course_data["credits"]
-                course.department = course_data["department"]
-                course.prerequisites = course_data["prerequisites"]
-                course.corequisites = course_data["corequisites"]
+                if not course:
+                    course = Course(
+                        course_code=course_code,
+                        course_name=course_data["courseName"],
+                        year=year,
+                        term=term,
+                        credits=course_data["credits"],
+                        department=course_data["department"],
+                        prerequisites=course_data["prerequisites"],
+                        corequisites=course_data["corequisites"],
+                    )
+                else:
+                    # Update existing course data
+                    course.course_name = course_data["courseName"]
+                    course.year = year
+                    course.term = term
+                    course.credits = course_data["credits"]
+                    course.department = course_data["department"]
+                    course.prerequisites = course_data["prerequisites"]
+                    course.corequisites = course_data["corequisites"]
 
-            for section_data in course_data["sections"]:
-                section = Section(
-                    section_code=section_data["sectionCode"],
-                    meetings=",".join(section_data["meetings"]),
-                    modality=section_data["modality"],
-                    capacity=section_data["capacity"],
-                    taken=section_data["usage"],
-                    reserved=section_data["reserved"],
-                    professors=",".join(
-                        [prof["name"] for prof in section_data["professors"]]
-                    ),
-                    term=course_data["term"],
-                    year=course_data["year"],
-                    misc=section_data["misc"],
-                )
+                for section_data in course_data["sections"]:
+                    section = Section(
+                        section_code=section_data["sectionCode"],
+                        meetings=",".join(section_data["meetings"]),
+                        modality=section_data["modality"],
+                        capacity=section_data["capacity"],
+                        taken=section_data["usage"],
+                        reserved=section_data["reserved"],
+                        professors=",".join(
+                            [prof["name"] for prof in section_data["professors"]]
+                        ),
+                        misc=section_data["misc"],
+                    )
 
-                course.sections.append(section)
+                    course.sections.append(section)
 
-                for meeting in section_data["meetings"]:
-                    meetingDict = parse_schedule(meeting)
-                    if meetingDict is not None:
-                        schedule = Schedule(
-                            building=meetingDict["building"],
-                            room=meetingDict["room"],
-                            days=meetingDict["days"],
-                            start_time=meetingDict["start_time"],
-                            end_time=meetingDict["end_time"],
-                        )
-                        section.schedules.append(schedule)
+                    for meeting in section_data["meetings"]:
+                        meetingDict = parse_schedule(meeting)
+                        if meetingDict is not None:
+                            schedule = Schedule(
+                                building=meetingDict["building"],
+                                room=meetingDict["room"],
+                                days=meetingDict["days"],
+                                start_time=meetingDict["start_time"],
+                                end_time=meetingDict["end_time"],
+                            )
+                            section.schedules.append(schedule)
 
-            session.merge(course)
+                session.merge(course)
         except IntegrityError as e:
             print(f"IntegrityError for course {course_code}: {str(e)}")
         except Exception as e:
