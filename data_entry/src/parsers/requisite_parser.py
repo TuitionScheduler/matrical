@@ -68,7 +68,7 @@ def t_CREDITS_TO_GRADUATION_REQUIREMENT(t):
     t.value = {
         "type": "CREDITS_TO_GRADUATION_REQUIREMENT",
         "value": int(
-            credits.group()
+            credits.group()  # type: ignore
         ),  # Read as: "You can graduate if you have fewer than these creds left"
     }
     return t
@@ -103,7 +103,7 @@ def t_error(t):
     t.lexer.skip(1)
 
 
-t_OR = r"O|o|U|u"
+t_OR = r"O|o|U|u"  # Maybe ass Y/O for that one weird course
 t_AND = r"Y|y|E|e"
 t_LPAREN = r"\("
 t_RPAREN = r"\)"

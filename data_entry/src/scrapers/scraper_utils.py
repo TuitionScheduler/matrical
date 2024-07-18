@@ -1,7 +1,5 @@
 import re
 
-import re
-
 
 def apply_regex(text, pattern, transform_function):
     """

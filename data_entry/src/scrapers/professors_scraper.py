@@ -4,7 +4,7 @@ import re
 import concurrent.futures
 import time
 import json
-from scraper_utils import apply_regex
+from src.scrapers.scraper_utils import apply_regex
 
 professors = {}
 
@@ -68,7 +68,7 @@ with concurrent.futures.ThreadPoolExecutor(
 
 # professors.update(a["href"][len("/professors/"):-1] for a in soup.find_all("a", href=re.compile("/professors/")))
 
-with open("../input_files/professor_ids.txt", "w") as file:
+with open("input_files/professor_ids.txt", "w") as file:
     json.dump(professors, file, indent=2)
 
 print(f"Scraped in {str(time.time() - start_time)} seconds")

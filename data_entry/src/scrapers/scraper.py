@@ -1,8 +1,8 @@
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 import re
-from scraper_utils import apply_regex
-from constants import number_to_term
+from src.scrapers.scraper_utils import apply_regex
+from src.constants import number_to_term
 
 
 def get_modality(section_code):
@@ -41,7 +41,7 @@ def get_professor_ids(name: str, lastname: str, second_lastname: str) -> list[st
     return result
 
 
-def get_professor_review(professor_ids: list[str], professors_ids_map: dict[str]):
+def get_professor_review(professor_ids: list[str], professors_ids_map: dict[str, dict]):
     for professor_id in professor_ids:
         if professors_ids_map.get(professor_id, False):
             return professors_ids_map[professor_id]
@@ -49,8 +49,8 @@ def get_professor_review(professor_ids: list[str], professors_ids_map: dict[str]
 
 
 def scrape_department(
-    department: str, term: str, year: int, professor_ids_map: dict[str]
-) -> dict:
+    department: str, term: str, year: int, professor_ids_map: dict[str, dict]
+) -> dict | None:
     url = f"https://www.uprm.edu/registrar/sections/index.php?v1={department.lower()}&v2=&term={term}-{str(year)}&a=s&cmd1=Search"
     response = requests.get(url)
 
@@ -62,7 +62,7 @@ def scrape_department(
 
         table = soup.find("table", class_="section_results")
 
-        if table is None:
+        if table is None or not isinstance(table, Tag):
             return None
 
         courses: dict[str, dict] = {}
@@ -99,7 +99,7 @@ def scrape_department(
             professors = []
             for name in professor_names:
                 review = get_professor_review(
-                    get_professor_ids(*split_professor(name)),
+                    get_professor_ids(*split_professor(name)),  # type: ignore
                     professor_ids_map,
                 )
                 professors.append(

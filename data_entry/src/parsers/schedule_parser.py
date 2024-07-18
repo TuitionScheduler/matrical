@@ -1,6 +1,4 @@
 import re
-import ply.yacc as yacc
-import ply.lex as lex
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,7 +27,7 @@ def parse_schedule(input_string) -> dict | None:
     if match:
         times = match.group(1).split("-")
         days = match.group(2)
-        room_code = match.group(3) if match.lastindex > 2 else " "
+        room_code = match.group(3) if match.lastindex > 2 else " "  # type: ignore
         building, room = room_code.split(" ")
 
         return {

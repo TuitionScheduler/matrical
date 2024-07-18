@@ -1,5 +1,5 @@
-from data_entry import scrape_department
-from constants import number_to_term, spanish_term_to_map
+from src.scrapers.scraper import scrape_department
+from src.constants import number_to_term, spanish_term_to_map
 import concurrent.futures
 import sys
 import time
@@ -7,9 +7,9 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 import datetime
-from data_entry.stats import DeptStats
+from src.models.stats import DeptStats
 import json
-from notification import send_notification
+from src.scrapers.notification import send_notification
 import os
 
 cred = credentials.Certificate("credentials.json")
@@ -70,7 +70,7 @@ def runner(department, term, year, professor_ids):
                         calculate_doc_name_size(
                             f"DepartmentCourses/{department}:{data['term']}:{year}"
                         )
-                        + calculate_doc_size(data),
+                        + calculate_doc_size(data),  # type: ignore
                         len(data["courses"].keys()),
                         sum(
                             len(course["sections"])
@@ -86,16 +86,16 @@ def runner(department, term, year, professor_ids):
 
 if __name__ == "__main__":
     term, year = sys.argv[1], sys.argv[2]
-    with open("../input_files/professor_ids.txt") as file:
+    with open("input_files/professor_ids.txt") as file:
         professor_ids = json.load(file)
-    with open("../input_files/departments.txt") as file:
+    with open("input_files/departments.txt") as file:
         departments = sorted(department.strip() for department in file)
     start_time = time.time()
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         for department in departments:
             executor.submit(runner, department, term, year, professor_ids)
 
-    departmentCoursesEntryInfo: dict = (
+    departmentCoursesEntryInfo: dict | None = (
         db.collection("DataEntryInformation")
         .document("DepartmentCourses")
         .get()

@@ -1,9 +1,8 @@
-import sys
 import pandas as pd
 from sqlalchemy import create_engine, join
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import select
-from database import Course, Section, GradeDistribution, Base
+from src.database import Course, Section, GradeDistribution, Base
 import argparse
 
 

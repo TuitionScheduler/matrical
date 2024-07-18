@@ -20,7 +20,7 @@ class Course(Base):
     course_code = Column(String(10), nullable=False)
     course_name = Column(String)
     year = Column(Integer, nullable=False)
-    term = Column(Integer, nullable=False)  # First Semester is 2, Second Semester is 3
+    term = Column(String, nullable=False)
     credits = Column(Integer)
     department = Column(String)
     prerequisites = Column(String)

@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "A collection of utilities to obtain UPRM course data"
 license = "Proprietary"   
 authors = ["Kelvin Gonzalez <kelvin.gonzalez11@upr.edu>", "Alejandro Cruzado <alejandro.cruzado@upr.edu>"]
-readme = "README.md"
+packages = [
+    { include = "src" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"

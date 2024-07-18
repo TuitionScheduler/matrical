@@ -1,14 +1,13 @@
 import json
 import sys
 import time
-from data_entry import scrape_department
+from src.scrapers.scraper import scrape_department
 import concurrent.futures
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
-from database import Course, Section, Schedule, Base
-from parsers.schedule_parser import parse_schedule
-from constants import term_to_number
+from src.database import Course, Section, Schedule, Base
+from src.parsers.schedule_parser import parse_schedule
 
 
 def runner(department, term, year, professor_ids, session):
@@ -37,7 +36,7 @@ def runner(department, term, year, professor_ids, session):
 def write_to_database(data, session):
 
     for course_code, course_data in data["courses"].items():
-        term = term_to_number[course_data["term"]]
+        term = course_data["term"]
         year = course_data["year"]
         try:
             with session.no_autoflush:
@@ -104,9 +103,9 @@ def write_to_database(data, session):
 
 if __name__ == "__main__":
     term, year = sys.argv[1], sys.argv[2]
-    with open("../input_files/professor_ids.txt") as file:
+    with open("input_files/professor_ids.txt") as file:
         professor_ids = json.load(file)
-    with open("../input_files/departments.txt") as file:
+    with open("input_files/departments.txt") as file:
         departments = sorted(department.strip() for department in file)
 
     engine = create_engine("sqlite:///courses.db", echo=True)

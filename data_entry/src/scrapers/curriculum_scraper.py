@@ -2,7 +2,7 @@ import PyPDF2
 import re
 
 departments_map = {}
-with open("../input_files/departments_map.txt") as file:  # TODO: update path
+with open("input_files/departments_map.txt") as file:
     for line in file:
         match = re.match(r"([A-Z]{4})\s*(.+)", line.strip())
         if match:
@@ -11,7 +11,7 @@ print(departments_map)
 
 # Open the PDF file in binary read mode
 with open(
-    "../input_files/Catálogo-Subgraduado-2023-2024.pdf", "rb"
+    "input_files/Catálogo-Subgraduado-2023-2024.pdf", "rb"
 ) as pdf_file:  # TODO: update path
     pdf_reader = PyPDF2.PdfReader(pdf_file)
 
