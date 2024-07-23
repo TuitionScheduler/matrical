@@ -3,3 +3,5 @@ credentials.json
 curriculum_output.txt
 courses.db
 output_files/
+parser.out
+parsetab.py

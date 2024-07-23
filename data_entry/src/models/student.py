@@ -15,6 +15,7 @@ class CourseRecord:
 @dataclass(slots=True)
 class StudentRecord:
     name: str  # full name of student
+    enrolledCourses: List[str]
     enrolledDegrees: List[
         Tuple[str, int]
     ]  # 4 letter code and the year enrolled ie (INSO,2019)
@@ -29,7 +30,7 @@ class StudentRecord:
     def yearsEnrolled(self, currentYear: int) -> int:
         return (
             currentYear
-            - min(year for d, year in self.enrolledDegrees,key=currentYear) # type: ignore
+            - min((year for d, year in self.enrolledDegrees), key=currentYear)  # type: ignore
             + 1
         )
 

@@ -6,7 +6,7 @@ import logging
 tokens = (
     "CREDITS_TO_GRADUATION_REQUIREMENT",
     "ENGLISH_LEVEL_REQUIREMENT",
-    "CREDIT_REQUIREMENT",
+    "DEPARTMENT_CREDITS_REQUIREMENT",
     "YEAR_REQUIREMENT",
     "COURSE",
     "DIRECTOR_APPROVAL",
@@ -58,7 +58,14 @@ def t_DEPARTMENT_REQUIREMENT(t):
 
 def t_GRADUATION_STATUS_REQUIREMENT(t):
     r"SUBGRADUADO|GRADUADO"
-    t.value = {"type": "GRADUATION_STATUS_REQUIREMENT", "value": t.value}
+    translated_status = {
+        "SUBGRADUADO": "Undergraduate",
+        "GRADUADO": "Graduate",
+    }
+    t.value = {
+        "type": "GRADUATION_STATUS_REQUIREMENT",
+        "value": translated_status[t.value],
+    }
     return t
 
 
