@@ -1,6 +1,7 @@
 from src.models.course import DesiredCourse
 from src.models.student import StudentRecord, CourseRecord
 from src.models.course_service import CourseService
+from src.parsers.requisite_parser import parse_prerequisites
 from src.requisite_handler import RecommendationSystem
 
 
@@ -22,7 +23,7 @@ def main():
     )
 
     # Create the desired course
-    desired_course = DesiredCourse(courseCode="CIIC4020", term="Fall", year=2024)
+    desired_course = DesiredCourse(courseCode="CINE3005", term="Fall", year=2024)
 
     # Check if the student can take the course
     requisite_analysis_result = recommendation_system.checkCourseRequisites(
@@ -32,5 +33,31 @@ def main():
     print(requisite_analysis_result)
 
 
+def lemahn():
+    cs = CourseService()
+    interestedCourses = [
+        {"course_code": "ADMI6006"},
+        {"course_code": "AGRO4038"},
+        {"course_code": "CINE3005"},
+        {"course_code": "CINE3025"},
+        {"course_code": "CINE4001"},
+        {"course_code": "CINE4002"},
+        {"course_code": "CINE4005"},
+        {"course_code": "CINE4016"},
+        {"course_code": "CINE4017"},
+        {"course_code": "INGL4095"},
+        {"course_code": "ININ4995"},
+        {"course_code": "QUIM8008"},
+    ]
+    interestedCourseObjects = map(
+        lambda c: cs.getCourse(c["course_code"], None, None), interestedCourses
+    )
+    parsedPrereqs = map(
+        lambda c: parse_prerequisites(c.prerequisites) if c else {},
+        interestedCourseObjects,
+    )
+    print(*list(parsedPrereqs), sep="\n")
+
+
 if __name__ == "__main__":
-    main()
+    lemahn()

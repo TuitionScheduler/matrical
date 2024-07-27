@@ -29,7 +29,7 @@ class RecommendationSystem:
         tookCorequisites, missingCorequisites = self.requisiteChecker(
             student=student,
             course=course,
-            requisites=parsedPrerequisites,
+            requisites=parsedCorequisites,
             hasDirectorApproval=hasDirectorApproval,
             checkingCorequisites=True,
         )
@@ -108,7 +108,7 @@ class RecommendationSystem:
             case "YEAR_REQUIREMENT":
                 return (
                     student.yearsEnrolled(course.year) >= requisites["value"],
-                    f"Student must have enrolled at least {requisites['value']} years",
+                    f"Must have been enrolled at least {requisites['value']} years",
                 )
             case "COURSE":
                 requiredCourse = requisites["value"]
@@ -136,11 +136,59 @@ class RecommendationSystem:
                 return (isInDept, "" if isInDept else f"Not in {requiredDept}")
             case "GRADUATION_STATUS_REQUIREMENT":
                 correctStatus = requisites["value"] == student.graduation_status
-                return correctStatus, "" if correctStatus else f"Student must be "
-            case "DEPARTMENT_CREDITS_REQUIREMENT":
-                # TODO implement
-                return True, ""
+                return correctStatus, (
+                    "" if correctStatus else f"Must be {requisites['value']}"
+                )
+            case "CREDITS_WITH_PATTERN_REQUIREMENT":
+                patterns = requisites["patterns"]
+                requiredCredits = requisites["credits"]
+                takenCredits = 0
+                for takenCourse in student.completed_courses:
+                    foundMatch = False
+                    for pattern in patterns:
+                        matches = True
+                        for cChar, pChar in zip(takenCourse.courseCode, pattern):
+                            if pChar != "*" and pChar != cChar:
+                                matches = False
+                                break
+                        if matches:
+                            foundMatch = True
+                            break
+                    if foundMatch:
+                        takenCredits += takenCourse.credits
+                if takenCredits >= requiredCredits:
+                    return True, ""
+                else:
+                    return (
+                        False,
+                        f"Needs {requiredCredits} credits matching {patterns}, but only has {takenCredits}",
+                    )
+            case "COURSES_WITH_PATTERN_REQUIREMENT":
+                patterns = requisites["patterns"]
+                requiredNumberOfCourses = requisites["courses"]
+                qualifiedCourses = 0
+                for takenCourse in student.completed_courses:
+                    foundMatch = False
+                    for pattern in patterns:
+                        matches = True
+                        for cChar, pChar in zip(takenCourse.courseCode, pattern):
+                            if pChar != "*" and pChar != cChar:
+                                matches = False
+                                break
+                        if matches:
+                            foundMatch = True
+                            break
+                    if foundMatch:
+                        qualifiedCourses += 1
+                if qualifiedCourses >= requiredNumberOfCourses:
+                    return True, ""
+                else:
+                    return (
+                        False,
+                        f"Needs {requiredNumberOfCourses} courses matching {patterns}, but only has {qualifiedCourses}",
+                    )
                 # return student.departmentCredits()
+
             # recursively handle compound requirements
             case "OR":
                 res = reduce(
@@ -181,5 +229,20 @@ class RecommendationSystem:
                 )
                 return success, missing
             case "FOR":
-                return (True, "")  # TODO Lol
+                # This case is rather strange as the only instance recorded is with the FISI course FISI4105
+                # For now, we only handle the corequisite case and assume that the first condition is the course we expect to be enrolled in
+                if not checkingCorequisites:
+                    return (True, "")
+                requisite = requisites["conditions"][0]
+                if requisite["type"] != "COURSE":
+                    return (False, "Couldn't parse FOR requirement")
+                requiredCourse = requisite["value"]
+                hasCourse = (
+                    student.tookCourse(requiredCourse)
+                    or requiredCourse in student.enrolledCourses
+                )
+                return hasCourse, (
+                    "" if hasCourse else f"Must be enrolled in {requiredCourse}"
+                )
+
         return (False, "Couldn't parse requirement type")
