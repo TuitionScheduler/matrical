@@ -14,6 +14,13 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
+class Program(Base):
+    __tablename__ = "programs"
+    prog_code = Column(String(5), primary_key=True, nullable=False)
+    prog_name = Column(String, nullable=False)
+    required_igs = Column(Integer, nullable=False)
+
+
 class Course(Base):
     __tablename__ = "courses"
     id = Column(Integer, primary_key=True, autoincrement=True)
