@@ -22,8 +22,12 @@ import 'package:share_plus/share_plus.dart';
 class ExportScheduleDialog extends StatelessWidget {
   final List<CourseSectionPair> notPresencialCourses;
   final GeneratedSchedule schedule;
+  final String? scheduleName;
   const ExportScheduleDialog(
-      {super.key, required this.notPresencialCourses, required this.schedule});
+      {super.key,
+      required this.notPresencialCourses,
+      required this.schedule,
+      this.scheduleName});
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +57,7 @@ class ExportScheduleDialog extends StatelessWidget {
                               saveFuture: exportScheduleAsImage(
                             notPresencialCourses,
                             schedule,
+                            scheduleName ?? 'horario',
                             innerContext,
                           )),
                       useRootNavigator: false)
@@ -65,7 +70,8 @@ class ExportScheduleDialog extends StatelessWidget {
               style: TextStyle(fontSize: 15), textAlign: TextAlign.end),
           onPressed: () {
             Navigator.of(context).pop(); // Close the dialog
-            exportScheduleAsIcal(schedule); // Call the method to export as ical
+            exportScheduleAsIcal(schedule,
+                scheduleName ?? "horario"); // Call the method to export as ical
           },
         ),
         TextButton(
@@ -160,8 +166,12 @@ class _SaveAsImageProgressDialogState extends State<SaveAsImageProgressDialog> {
   }
 }
 
-Future<bool> exportScheduleAsImage(List<CourseSectionPair> notPresencial,
-    GeneratedSchedule schedule, BuildContext context) async {
+Future<bool> exportScheduleAsImage(
+  List<CourseSectionPair> notPresencial,
+  GeneratedSchedule schedule,
+  String scheduleName,
+  BuildContext context,
+) async {
   const calendarWidth = 600.0;
   final copiedController = EventController();
   const scheduleHeaderHeight = 60.0;
@@ -178,7 +188,7 @@ Future<bool> exportScheduleAsImage(List<CourseSectionPair> notPresencial,
 
   schedule.overwriteEventController(copiedController, neverLock);
 
-  final imageName = "horario-${schedule.term}-${schedule.year}.png";
+  final imageName = "$scheduleName-${schedule.term}-${schedule.year}.png";
   Uint8List pngBytes = await ScreenshotController().captureFromLongWidget(
       MediaQuery(
         data: MediaQuery.of(context),
@@ -282,7 +292,8 @@ Future<bool> saveScheduleToGallery(
   }
 }
 
-Future<bool> exportScheduleAsIcal(GeneratedSchedule currentSchedule) async {
+Future<bool> exportScheduleAsIcal(
+    GeneratedSchedule currentSchedule, String scheduleName) async {
   String? icsContent = parseScheduleAsIcal(currentSchedule);
   if (icsContent == null) {
     return false;
@@ -290,7 +301,7 @@ Future<bool> exportScheduleAsIcal(GeneratedSchedule currentSchedule) async {
 
   final term = Term.fromString(currentSchedule.term) ?? Term.getPredictedTerm();
   final year = currentSchedule.year;
-  final icsName = "horario-${term.displayName}-$year.ics";
+  final icsName = "$scheduleName-${term.displayName}-$year.ics";
   if (kIsWeb) {
     return downloadFileOnWeb(icsName, icsContent.codeUnits);
   } else if (Platform.isAndroid) {

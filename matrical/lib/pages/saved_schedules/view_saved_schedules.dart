@@ -477,6 +477,7 @@ Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
                           .getCourseSectionPairsByModality(
                               Modality.byagreement),
                       schedule: schedule.schedule,
+                      scheduleName: schedule.name,
                     );
                   },
                 );
