@@ -80,7 +80,9 @@ class ExportScheduleDialog extends StatelessWidget {
           onPressed: () {
             final sharedContent = kIsWeb
                 ? Uri.base
-                    .replace(queryParameters: schedule.toQueryParams())
+                    .replace(
+                        path: "/share",
+                        queryParameters: schedule.toQueryParams())
                     .toString()
                 : schedule.toImportCode();
             Share.share(sharedContent).then((_) {
