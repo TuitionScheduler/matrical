@@ -48,9 +48,8 @@ jobs:
 
       - name: Build and Copy
         run: |
-          ls
           cd matrical
-          cp -avr ./build/web/* pages/
+          cp -avr ./build/web/* ../pages/
 
       - name: Commit and push to tuitionscheduler.github.io
         run: |
