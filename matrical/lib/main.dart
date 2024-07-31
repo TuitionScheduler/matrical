@@ -41,11 +41,14 @@ class _MainAppState extends State<MainApp> {
     // If we are on web, we want to check if the user opened a share link and
     // take them to Course Select with the courses in the link
     if (kIsWeb) {
-      _parseUrlAndUpdateState();
+      _tryToImportSchedule();
     }
   }
 
-  void _parseUrlAndUpdateState() {
+  // imports the schedule included in the URL query params if the schedule is valid
+  // and the path is /share. Clears the path and query params if successful.
+  // Does nothing otherwise.
+  void _tryToImportSchedule() {
     final uri = Uri.base;
     final queryParams = uri.queryParameters;
 
@@ -54,7 +57,8 @@ class _MainAppState extends State<MainApp> {
     final courseListRegex = RegExp(
         r'^([A-Z]{4}\d{4}(?:-[A-Za-z0-9]{1,5})?)(?:\+[A-Z]{4}\d{4}(?:-[A-Za-z0-9]{1,5})?)*$');
 
-    if (queryParams.containsKey('term') &&
+    if (uri.path == "/share" &&
+        queryParams.containsKey('term') &&
         queryParams.containsKey('year') &&
         queryParams.containsKey('courses')) {
       final term = queryParams['term'];
@@ -68,7 +72,7 @@ class _MainAppState extends State<MainApp> {
         final parsedTerm = Term.fromString(term) ?? Term.getPredictedTerm();
         final parsedYear = int.parse(year);
         final coursesWithSections = courses.split('+');
-        matricalCubitSingleton.setPage(MatricalPage.courseSelect);
+
         matricalCubitSingleton.updateTerm(parsedTerm);
         matricalCubitSingleton.updateYear(parsedYear);
         matricalCubitSingleton
@@ -80,7 +84,8 @@ class _MainAppState extends State<MainApp> {
           return CourseWithFilters.withoutFilters(
               courseCode: courseCode, sectionCode: sectionCode);
         }).toList());
-        clearQueryParameters();
+        matricalCubitSingleton.setPage(MatricalPage.generatedSchedules);
+        clearShareUrl();
       }
     }
   }

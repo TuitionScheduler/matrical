@@ -4,10 +4,10 @@ import 'dart:convert';
 import 'dart:html' as html;
 import 'dart:typed_data';
 
-void clearQueryParameters() {
+void clearShareUrl() {
   final currentURI = Uri.base;
-  html.window.history
-      .pushState(null, "matrical", currentURI.replace(query: "").toString());
+  html.window.history.pushState(
+      null, "matrical", currentURI.replace(path: "/", query: "").toString());
 }
 
 bool downloadFileOnWeb(String fileName, List<int> bytes) {
