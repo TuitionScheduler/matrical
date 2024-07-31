@@ -4,6 +4,12 @@ import 'dart:convert';
 import 'dart:html' as html;
 import 'dart:typed_data';
 
+void clearQueryParameters() {
+  final currentURI = Uri.base;
+  html.window.history
+      .pushState(null, "matrical", currentURI.replace(query: "").toString());
+}
+
 bool downloadFileOnWeb(String fileName, List<int> bytes) {
   final b64bytes = base64Encode(bytes);
   final uri = Uri.parse("data:application/octet-stream;base64,$b64bytes");

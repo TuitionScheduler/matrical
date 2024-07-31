@@ -231,6 +231,16 @@ class GeneratedSchedule {
     return base64String;
   }
 
+  Map<String, String> toQueryParams() {
+    return {
+      "term": term,
+      "year": year.toString(),
+      "courses": courses
+          .map((cs) => "${cs.course.courseCode}-${cs.sectionCode}")
+          .join("+")
+    };
+  }
+
   static GeneratedSchedule? fromImportCode(String code) {
     try {
       final decodedBytes = base64Decode(code);

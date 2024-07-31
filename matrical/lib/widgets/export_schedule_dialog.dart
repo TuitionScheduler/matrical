@@ -78,7 +78,12 @@ class ExportScheduleDialog extends StatelessWidget {
           child: const Text('Texto',
               style: TextStyle(fontSize: 15), textAlign: TextAlign.end),
           onPressed: () {
-            Share.share(schedule.toImportCode()).then((_) {
+            final sharedContent = kIsWeb
+                ? Uri.base
+                    .replace(queryParameters: schedule.toQueryParams())
+                    .toString()
+                : schedule.toImportCode();
+            Share.share(sharedContent).then((_) {
               Navigator.of(context).pop();
             });
           },
