@@ -23,10 +23,14 @@ jobs:
         run: flutter config --enable-web
 
       - name: Download Dependencies
-        run: flutter pub get
+        run: |
+          cd matrical
+          flutter pub get
 
       - name: Build
-        run: flutter build web --web-renderer canvaskit
+        run: |
+          cd matrical
+          flutter build web --web-renderer canvaskit
 
       - name: Generate token
         id: generate_token
@@ -45,6 +49,7 @@ jobs:
       - name: Copy build files
         run: |
           rm -rf tuitionscheduler.github.io/*
+          cd matrical
           cp -avr build/web/* tuitionscheduler.github.io/
 
       - name: Commit and push to tuitionscheduler.github.io
