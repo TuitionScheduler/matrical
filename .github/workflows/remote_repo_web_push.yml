@@ -31,6 +31,7 @@ jobs:
         run: |
           cd matrical
           flutter build web --web-renderer canvaskit
+          cd ..
 
       - name: Generate token
         id: generate_token
