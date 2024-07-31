@@ -45,8 +45,8 @@ class _MainAppState extends State<MainApp> {
     }
   }
 
-  // imports the schedule included in the URL query params if the schedule is valid
-  // and the path is /share. Clears the path and query params if successful.
+  // imports the schedule included in the URL query params if the schedule is valid.
+  // Clears the query params if successful.
   // Does nothing otherwise.
   void _tryToImportSchedule() {
     final uri = Uri.base;
@@ -57,8 +57,7 @@ class _MainAppState extends State<MainApp> {
     final courseListRegex = RegExp(
         r'^([A-Z]{4}\d{4}(?:-[A-Za-z0-9]{1,5})?)(?:\+[A-Z]{4}\d{4}(?:-[A-Za-z0-9]{1,5})?)*$');
 
-    if (uri.path == "/share" &&
-        queryParams.containsKey('term') &&
+    if (queryParams.containsKey('term') &&
         queryParams.containsKey('year') &&
         queryParams.containsKey('courses')) {
       final term = queryParams['term'];
