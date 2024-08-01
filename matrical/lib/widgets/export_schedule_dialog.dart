@@ -75,7 +75,7 @@ class ExportScheduleDialog extends StatelessWidget {
           },
         ),
         TextButton(
-          child: const Text('Texto',
+          child: const Text(kIsWeb ? 'Enlace' : 'Texto',
               style: TextStyle(fontSize: 15), textAlign: TextAlign.end),
           onPressed: () {
             final sharedContent = kIsWeb
@@ -325,7 +325,7 @@ Future<bool> exportScheduleAsIcal(
 Widget _exportHelp() {
   return InfoWidget(
       infoText:
-          "Imagen: Guarda una imagen del horario en la galería de tu dispositivo\n\nCalendario: Crea y abre un archivo \".ics\" con tu horario. Los archivos \".ics\" pueden ser abiertos por Google Calendar, Outlook, etc. para añadir tus clases a tu calendario.\n\nTexto: Te permite enviar un código con las secciones en este horario. Otros usuarios pueden copiar el código e importarlo en la aplicación mediante la página de Selección de Cursos o la de Horarios Guardados.",
+          "Imagen: Guarda una imagen del horario en la galería de tu dispositivo\n\nCalendario: Crea y abre un archivo \".ics\" con tu horario. Los archivos \".ics\" pueden ser abiertos por Google Calendar, Outlook, etc. para añadir tus clases a tu calendario.\n\n${kIsWeb ? 'Enlace' : 'Código'}: ${kIsWeb ? 'Genera un enlace que otros usuarios pueden acceder para ver el horario.' : 'Te permite enviar un código con las secciones en este horario. Otros usuarios pueden copiar el código e importarlo en la aplicación mediante la página de Selección de Cursos o la de Horarios Guardados.'}",
       iconData: Icons.help,
       iconColor: Colors.black87);
 }

@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:info_widget/info_widget.dart';
@@ -205,76 +206,81 @@ class _CourseSelectState extends State<CourseSelect> {
                               Row(
                                 children: [
                                   const Text(
-                                    "Añadir Cursos o ",
+                                    "Añadir Cursos",
                                     style: TextStyle(fontSize: 14),
                                   ),
-                                  Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 0.0),
-                                      child: InkWell(
-                                        onTap: () async {
-                                          showDialog<String?>(
-                                                  useRootNavigator: false,
-                                                  context: innerContext,
-                                                  builder: (innerContext) =>
-                                                      ImportScheduleModal())
-                                              .then((encodedSchedule) {
-                                            if (encodedSchedule != null) {
-                                              GeneratedSchedule?
-                                                  decodedSchedule =
-                                                  GeneratedSchedule
-                                                      .fromImportCode(
-                                                          encodedSchedule);
-                                              if (decodedSchedule == null) {
-                                                ScaffoldMessenger.of(context)
-                                                    .hideCurrentSnackBar();
+                                  if (!kIsWeb) // Hide import button on web since web uses URL imports
+                                    const Text(" o ",
+                                        style: TextStyle(fontSize: 14)),
+                                  if (!kIsWeb) // Hide import button on web since web uses URL imports
+                                    Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 0.0),
+                                        child: InkWell(
+                                          onTap: () async {
+                                            showDialog<String?>(
+                                                    useRootNavigator: false,
+                                                    context: innerContext,
+                                                    builder: (innerContext) =>
+                                                        ImportScheduleModal())
+                                                .then((encodedSchedule) {
+                                              if (encodedSchedule != null) {
+                                                GeneratedSchedule?
+                                                    decodedSchedule =
+                                                    GeneratedSchedule
+                                                        .fromImportCode(
+                                                            encodedSchedule);
+                                                if (decodedSchedule == null) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .hideCurrentSnackBar();
+                                                  return ScaffoldMessenger.of(
+                                                          innerContext)
+                                                      .showSnackBar(const SnackBar(
+                                                          content: Text(
+                                                              "El código entrado tiene un formato inválido.")));
+                                                }
+                                                final newTerm = Term.fromString(
+                                                        decodedSchedule.term) ??
+                                                    Term.getPredictedTerm();
+                                                matricalCubit
+                                                    .updateTerm(newTerm);
+
+                                                matricalCubit.updateYear(
+                                                    decodedSchedule.year);
+                                                termController.text =
+                                                    newTerm.displayName;
+                                                yearController.text =
+                                                    decodedSchedule.year
+                                                        .toString();
+                                                matricalCubit.updateCourses(
+                                                    decodedSchedule.courses.map(
+                                                        (courseWithSection) {
+                                                  return CourseWithFilters
+                                                      .withoutFilters(
+                                                          courseCode:
+                                                              courseWithSection
+                                                                  .course
+                                                                  .courseCode,
+                                                          sectionCode:
+                                                              courseWithSection
+                                                                  .sectionCode);
+                                                }).toList());
                                                 return ScaffoldMessenger.of(
                                                         innerContext)
                                                     .showSnackBar(const SnackBar(
                                                         content: Text(
-                                                            "El código entrado tiene un formato inválido.")));
+                                                            "Horario importado exitosamente.")));
                                               }
-                                              final newTerm = Term.fromString(
-                                                      decodedSchedule.term) ??
-                                                  Term.getPredictedTerm();
-                                              matricalCubit.updateTerm(newTerm);
-
-                                              matricalCubit.updateYear(
-                                                  decodedSchedule.year);
-                                              termController.text =
-                                                  newTerm.displayName;
-                                              yearController.text =
-                                                  decodedSchedule.year
-                                                      .toString();
-                                              matricalCubit.updateCourses(
-                                                  decodedSchedule.courses
-                                                      .map((courseWithSection) {
-                                                return CourseWithFilters
-                                                    .withoutFilters(
-                                                        courseCode:
-                                                            courseWithSection
-                                                                .course
-                                                                .courseCode,
-                                                        sectionCode:
-                                                            courseWithSection
-                                                                .sectionCode);
-                                              }).toList());
-                                              return ScaffoldMessenger.of(
-                                                      innerContext)
-                                                  .showSnackBar(const SnackBar(
-                                                      content: Text(
-                                                          "Horario importado exitosamente.")));
-                                            }
-                                          });
-                                        },
-                                        child: Text("Importar",
-                                            style: TextStyle(
-                                                color: Colors.green[900],
-                                                fontSize: 14,
-                                                fontStyle: FontStyle.italic,
-                                                decoration:
-                                                    TextDecoration.underline)),
-                                      ))
+                                            });
+                                          },
+                                          child: Text("Importar",
+                                              style: TextStyle(
+                                                  color: Colors.green[900],
+                                                  fontSize: 14,
+                                                  fontStyle: FontStyle.italic,
+                                                  decoration: TextDecoration
+                                                      .underline)),
+                                        ))
                                 ],
                               ),
                               FocusScope(

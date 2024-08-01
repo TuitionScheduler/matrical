@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:matrical/globals/cubits.dart';
@@ -114,18 +115,20 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                         ),
                       ),
                     ),
-                    IconButton(
-                      iconSize: 30,
-                      icon: const Icon(Icons.save_alt),
-                      onPressed: () {
-                        showDialog<String?>(
-                            context: context,
-                            useRootNavigator: false,
-                            builder: (innerContext) =>
-                                ImportScheduleModal()).then((encodedSchedule) =>
-                            saveImportedSchedule(context, encodedSchedule));
-                      },
-                    ),
+                    if (!kIsWeb) // Hide import button on web as it uses URL imports
+                      IconButton(
+                        iconSize: 30,
+                        icon: const Icon(Icons.save_alt),
+                        onPressed: () {
+                          showDialog<String?>(
+                              context: context,
+                              useRootNavigator: false,
+                              builder: (innerContext) =>
+                                  ImportScheduleModal()).then(
+                              (encodedSchedule) => saveImportedSchedule(
+                                  context, encodedSchedule));
+                        },
+                      ),
                     IconButton(
                       iconSize: 30,
                       onPressed: () {
