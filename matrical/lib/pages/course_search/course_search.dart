@@ -43,6 +43,8 @@ class _CourseSearchState extends State<CourseSearch> {
     super.initState();
     final matricalCubit = BlocProvider.of<MatricalCubit>(context);
     if (matricalCubit.state.lastSearch?.isNotEmpty ?? false) {
+      matricalCubit.state.searchController.text =
+          matricalCubit.state.lastSearch ?? "";
       search(matricalCubit.state.lastSearch);
     }
   }

@@ -288,21 +288,29 @@ class _CourseSelectState extends State<CourseSelect> {
                                   children: [
                                     Expanded(
                                         child: TextField(
-                                      controller:
-                                          matricalState.courseController,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Curso*',
-                                        hintText: 'ie. CIIC3015',
-                                      ),
-                                      textCapitalization:
-                                          TextCapitalization.characters,
-                                      keyboardType:
-                                          TextInputType.visiblePassword,
-                                      inputFormatters: [
-                                        UpperCaseTextFormatter()
-                                      ],
-                                      textInputAction: TextInputAction.next,
-                                    )),
+                                            controller:
+                                                matricalState.courseController,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Curso*',
+                                              hintText: 'ie. CIIC3015',
+                                            ),
+                                            textCapitalization:
+                                                TextCapitalization.characters,
+                                            keyboardType:
+                                                TextInputType.visiblePassword,
+                                            inputFormatters: [
+                                              UpperCaseTextFormatter()
+                                            ],
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            onSubmitted: (maybeCourse) async {
+                                              if (maybeCourse.length == 4) {
+                                                matricalCubit
+                                                    .setLastSearch(maybeCourse);
+                                                matricalCubit.setPage(
+                                                    MatricalPage.courseSearch);
+                                              }
+                                            })),
                                     const Text("  —  "),
                                     Expanded(
                                         child: TextField(
