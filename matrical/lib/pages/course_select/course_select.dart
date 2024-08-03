@@ -343,10 +343,19 @@ class _CourseSelectState extends State<CourseSelect> {
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: ElevatedButton(
-                          onPressed: () => _addCourse(
-                              innerContext, matricalState, internetState),
-                          child: const Icon(Icons.add),
-                        ),
+                            onPressed: () {
+                              if (matricalState.courseController.text.length ==
+                                  4) {
+                                matricalCubit.setLastSearch(
+                                    matricalState.courseController.text);
+                                matricalCubit
+                                    .setPage(MatricalPage.courseSearch);
+                              } else {
+                                _addCourse(
+                                    innerContext, matricalState, internetState);
+                              }
+                            },
+                            child: const Icon(Icons.add)),
                       )
                     ],
                   ),
