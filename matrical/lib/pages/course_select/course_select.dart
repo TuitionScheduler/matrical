@@ -11,7 +11,6 @@ import 'package:matrical/models/matrical_cubit.dart';
 import 'package:matrical/models/matrical_page.dart';
 import 'package:matrical/models/schedule_generation_options.dart';
 import 'package:matrical/pages/generated_schedules/preferences_view.dart';
-import 'package:matrical/services/course_data_entry_info_service.dart';
 import 'package:matrical/services/course_service.dart';
 import 'package:matrical/services/formatter_service.dart';
 import 'package:matrical/services/stored_preferences.dart';
@@ -32,7 +31,6 @@ class _CourseSelectState extends State<CourseSelect> {
   static List<int> years = getAcademicYears();
   final termController = TextEditingController();
   final yearController = TextEditingController();
-  var dataEntryInfoService = CourseDataEntryInfoService();
 
   Future<void> _addCourse(BuildContext context, MatricalState matricalState,
       InternetState internetState) async {

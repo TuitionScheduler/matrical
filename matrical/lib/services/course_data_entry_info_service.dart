@@ -3,13 +3,18 @@ import 'package:matrical/services/connection_service.dart';
 import 'package:pair/pair.dart';
 
 class CourseDataEntryInfoService {
+  static final CourseDataEntryInfoService _instance =
+      CourseDataEntryInfoService._internal();
+
+  static CourseDataEntryInfoService getInstance() {
+    return _instance;
+  }
+
+  CourseDataEntryInfoService._internal();
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _initialized = false;
-
-  // ignore: prefer_final_fields
   Map<String, Pair<DateTime, Set<String>>> _termYearScrapeInfo = {};
-
-  CourseDataEntryInfoService();
 
   // Method to initialize data from Firestore
   Future<void> _initializeData() async {
@@ -18,7 +23,6 @@ class CourseDataEntryInfoService {
           .collection('DataEntryInformation')
           .doc('DepartmentCourses')
           .get();
-
       if (snapshot.exists) {
         _termYearScrapeInfo = Map<String, Pair<DateTime, Set<String>>>.from(
             ((snapshot.data() as Map<String, dynamic>)['termYearScrapeInfo'] ??
@@ -70,5 +74,12 @@ class CourseDataEntryInfoService {
 
   bool get initialized {
     return _initialized;
+  }
+
+  Future<List<String>> autocompleteQuery(
+      String query, String term, int year) async {
+    final sanitizedQuery = query.replaceAll(" ", "").toUpperCase();
+    final departments = await getDepartments(term, year);
+    return departments.where((dept) => dept.contains(sanitizedQuery)).toList();
   }
 }

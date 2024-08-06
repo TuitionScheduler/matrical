@@ -17,7 +17,7 @@ class CourseService {
 
   // Private constructor
   CourseService._privateConstructor()
-      : dataEntryInfoService = CourseDataEntryInfoService(),
+      : dataEntryInfoService = CourseDataEntryInfoService.getInstance(),
         _cacheService = SharedPreferencesCacheService.getInstance();
 
   // Public factory method to return the instance

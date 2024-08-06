@@ -41,6 +41,7 @@ dependencies:
   universal_io: ^2.2.2
   archive: ^3.6.1
   web_browser_detect: ^2.0.3
+  flutter_typeahead: ^5.2.0
 
 dev_dependencies:
   flutter_test:

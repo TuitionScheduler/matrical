@@ -1,12 +1,14 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:matrical/globals/cubits.dart';
 import 'package:matrical/models/course_filters.dart';
 import 'package:matrical/models/course_filters_popup_response.dart';
 import 'package:matrical/models/department_course.dart';
 import 'package:matrical/models/matrical_cubit.dart';
 import 'package:matrical/models/schedule_generation_options.dart';
+import 'package:matrical/services/course_data_entry_info_service.dart';
 import 'package:matrical/services/course_service.dart';
 import 'package:matrical/services/formatter_service.dart';
 import 'package:matrical/services/stored_preferences.dart';
@@ -26,6 +28,7 @@ class _CourseSearchState extends State<CourseSearch> {
   Future<List<Course>> searchFuture = Future<List<Course>>.value([]);
   Term currentTerm = matricalCubitSingleton.state.term;
   int currentYear = matricalCubitSingleton.state.year;
+  TextEditingController? searchController;
 
   void search(String? query) {
     FocusManager.instance.primaryFocus?.unfocus(); // close keyboard
@@ -43,8 +46,6 @@ class _CourseSearchState extends State<CourseSearch> {
     super.initState();
     final matricalCubit = BlocProvider.of<MatricalCubit>(context);
     if (matricalCubit.state.lastSearch?.isNotEmpty ?? false) {
-      matricalCubit.state.searchController.text =
-          matricalCubit.state.lastSearch ?? "";
       search(matricalCubit.state.lastSearch);
     }
   }
@@ -135,18 +136,47 @@ class _CourseSearchState extends State<CourseSearch> {
             child: Row(
               children: [
                 Expanded(
-                    child: TextField(
-                  controller: matricalState.searchController,
-                  decoration: const InputDecoration(
-                    labelText: 'Buscar Curso o Departamento',
-                    hintText: 'ie. CIIC3015, INSO',
-                  ),
-                  textCapitalization: TextCapitalization.characters,
-                  inputFormatters: [UpperCaseTextFormatter()],
-                  textInputAction: TextInputAction.search,
-                  keyboardType: TextInputType.visiblePassword,
-                  onSubmitted: (_) =>
-                      search(matricalState.searchController.text),
+                    child: TypeAheadField<String>(
+                  suggestionsCallback: (search) async {
+                    if (search.isEmpty) {
+                      return [];
+                    }
+                    final dataEntryService =
+                        CourseDataEntryInfoService.getInstance();
+                    return await dataEntryService.autocompleteQuery(
+                        search, currentTerm.databaseKey, currentYear);
+                  },
+                  builder: (context, controller, focusNode) {
+                    if (controller.text.isEmpty &&
+                        (matricalState.lastSearch?.isNotEmpty ?? false)) {
+                      controller.text = matricalState.lastSearch!;
+                    }
+                    searchController = controller;
+                    return TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        autofocus: false,
+                        decoration: const InputDecoration(
+                          labelText: 'Buscar Curso o Departamento',
+                          hintText: 'ie. CIIC3015, INSO',
+                        ),
+                        textCapitalization: TextCapitalization.characters,
+                        inputFormatters: [UpperCaseTextFormatter()],
+                        textInputAction: TextInputAction.search,
+                        keyboardType: TextInputType.visiblePassword,
+                        onSubmitted: (query) => search(query));
+                  },
+                  itemBuilder: (context, suggestion) {
+                    return ListTile(
+                      title: Text(suggestion),
+                    );
+                  },
+                  errorBuilder: (context, error) =>
+                      const Text('Error sugiriendo departamentos.'),
+                  emptyBuilder: (context) => const SizedBox.shrink(),
+                  onSelected: (suggestion) {
+                    search(suggestion);
+                  },
                 )),
                 IconButton(
                     onPressed: () async {
@@ -163,7 +193,7 @@ class _CourseSearchState extends State<CourseSearch> {
                     },
                     icon: const Icon(Icons.filter_alt)),
                 ElevatedButton(
-                  onPressed: () => search(matricalState.searchController.text),
+                  onPressed: () => search(searchController?.text),
                   child: const Icon(Icons.search),
                 ),
               ],
