@@ -17,7 +17,7 @@ class CourseService {
 
   // Private constructor
   CourseService._privateConstructor()
-      : dataEntryInfoService = CourseDataEntryInfoService(),
+      : dataEntryInfoService = CourseDataEntryInfoService.getInstance(),
         _cacheService = SharedPreferencesCacheService.getInstance();
 
   // Public factory method to return the instance
@@ -171,6 +171,22 @@ class CourseService {
           department.term, department.year);
     }
     _cacheService.store(cacheKey, department, dateObtained: dataDate);
+  }
+
+  Future<List<String>> autocompleteQuery(
+      String query, String term, int year) async {
+    final sanitizedQuery = query.replaceAll(" ", "").toUpperCase();
+    if (sanitizedQuery.length <= 4) {
+      final departments = await dataEntryInfoService.getDepartments(term, year);
+      return departments
+          .where((dept) => dept.contains(sanitizedQuery))
+          .toList();
+    }
+    final courses = await searchCoursesByPrefix(sanitizedQuery, term, year);
+    return courses
+        .map((c) => c.courseCode)
+        .where((code) => code.startsWith(sanitizedQuery))
+        .toList();
   }
 }
 
