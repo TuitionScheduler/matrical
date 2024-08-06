@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:matrical/services/platform_service.dart'
     if (dart.library.html) 'package:matrical/services/web_service.dart';
 import "package:universal_io/io.dart";
@@ -18,6 +19,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:web_browser_detect/web_browser_detect.dart';
 
 class ExportScheduleDialog extends StatelessWidget {
   final List<CourseSectionPair> notPresencialCourses;
@@ -74,20 +76,7 @@ class ExportScheduleDialog extends StatelessWidget {
                 scheduleName ?? "horario"); // Call the method to export as ical
           },
         ),
-        TextButton(
-          child: const Text(kIsWeb ? 'Enlace' : 'Texto',
-              style: TextStyle(fontSize: 15), textAlign: TextAlign.end),
-          onPressed: () {
-            final sharedContent = kIsWeb
-                ? Uri.base
-                    .replace(queryParameters: schedule.toQueryParams())
-                    .toString()
-                : schedule.toImportCode();
-            Share.share(sharedContent).then((_) {
-              Navigator.of(context).pop();
-            });
-          },
-        )
+        _exportTextOrLinkButton(context, schedule)
       ],
     );
   }
@@ -328,4 +317,47 @@ Widget _exportHelp() {
           "Imagen: Guarda una imagen del horario en la galería de tu dispositivo\n\nCalendario: Crea y abre un archivo \".ics\" con tu horario. Los archivos \".ics\" pueden ser abiertos por Google Calendar, Outlook, etc. para añadir tus clases a tu calendario.\n\n${kIsWeb ? 'Enlace' : 'Código'}: ${kIsWeb ? 'Genera un enlace que otros usuarios pueden acceder para ver el horario.' : 'Te permite enviar un código con las secciones en este horario. Otros usuarios pueden copiar el código e importarlo en la aplicación mediante la página de Selección de Cursos o la de Horarios Guardados.'}",
       iconData: Icons.help,
       iconColor: Colors.black87);
+}
+
+Widget _exportTextOrLinkButton(
+    BuildContext context, GeneratedSchedule schedule) {
+  final browser = Browser.detectOrNull(); // Always null when not on web
+  return TextButton(
+    child: Text(browser == null ? 'Enlace' : 'Texto',
+        style: const TextStyle(fontSize: 15), textAlign: TextAlign.end),
+    onPressed: () async {
+      if (browser == null) {
+        // TODO(poggecci): share deeplinks when on mobile devices instead of Import codes
+        Share.share(schedule.toImportCode()).then((_) {
+          Navigator.of(context).pop();
+        });
+      } else {
+        /*
+            On browsers with access to the webshare API, 
+            use that to share the URL or Text code. Otherwise, fall back to
+            writing the URL to the clipboard.
+            Exceptions: FireFox has WebShare but text isn't properly copied onto it
+
+          */
+        final shareURL = Uri.base
+            .replace(queryParameters: schedule.toQueryParams())
+            .toString();
+
+        switch (browser.browserAgent) {
+          // TODO(poggecci): add SamsungInternet to BrowserAgent
+          case BrowserAgent.Chrome:
+          case BrowserAgent.Edge:
+          case BrowserAgent.EdgeChromium:
+          case BrowserAgent.Safari:
+            await Share.share(shareURL);
+          default:
+            await Clipboard.setData(ClipboardData(text: shareURL));
+            break;
+        }
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
+      }
+    },
+  );
 }
