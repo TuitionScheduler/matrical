@@ -75,11 +75,4 @@ class CourseDataEntryInfoService {
   bool get initialized {
     return _initialized;
   }
-
-  Future<List<String>> autocompleteQuery(
-      String query, String term, int year) async {
-    final sanitizedQuery = query.replaceAll(" ", "").toUpperCase();
-    final departments = await getDepartments(term, year);
-    return departments.where((dept) => dept.contains(sanitizedQuery)).toList();
-  }
 }
