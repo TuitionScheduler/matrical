@@ -323,7 +323,7 @@ Widget _exportTextOrLinkButton(
     BuildContext context, GeneratedSchedule schedule) {
   final browser = Browser.detectOrNull(); // Always null when not on web
   return TextButton(
-    child: Text(browser == null ? 'Enlace' : 'Texto',
+    child: Text(browser != null ? 'Enlace' : 'Texto',
         style: const TextStyle(fontSize: 15), textAlign: TextAlign.end),
     onPressed: () async {
       if (browser == null) {
@@ -344,7 +344,6 @@ Widget _exportTextOrLinkButton(
             .toString();
 
         switch (browser.browserAgent) {
-          // TODO(poggecci): add SamsungInternet to BrowserAgent
           case BrowserAgent.Chrome:
           case BrowserAgent.Edge:
           case BrowserAgent.EdgeChromium:
