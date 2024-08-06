@@ -49,6 +49,21 @@ class CourseService {
     }
   }
 
+  Future<List<Course>> searchCoursesByPrefix(
+      String prefix, String term, int year) async {
+    if (prefix.length < 4) {
+      return <Course>[];
+    }
+    String deptName = prefix.substring(0, 4);
+    Department? dept = await getDepartment(deptName, term, year);
+    if (dept == null) {
+      return <Course>[];
+    }
+    return dept.courses.values
+        .where((c) => c.courseCode.startsWith(prefix))
+        .toList();
+  }
+
   Future<Department?> getDepartment(
       String department, String term, int year) async {
     if (department.length != 4) {
@@ -166,26 +181,14 @@ Future<List<Course>> getCourseSearch(
   var courses = <Course>[];
   for (var courseOrDept in coursesOrDepts) {
     var formatted = courseOrDept.trim().toUpperCase();
-    switch (formatted.length) {
-      case 0:
-        // Empty string was passed in
-        break;
-      case 4:
-        var dept = await cs.getDepartment(formatted, term, year);
-        if (dept != null) {
-          courses.addAll(dept.courses.values);
-        }
-        break;
-      case 8:
-        var course = await cs.getCourse(formatted, term, year);
-        if (course != null) {
-          courses.add(course);
-        }
-        break;
-      default:
-        throw Exception("Value is not course or department");
+    if (formatted.length > 8 || formatted.length < 4) {
+      continue;
     }
+    var coursesMatchingPrefix =
+        await cs.searchCoursesByPrefix(formatted, term, year);
+    courses.addAll(coursesMatchingPrefix);
   }
+
   return await compute(
       applyFiltersToAll, {'courses': courses, 'filters': filters});
 }
