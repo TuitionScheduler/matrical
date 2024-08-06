@@ -344,17 +344,18 @@ Widget _exportTextOrLinkButton(
             .toString();
 
         switch (browser.browserAgent) {
+          // TODO(poggecci): add SamsungInternet to BrowserAgent
           case BrowserAgent.Chrome:
           case BrowserAgent.Edge:
           case BrowserAgent.EdgeChromium:
           case BrowserAgent.Safari:
-            Share.share(shareURL).then((_) {
-              Navigator.of(context).pop();
-            });
-            break;
+            await Share.share(shareURL);
           default:
             await Clipboard.setData(ClipboardData(text: shareURL));
             break;
+        }
+        if (context.mounted) {
+          Navigator.of(context).pop();
         }
       }
     },
