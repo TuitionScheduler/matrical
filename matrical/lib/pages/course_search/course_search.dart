@@ -141,9 +141,8 @@ class _CourseSearchState extends State<CourseSearch> {
                     if (search.isEmpty) {
                       return [];
                     }
-                    final dataEntryService =
-                        CourseDataEntryInfoService.getInstance();
-                    return await dataEntryService.autocompleteQuery(
+                    final cs = CourseService.getInstance();
+                    return await cs.autocompleteQuery(
                         search, currentTerm.databaseKey, currentYear);
                   },
                   builder: (context, controller, focusNode) {
