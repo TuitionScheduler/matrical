@@ -327,7 +327,7 @@ Widget _exportTextOrLinkButton(
         style: const TextStyle(fontSize: 15), textAlign: TextAlign.end),
     onPressed: () async {
       if (browser == null) {
-        // TODO(poggecci): share deeplinks when on mobile devices instead of Import codes
+        // TODO(poggecci): share deeplinks when running native on mobile devices instead of Import codes
         Share.share(schedule.toImportCode()).then((_) {
           Navigator.of(context).pop();
         });
@@ -351,6 +351,14 @@ Widget _exportTextOrLinkButton(
             await Share.share(shareURL);
           default:
             await Clipboard.setData(ClipboardData(text: shareURL));
+            if (context.mounted) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(const SnackBar(
+                  content:
+                      Text('Enlace con tu horario copiado a tu dispositivo.'),
+                ));
+            }
             break;
         }
         if (context.mounted) {
