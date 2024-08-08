@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:matrical/models/blacklist.dart';
@@ -180,13 +181,23 @@ class CourseService {
       final departments = await dataEntryInfoService.getDepartments(term, year);
       return departments
           .where((dept) => dept.contains(sanitizedQuery))
-          .toList();
+          .toList()
+          .sortedByCompare((value) {
+        (bool, String) key = (value.startsWith(sanitizedQuery), value);
+        return key;
+      }, (val1, val2) {
+        if (val1.$1 == val2.$1) {
+          return val1.$2.compareTo(val2.$2);
+        }
+        return val1.$1 ? -1 : 1;
+      });
     }
     final courses = await searchCoursesByPrefix(sanitizedQuery, term, year);
     return courses
         .map((c) => c.courseCode)
         .where((code) => code.startsWith(sanitizedQuery))
-        .toList();
+        .toList()
+        .sorted();
   }
 }
 
