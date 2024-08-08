@@ -176,7 +176,7 @@ class CourseService {
   Future<List<String>> autocompleteQuery(
       String query, String term, int year) async {
     final sanitizedQuery = query.replaceAll(" ", "").toUpperCase();
-    if (sanitizedQuery.length <= 4) {
+    if (sanitizedQuery.length < 4) {
       final departments = await dataEntryInfoService.getDepartments(term, year);
       return departments
           .where((dept) => dept.contains(sanitizedQuery))
