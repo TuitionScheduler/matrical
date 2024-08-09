@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 import 'package:info_widget/info_widget.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,6 +30,7 @@ class CourseSelect extends StatefulWidget {
 class _CourseSelectState extends State<CourseSelect> {
   TextStyle textStyle = const TextStyle(color: Colors.white, fontSize: 20);
   static List<int> years = getAcademicYears();
+  TextEditingController? courseController;
   final termController = TextEditingController();
   final yearController = TextEditingController();
 
@@ -36,8 +38,13 @@ class _CourseSelectState extends State<CourseSelect> {
       InternetState internetState) async {
     FocusManager.instance.primaryFocus?.unfocus(); // close keyboard
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    // This should never be null as the controller is populated by the autocomplete at build time
+    if (courseController == null) {
+      return;
+    }
+    var courseCode = courseController?.text ?? "";
     final matricalCubit = BlocProvider.of<MatricalCubit>(context);
-    if (!isCourseCode(matricalState.courseController.text)) {
+    if (!isCourseCode(courseCode)) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Curso no tiene el formato esperado (DEPT####).'),
       ));
@@ -50,8 +57,6 @@ class _CourseSelectState extends State<CourseSelect> {
       ));
       return;
     }
-
-    var courseCode = matricalState.courseController.text;
     final term = matricalState.term.databaseKey;
     final year = matricalState.year;
     var course = await CourseService().getCourse(courseCode, term, year);
@@ -73,8 +78,7 @@ class _CourseSelectState extends State<CourseSelect> {
         return;
       }
 
-      matricalCubit.addCourse(matricalState.courseController.text,
-          matricalState.sectionController.text);
+      matricalCubit.addCourse(courseCode, matricalState.sectionController.text);
     } else {
       if (course == null) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -92,8 +96,7 @@ class _CourseSelectState extends State<CourseSelect> {
         ));
         return;
       }
-      matricalCubit.addCourse(matricalState.courseController.text,
-          matricalState.sectionController.text);
+      matricalCubit.addCourse(courseCode, matricalState.sectionController.text);
     }
   }
 
@@ -285,9 +288,23 @@ class _CourseSelectState extends State<CourseSelect> {
                                 child: Row(
                                   children: [
                                     Expanded(
-                                        child: TextField(
-                                            controller:
-                                                matricalState.courseController,
+                                        child: TypeAheadField<String>(
+                                      suggestionsCallback: (search) async {
+                                        if (search.isEmpty) {
+                                          return [];
+                                        }
+                                        final cs = CourseService.getInstance();
+                                        return await cs.autocompleteQuery(
+                                            search,
+                                            matricalState.term.databaseKey,
+                                            matricalState.year);
+                                      },
+                                      builder:
+                                          (context, controller, focusNode) {
+                                        courseController = controller;
+                                        return TextField(
+                                            controller: controller,
+                                            focusNode: focusNode,
                                             decoration: const InputDecoration(
                                               labelText: 'Curso*',
                                               hintText: 'ie. CIIC3015',
@@ -308,7 +325,23 @@ class _CourseSelectState extends State<CourseSelect> {
                                                 matricalCubit.setPage(
                                                     MatricalPage.courseSearch);
                                               }
-                                            })),
+                                            });
+                                      },
+                                      itemBuilder: (context, suggestion) {
+                                        return ListTile(
+                                          title: Text(suggestion),
+                                        );
+                                      },
+                                      errorBuilder: (context, error) =>
+                                          const Text(
+                                              'Error sugiriendo cursos.'),
+                                      emptyBuilder: (context) =>
+                                          const SizedBox.shrink(),
+                                      onSelected: (suggestion) {
+                                        courseController?.text = suggestion;
+                                        // TODO: figure out how to have onselected trigger "enter"
+                                      },
+                                    )),
                                     const Text("  —  "),
                                     Expanded(
                                         child: TextField(
@@ -342,10 +375,9 @@ class _CourseSelectState extends State<CourseSelect> {
                         padding: const EdgeInsets.all(8.0),
                         child: ElevatedButton(
                             onPressed: () {
-                              if (matricalState.courseController.text.length ==
-                                  4) {
-                                matricalCubit.setLastSearch(
-                                    matricalState.courseController.text);
+                              if (courseController?.text.length == 4) {
+                                matricalCubit
+                                    .setLastSearch(courseController?.text);
                                 matricalCubit
                                     .setPage(MatricalPage.courseSearch);
                               } else {

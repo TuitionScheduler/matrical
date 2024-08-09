@@ -18,7 +18,6 @@ class MatricalCubit extends Cubit<MatricalState> {
           preferences: GeneratedSchedulePreferences.getDefault(),
           pageIndex: 0,
           pageTitle: "Selección de Cursos",
-          courseController: TextEditingController(),
           sectionController: TextEditingController(),
           searchFilters: CourseFilters.empty(),
           lastSearch: null,
@@ -37,7 +36,6 @@ class MatricalCubit extends Cubit<MatricalState> {
       GeneratedSchedulePreferences preferences,
       int pageIndex,
       String pageTitle,
-      TextEditingController courseController,
       TextEditingController sectionController,
       CourseFilters searchFilters,
       String? lastSearch,
@@ -53,7 +51,6 @@ class MatricalCubit extends Cubit<MatricalState> {
       preferences: preferences,
       pageIndex: pageIndex,
       pageTitle: pageTitle,
-      courseController: courseController,
       sectionController: sectionController,
       searchFilters: searchFilters,
       lastSearch: lastSearch,
@@ -179,7 +176,6 @@ class MatricalState extends Equatable {
   final GeneratedSchedulePreferences preferences;
   final int pageIndex;
   final String pageTitle;
-  final TextEditingController courseController;
   final TextEditingController sectionController;
   final CourseFilters searchFilters;
   final String? lastSearch;
@@ -196,7 +192,6 @@ class MatricalState extends Equatable {
     required this.preferences,
     required this.pageIndex,
     required this.pageTitle,
-    required this.courseController,
     required this.sectionController,
     required this.searchFilters,
     required this.lastSearch,
@@ -214,7 +209,6 @@ class MatricalState extends Equatable {
     GeneratedSchedulePreferences? preferences,
     int? pageIndex,
     String? pageTitle,
-    TextEditingController? courseController,
     TextEditingController? sectionController,
     CourseFilters? searchFilters,
     String? lastSearch,
@@ -231,7 +225,6 @@ class MatricalState extends Equatable {
       preferences: preferences ?? this.preferences,
       pageIndex: pageIndex ?? this.pageIndex,
       pageTitle: pageTitle ?? this.pageTitle,
-      courseController: courseController ?? this.courseController,
       sectionController: sectionController ?? this.sectionController,
       searchFilters: searchFilters ?? this.searchFilters,
       lastSearch: lastSearch ?? this.lastSearch,
@@ -256,7 +249,6 @@ class MatricalState extends Equatable {
         preferences,
         pageIndex,
         pageTitle,
-        courseController,
         sectionController,
         searchFilters,
         lastSearch,
