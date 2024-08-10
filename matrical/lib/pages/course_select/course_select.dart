@@ -303,7 +303,7 @@ class _CourseSelectState extends State<CourseSelect> {
                                             controller: controller,
                                             focusNode: focusNode,
                                             decoration: const InputDecoration(
-                                              labelText: 'Curso',
+                                              labelText: 'Curso*',
                                               hintText: 'ie. CIIC3015',
                                             ),
                                             textCapitalization:
@@ -396,8 +396,7 @@ class _CourseSelectState extends State<CourseSelect> {
                                                 decoration:
                                                     const InputDecoration(
                                                   hintText: 'ie. 070, 001D',
-                                                  labelText:
-                                                      'Sección (opcional)',
+                                                  labelText: 'Sección',
                                                 ),
                                                 textCapitalization:
                                                     TextCapitalization
