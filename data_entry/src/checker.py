@@ -1,7 +1,7 @@
 from src.models.course import DesiredCourse
 from src.models.student import StudentRecord, CourseRecord
 from src.models.course_service import CourseService
-from src.parsers.requisite_parser import parse_prerequisites
+from src.parsers.requisite_parser import parse_prerequisites, lexer_tester
 from src.requisite_handler import RecommendationSystem
 
 
@@ -59,5 +59,9 @@ def lemahn():
     print(*list(parsedPrereqs), sep="\n")
 
 
+def try_parse():
+    print(lexer_tester("MENOS DE 30 CRS PARA GRADUACION"))
+
+
 if __name__ == "__main__":
-    lemahn()
+    try_parse()

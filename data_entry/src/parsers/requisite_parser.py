@@ -13,7 +13,7 @@ tokens = (
     "COURSE",
     "DIRECTOR_APPROVAL",
     "UNKNOWN",
-    "DEPARTMENT_REQUIREMENT",
+    # "DEPARTMENT_REQUIREMENT", #Removing this requirement and will replace with program code inspection
     "GRADUATION_STATUS_REQUIREMENT",
     "OR",
     "AND",
@@ -24,15 +24,40 @@ tokens = (
 )
 
 
-def t_CREDITS_GROUP(t):
-    r"\{([0-9]+)\}"
-    t.value = int(t.value[1:-1])  # Remove braces and convert to int
+def t_CREDITS_TO_GRADUATION_REQUIREMENT(t):
+    r"MENOS\s+DE\s+\d+\s+CRS\s+PARA\s+GRADUACION"
+    credits = re.search(r"\d+", t.value)
+    t.value = {
+        "type": "CREDITS_TO_GRADUATION_REQUIREMENT",
+        "value": int(
+            credits.group()  # type: ignore
+        ),  # Read as: "You can graduate if you have fewer than these creds left"
+    }
     return t
 
 
-def t_COURSES_AMOUNT_REQUIRED(t):
-    r"\s*(\d+)\s*"
-    t.value = int(t.value.strip(" "))
+def t_ENGLISH_LEVEL_REQUIREMENT(t):
+    r"NIVEL_AVAN_INGL\s(=|<|>|<=|>=)\s\#(\d+)"
+    comparator = re.findall(r"\s(=|<|>|<=|>=)\s", t.value)[0]
+    level = re.findall(r"\d+", t.value)[0]
+    t.value = {
+        "type": "ENGLISH_LEVEL_REQUIREMENT",
+        "comparator": comparator,
+        "level": int(level),  # Read as: your level must be [comparator] [level]
+    }
+    return t
+
+
+def t_GRADUATION_STATUS_REQUIREMENT(t):
+    r"SUBGRADUADO|GRADUADO"
+    translated_status = {
+        "SUBGRADUADO": "Undergraduate",
+        "GRADUADO": "Graduate",
+    }
+    t.value = {
+        "type": "GRADUATION_STATUS_REQUIREMENT",
+        "value": translated_status[t.value],
+    }
     return t
 
 
@@ -42,6 +67,13 @@ def t_YEAR_REQUIREMENT(t):
     if match:
         t.value = {"type": "YEAR_REQUIREMENT", "value": int(match.group(1))}
     return t
+
+
+# This requirement is currently broken and should be replaced with a program code (ie 0503) requirement
+# def t_DEPARTMENT_REQUIREMENT(t):
+#     r"(?!PARA)[A-Z]{4}(?=\s|$|\))"
+#     t.value = {"type": "DEPARTMENT_REQUIREMENT", "value": t.value}
+#     return t
 
 
 def t_COURSE(t):
@@ -73,46 +105,15 @@ def t_DIRECTOR_APPROVAL(t):
     return t
 
 
-def t_DEPARTMENT_REQUIREMENT(t):
-    r"(?!PARA)[A-Z]{4}(?=\s|$|\))"
-    t.value = {"type": "DEPARTMENT_REQUIREMENT", "value": t.value}
+def t_CREDITS_GROUP(t):
+    r"\{([0-9]+)\}"
+    t.value = int(t.value[1:-1])  # Remove braces and convert to int
     return t
 
 
-def t_GRADUATION_STATUS_REQUIREMENT(t):
-    r"SUBGRADUADO|GRADUADO"
-    translated_status = {
-        "SUBGRADUADO": "Undergraduate",
-        "GRADUADO": "Graduate",
-    }
-    t.value = {
-        "type": "GRADUATION_STATUS_REQUIREMENT",
-        "value": translated_status[t.value],
-    }
-    return t
-
-
-def t_CREDITS_TO_GRADUATION_REQUIREMENT(t):
-    r"MENOS\sDE\s\d+\sCRS?\sPARA\sGRADUACION"
-    credits = re.match(r"\d+", t.value)
-    t.value = {
-        "type": "CREDITS_TO_GRADUATION_REQUIREMENT",
-        "value": int(
-            credits.group()  # type: ignore
-        ),  # Read as: "You can graduate if you have fewer than these creds left"
-    }
-    return t
-
-
-def t_ENGLISH_LEVEL_REQUIREMENT(t):
-    r"NIVEL_AVAN_INGL\s(=|<|>|<=|>=)\s\#(\d+)"
-    comparator = re.findall(r"\s(=|<|>|<=|>=)\s", t.value)[0]
-    level = re.findall(r"\d+", t.value)[0]
-    t.value = {
-        "type": "ENGLISH_LEVEL_REQUIREMENT",
-        "comparator": comparator,
-        "level": int(level),  # Read as: your level must be [comparator] [level]
-    }
+def t_COURSES_AMOUNT_REQUIRED(t):
+    r"\s*(\d+)\s*"
+    t.value = int(t.value.strip(" "))
     return t
 
 
@@ -214,7 +215,6 @@ def p_term(p):
     | YEAR_REQUIREMENT
     | COURSE
     | DIRECTOR_APPROVAL
-    | DEPARTMENT_REQUIREMENT
     | GRADUATION_STATUS_REQUIREMENT
     | ENGLISH_LEVEL_REQUIREMENT
     | credits_with_pattern_requirement
@@ -238,6 +238,14 @@ lexer.outputdir = "requisite_parser_output"
 parser = yacc.yacc()
 parser.outputdir = "requisite_parser_output"
 logger = logging.getLogger(__name__)
+
+
+def lexer_tester(input_string):
+    lexer.input(input_string)
+    tok = lexer.token()
+    while tok is not None:
+        print(tok)
+        tok = lexer.token()
 
 
 def parse_prerequisites(input_string):
