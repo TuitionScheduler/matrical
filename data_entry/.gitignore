@@ -5,3 +5,4 @@ courses.db
 output_files/
 parser.out
 parsetab.py
+dist/
