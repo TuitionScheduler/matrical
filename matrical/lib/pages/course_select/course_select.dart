@@ -350,11 +350,13 @@ class _CourseSelectState extends State<CourseSelect> {
                                         child: TypeAheadField<String>(
                                             suggestionsCallback:
                                                 (search) async {
-                                              if (courseController == null) {
+                                              if (courseController == null ||
+                                                  search.isEmpty) {
                                                 return [];
                                               }
                                               final courseCode =
                                                   courseController?.text ?? "";
+
                                               final cs =
                                                   CourseService.getInstance();
                                               return await cs
