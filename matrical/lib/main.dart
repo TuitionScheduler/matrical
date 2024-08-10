@@ -9,7 +9,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:matrical/firebase_options.dart';
 import 'package:matrical/globals/cubits.dart';
 import 'package:matrical/models/course_filters.dart';
-import 'package:matrical/models/internet_cubit.dart';
 import 'package:matrical/models/matrical_page.dart';
 import 'package:matrical/models/schedule_generation_options.dart';
 import 'package:matrical/pages/matrical.dart';
@@ -25,6 +24,7 @@ Future<void> setUp() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  internetCubitSingleton.initialState();
 }
 
 class MainApp extends StatefulWidget {
@@ -97,7 +97,7 @@ class _MainAppState extends State<MainApp> {
           home: MultiBlocProvider(
             providers: [
               BlocProvider.value(value: matricalCubitSingleton),
-              BlocProvider.value(value: InternetCubit())
+              BlocProvider.value(value: internetCubitSingleton)
             ],
             child: const Matrical(),
           ),

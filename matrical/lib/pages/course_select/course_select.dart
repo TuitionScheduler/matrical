@@ -35,7 +35,7 @@ class _CourseSelectState extends State<CourseSelect> {
   final termController = TextEditingController();
   final yearController = TextEditingController();
 
-  Future<void> _addCourse(BuildContext context, MatricalState matricalState,
+  Future<void> _addCourse(BuildContext context, String term, int year,
       InternetState internetState) async {
     FocusManager.instance.primaryFocus?.unfocus(); // close keyboard
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -58,10 +58,8 @@ class _CourseSelectState extends State<CourseSelect> {
       ));
       return;
     }
-    final term = matricalState.term.databaseKey;
-    final year = matricalState.year;
     var course = await CourseService().getCourse(courseCode, term, year);
-    if (internetState.connected!) {
+    if (internetState.connected) {
       if (course == null) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
@@ -323,6 +321,10 @@ class _CourseSelectState extends State<CourseSelect> {
                                                     .setLastSearch(maybeCourse);
                                                 matricalCubit.setPage(
                                                     MatricalPage.courseSearch);
+                                              } else {
+                                                // clear section controller when course changes
+                                                // to trigger autocomplete refresh
+                                                sectionController?.text = "";
                                               }
                                             });
                                       },
@@ -338,6 +340,9 @@ class _CourseSelectState extends State<CourseSelect> {
                                           const SizedBox.shrink(),
                                       onSelected: (suggestion) {
                                         courseController?.text = suggestion;
+                                        // clear section controller when course changes
+                                        // to trigger autocomplete refresh
+                                        sectionController?.text = "";
                                       },
                                     )),
                                     const Text("  —  "),
@@ -373,8 +378,12 @@ class _CourseSelectState extends State<CourseSelect> {
                                             onSelected: (suggestion) {
                                               sectionController?.text =
                                                   suggestion;
-                                              _addCourse(innerContext,
-                                                  matricalState, internetState);
+                                              _addCourse(
+                                                  innerContext,
+                                                  matricalState
+                                                      .term.databaseKey,
+                                                  matricalState.year,
+                                                  internetState);
                                             },
                                             builder: (context, controller,
                                                 focusNode) {
@@ -401,7 +410,9 @@ class _CourseSelectState extends State<CourseSelect> {
                                                 onSubmitted: (value) =>
                                                     _addCourse(
                                                         innerContext,
-                                                        matricalState,
+                                                        matricalState
+                                                            .term.databaseKey,
+                                                        matricalState.year,
                                                         internetState),
                                               );
                                             })),
@@ -423,7 +434,10 @@ class _CourseSelectState extends State<CourseSelect> {
                                     .setPage(MatricalPage.courseSearch);
                               } else {
                                 _addCourse(
-                                    innerContext, matricalState, internetState);
+                                    innerContext,
+                                    matricalState.term.databaseKey,
+                                    matricalState.year,
+                                    internetState);
                               }
                             },
                             child: const Icon(Icons.add)),

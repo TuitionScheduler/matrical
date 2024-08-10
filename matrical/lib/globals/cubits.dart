@@ -1,3 +1,4 @@
+import 'package:matrical/models/internet_cubit.dart';
 import 'package:matrical/models/matrical_cubit.dart';
 
 /* This is provided to the root Matrical component and so children of it should just
@@ -7,3 +8,5 @@ having access to a widget's context (ie. declaration of a StatefulWidget) or ins
 where the original codebase utilized it. 
 */
 final matricalCubitSingleton = MatricalCubit();
+
+final internetCubitSingleton = InternetCubit();

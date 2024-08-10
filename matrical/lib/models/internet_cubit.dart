@@ -7,12 +7,12 @@ import 'package:equatable/equatable.dart';
 import 'package:matrical/services/connection_service.dart';
 
 class InternetState extends Equatable {
-  final bool? connected;
+  final bool connected;
 
   const InternetState({required this.connected});
 
-  InternetState copyWith({bool? connected}) {
-    return InternetState(connected: connected ?? connected);
+  InternetState copyWith({bool? newConnected}) {
+    return InternetState(connected: newConnected ?? connected);
   }
 
   @override
@@ -26,7 +26,7 @@ class InternetCubit extends Cubit<InternetState> {
   InternetCubit() : super(const InternetState(connected: false)) {
     initialState();
 
-    Connectivity().onConnectivityChanged.listen((result) {
+    _streamSubscription = Connectivity().onConnectivityChanged.listen((result) {
       if (ConnectionService.checkConnectionsForInternet(result)) {
         emitConnected();
       } else {
@@ -37,9 +37,9 @@ class InternetCubit extends Cubit<InternetState> {
     });
   }
 
-  void emitConnected() => emit(state.copyWith(connected: true));
+  void emitConnected() => emit(state.copyWith(newConnected: true));
 
-  void emitDisconnected() => emit(state.copyWith(connected: false));
+  void emitDisconnected() => emit(state.copyWith(newConnected: false));
 
   void initialState() async {
     if (await ConnectionService.isConnectedToInternet()) {
