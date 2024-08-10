@@ -23,15 +23,6 @@ tokens = (
     "WHITESPACE",
 )
 
-r"""
-# TODO: Parse this better
-def t_DEPARTMENT_CREDITS_REQUIREMENT(t):
-    r"(\{[0-9]+\}\s*([\*A-Z]{4}([\*0-9]{4})?|\[([\*A-Z]{4}([\*0-9]{4})?,\s*)+[\*A-Z]{4}([\*0-9]{4})?\]))\
-    |(([\*A-Z]{4}([\*0-9]{4})?|\[([\*A-Z]{4}([\*0-9]{4})?,\s*)+[\*A-Z]{4}([\*0-9]{4})?\])\s*\{[0-9]+\})"
-    t.value = {"type": "DEPARTMENT_CREDITS_REQUIREMENT", "value": t.value}
-    return t
-"""
-
 
 def t_CREDITS_GROUP(t):
     r"\{([0-9]+)\}"
@@ -42,22 +33,6 @@ def t_CREDITS_GROUP(t):
 def t_COURSES_AMOUNT_REQUIRED(t):
     r"\s*(\d+)\s*"
     t.value = int(t.value.strip(" "))
-    return t
-
-
-def t_PATTERN_GROUP(t):
-    r"(?:\[([A-Z0-9*]{4,9}(?:,\s*[A-Z0-9*]{4,9})*)\]|([A-Z0-9*]{4,9}))"
-    # Really, patterns should only be of length 4 and 8, but the university mispelled it once
-    # in CINE2025 with the pattern ****3****, so we'll just pretend it is allowed
-    # Not breaking behavior as the pattern is zip()'d vs the course code and thus 9th character of the pattern would
-    # never be compared with the course code (which always has a length of 8)
-    if t.value.startswith("["):
-        # It's an array pattern
-        patterns = t.value[1:-1].replace(" ", "").split(",")
-    else:
-        # It's a single pattern
-        patterns = [t.value]
-    t.value = patterns
     return t
 
 
@@ -72,6 +47,23 @@ def t_YEAR_REQUIREMENT(t):
 def t_COURSE(t):
     r"[A-Z]{4}\s*\d{4}"
     t.value = {"type": "COURSE", "value": t.value}
+    return t
+
+
+# THIS MUST BE BELOW COURSE OR IT WILL TAKE PRECEDENCE AND BREAK COURSE RECOGNITION
+def t_PATTERN_GROUP(t):
+    r"(?:\[([A-Z0-9*]{4,9}(?:,\s*[A-Z0-9*]{4,9})*)\]|([A-Z0-9*]{4,9}))"
+    # Really, patterns should only be of length 4 and 8, but the university mispelled it once
+    # in CINE2025 with the pattern ****3****, so we'll just pretend it is allowed
+    # Not breaking behavior as the pattern is zip()'d vs the course code and thus 9th character of the pattern would
+    # never be compared with the course code (which always has a length of 8)
+    if t.value.startswith("["):
+        # It's an array pattern
+        patterns = t.value[1:-1].replace(" ", "").split(",")
+    else:
+        # It's a single pattern
+        patterns = [t.value]
+    t.value = patterns
     return t
 
 
@@ -141,7 +133,7 @@ def t_error(t):
     t.lexer.skip(1)
 
 
-t_OR = r"O|o|U|u"  # Maybe ass Y/O for that one weird course
+t_OR = r"O|o|U|u"  # Maybe add Y/O for that one weird course?
 t_AND = r"Y|y|E|e"
 t_LPAREN = r"\("
 t_RPAREN = r"\)"
@@ -220,13 +212,13 @@ def p_courses_with_pattern_requirement(p):
 def p_term(p):
     """prerequisite : CREDITS_TO_GRADUATION_REQUIREMENT
     | YEAR_REQUIREMENT
-    | credits_with_pattern_requirement
-    | courses_with_pattern_requirement
     | COURSE
     | DIRECTOR_APPROVAL
     | DEPARTMENT_REQUIREMENT
     | GRADUATION_STATUS_REQUIREMENT
     | ENGLISH_LEVEL_REQUIREMENT
+    | credits_with_pattern_requirement
+    | courses_with_pattern_requirement
     | UNKNOWN"""
     p[0] = p[1]
 
