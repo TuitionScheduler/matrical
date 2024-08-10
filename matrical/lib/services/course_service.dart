@@ -199,6 +199,28 @@ class CourseService {
         .toList()
         .sorted();
   }
+
+  Future<List<String>> autocompleteSections(
+      String courseCode, String query, String term, int year) async {
+    final course = await getCourse(courseCode, term, year);
+    if (course == null) {
+      return [];
+    }
+    final sanitizedQuery = query.replaceAll(" ", "").toUpperCase();
+    return course.sections
+        .map((s) => s.sectionCode)
+        .where((sectionCode) => sectionCode.contains(sanitizedQuery))
+        .toList()
+        .sortedByCompare((value) {
+      (bool, String) key = (value.startsWith(sanitizedQuery), value);
+      return key;
+    }, (val1, val2) {
+      if (val1.$1 == val2.$1) {
+        return val1.$2.compareTo(val2.$2);
+      }
+      return val1.$1 ? -1 : 1;
+    });
+  }
 }
 
 Future<List<Course>> getCourseSearch(

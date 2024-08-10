@@ -31,6 +31,7 @@ class _CourseSelectState extends State<CourseSelect> {
   TextStyle textStyle = const TextStyle(color: Colors.white, fontSize: 20);
   static List<int> years = getAcademicYears();
   TextEditingController? courseController;
+  TextEditingController? sectionController;
   final termController = TextEditingController();
   final yearController = TextEditingController();
 
@@ -43,6 +44,7 @@ class _CourseSelectState extends State<CourseSelect> {
       return;
     }
     var courseCode = courseController?.text ?? "";
+    var sectionCode = sectionController?.text ?? "";
     final matricalCubit = BlocProvider.of<MatricalCubit>(context);
     if (!isCourseCode(courseCode)) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -50,8 +52,7 @@ class _CourseSelectState extends State<CourseSelect> {
       ));
       return;
     }
-    if (matricalState.sectionController.text.isNotEmpty &&
-        !isSectionCode(matricalState.sectionController.text)) {
+    if (sectionCode.isNotEmpty && !isSectionCode(sectionCode)) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Sección no tiene el formato esperado.'),
       ));
@@ -68,9 +69,8 @@ class _CourseSelectState extends State<CourseSelect> {
         ));
         return;
       }
-      final section = matricalState.sectionController.text;
-      if (section.isNotEmpty &&
-          course.sections.none((s) => s.sectionCode == section)) {
+      if (sectionCode.isNotEmpty &&
+          course.sections.none((s) => s.sectionCode == sectionCode)) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
               'Sección no disponible para este semestre según nuestra base de datos.'),
@@ -78,7 +78,7 @@ class _CourseSelectState extends State<CourseSelect> {
         return;
       }
 
-      matricalCubit.addCourse(courseCode, matricalState.sectionController.text);
+      matricalCubit.addCourse(courseCode, sectionCode);
     } else {
       if (course == null) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -87,16 +87,15 @@ class _CourseSelectState extends State<CourseSelect> {
         ));
         return;
       }
-      final section = matricalState.sectionController.text;
-      if (section.isNotEmpty &&
-          course.sections.none((s) => s.sectionCode == section)) {
+      if (sectionCode.isNotEmpty &&
+          course.sections.none((s) => s.sectionCode == sectionCode)) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
               'No se pudo encontrar esa sección para el curso en la memoria local. Intente otra vez una vez esté conectado al Internet.'),
         ));
         return;
       }
-      matricalCubit.addCourse(courseCode, matricalState.sectionController.text);
+      matricalCubit.addCourse(courseCode, sectionCode);
     }
   }
 
@@ -306,7 +305,7 @@ class _CourseSelectState extends State<CourseSelect> {
                                             controller: controller,
                                             focusNode: focusNode,
                                             decoration: const InputDecoration(
-                                              labelText: 'Curso*',
+                                              labelText: 'Curso',
                                               hintText: 'ie. CIIC3015',
                                             ),
                                             textCapitalization:
@@ -339,31 +338,73 @@ class _CourseSelectState extends State<CourseSelect> {
                                           const SizedBox.shrink(),
                                       onSelected: (suggestion) {
                                         courseController?.text = suggestion;
-                                        // TODO: figure out how to have onselected trigger "enter"
                                       },
                                     )),
                                     const Text("  —  "),
                                     Expanded(
-                                        child: TextField(
-                                      controller:
-                                          matricalState.sectionController,
-                                      decoration: const InputDecoration(
-                                        hintText: 'ie. 070, 001D',
-                                        labelText: 'Sección',
-                                      ),
-                                      textCapitalization:
-                                          TextCapitalization.characters,
-                                      keyboardType:
-                                          TextInputType.visiblePassword,
-                                      inputFormatters: [
-                                        UpperCaseTextFormatter()
-                                      ],
-                                      textInputAction: TextInputAction.done,
-                                      onSubmitted: (value) => _addCourse(
-                                          innerContext,
-                                          matricalState,
-                                          internetState),
-                                    )),
+                                        child: TypeAheadField<String>(
+                                            suggestionsCallback:
+                                                (search) async {
+                                              if (courseController == null) {
+                                                return [];
+                                              }
+                                              final courseCode =
+                                                  courseController?.text ?? "";
+                                              final cs =
+                                                  CourseService.getInstance();
+                                              return await cs
+                                                  .autocompleteSections(
+                                                      courseCode,
+                                                      search,
+                                                      matricalState
+                                                          .term.databaseKey,
+                                                      matricalState.year);
+                                            },
+                                            itemBuilder: (context, suggestion) {
+                                              return ListTile(
+                                                title: Text(suggestion),
+                                              );
+                                            },
+                                            errorBuilder: (context, error) =>
+                                                const Text(
+                                                    'Error sugiriendo secciones.'),
+                                            emptyBuilder: (context) =>
+                                                const SizedBox.shrink(),
+                                            onSelected: (suggestion) {
+                                              sectionController?.text =
+                                                  suggestion;
+                                              _addCourse(innerContext,
+                                                  matricalState, internetState);
+                                            },
+                                            builder: (context, controller,
+                                                focusNode) {
+                                              sectionController = controller;
+                                              return TextField(
+                                                controller: controller,
+                                                focusNode: focusNode,
+                                                decoration:
+                                                    const InputDecoration(
+                                                  hintText: 'ie. 070, 001D',
+                                                  labelText:
+                                                      'Sección (opcional)',
+                                                ),
+                                                textCapitalization:
+                                                    TextCapitalization
+                                                        .characters,
+                                                keyboardType: TextInputType
+                                                    .visiblePassword,
+                                                inputFormatters: [
+                                                  UpperCaseTextFormatter()
+                                                ],
+                                                textInputAction:
+                                                    TextInputAction.done,
+                                                onSubmitted: (value) =>
+                                                    _addCourse(
+                                                        innerContext,
+                                                        matricalState,
+                                                        internetState),
+                                              );
+                                            })),
                                   ],
                                 ),
                               ),
