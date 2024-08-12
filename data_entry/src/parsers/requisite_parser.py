@@ -5,20 +5,24 @@ import logging
 
 tokens = (
     "CREDITS_TO_GRADUATION_REQUIREMENT",
+    "GRADUATION_STATUS_REQUIREMENT",
     "ENGLISH_LEVEL_REQUIREMENT",
-    "PATTERN_GROUP",
-    "CREDITS_GROUP",
-    "COURSES_AMOUNT_REQUIRED",
+    "CREDITS_WITH_PATTERN_REQUIREMENT",
+    "COURSES_WITH_PATTERN_REQUIREMENT",
     "YEAR_REQUIREMENT",
     "COURSE",
-    "DIRECTOR_APPROVAL",
+    "EXAM_REQUIREMENT",
     "UNKNOWN",
-    # "DEPARTMENT_REQUIREMENT", #Removing this requirement and will replace with program code inspection
-    "GRADUATION_STATUS_REQUIREMENT",
+    "DEPARTMENT_REQUIREMENT",
+    "PROGRAM_REQUIREMENT",
+    "DIRECTOR_APPROVAL",
     "OR",
     "AND",
     "LPAREN",
     "RPAREN",
+    "LBRACKET",
+    "RBRACKET",
+    "CREDITS_GROUP",
     "FOR",
     "WHITESPACE",
 )
@@ -37,7 +41,7 @@ def t_CREDITS_TO_GRADUATION_REQUIREMENT(t):
 
 
 def t_ENGLISH_LEVEL_REQUIREMENT(t):
-    r"NIVEL_AVAN_INGL\s(=|<|>|<=|>=)\s\#(\d+)"
+    r"NIVEL_AVAN_INGL\s*(=|<|>|<=|>=)\s*\#(\d+)"
     comparator = re.findall(r"\s(=|<|>|<=|>=)\s", t.value)[0]
     level = re.findall(r"\d+", t.value)[0]
     t.value = {
@@ -69,33 +73,50 @@ def t_YEAR_REQUIREMENT(t):
     return t
 
 
-# This requirement is currently broken and should be replaced with a program code (ie 0503) requirement
-# def t_DEPARTMENT_REQUIREMENT(t):
-#     r"(?!PARA)[A-Z]{4}(?=\s|$|\))"
-#     t.value = {"type": "DEPARTMENT_REQUIREMENT", "value": t.value}
-#     return t
+def t_CREDITS_WITH_PATTERN_REQUIREMENT(t):
+    r"(?:\[([A-Z*]{4}[0-9*]{0,5}(?:,\s*[A-Z*]{4}[0-9*]{0,5})*)\]|([A-Z*]{4}[0-9*]{0,5}))\s*\{([0-9]+)\}"
+    # Really, patterns should only be of length 4 and 8, but the university mispelled it once
+    # in CINE2025 with the pattern ****3****, so we'll just pretend it is allowed
+    # Not breaking behavior as the pattern is zip()'d vs the course code and thus 9th character of the pattern would
+    # never be compared with the course code (which always has a length of 8)
+    credits = int(re.search(r"\{\d+\}", t.value).group()[1:-1])  # type: ignore
+    if t.value.startswith("["):
+        # It's an array pattern
+        rBracketPos = t.value.rindex("]")
+        patterns = t.value[1:rBracketPos].replace(" ", "").split(",")
+    else:
+        # It's a single pattern
+        lCurlyPos = t.value.index("{")
+        patterns = [t.value[:lCurlyPos].replace(" ", "")]
+    t.value = {
+        "type": "CREDITS_WITH_PATTERN_REQUIREMENT",
+        "patterns": patterns,
+        "credits": credits,
+    }
+    return t
+
+
+# Note: currently only handles array patterns
+def t_COURSES_WITH_PATTERN_REQUIREMENT(t):
+    r"(?:\[([A-Z*]{4}[0-9*]{0,5}(?:,\s*[A-Z*]{4}[0-9*]{0,5})*)\])\s*(\d+)"
+    # Really, patterns should only be of length 4 and 8, but the university mispelled it once
+    # in CINE2025 with the pattern ****3****, so we'll just pretend it is allowed
+    # Not breaking behavior as the pattern is zip()'d vs the course code and thus 9th character of the pattern would
+    # never be compared with the course code (which always has a length of 8)
+    rBracketPos = t.value.rindex("]")
+    patterns = t.value[1:rBracketPos].replace(" ", "").split(",")
+    credits = int(t.value[rBracketPos + 1 :].replace(" ", ""))
+    t.value = {
+        "type": "COURSES_WITH_PATTERN_REQUIREMENT",
+        "patterns": patterns,
+        "credits": credits,
+    }
+    return t
 
 
 def t_COURSE(t):
     r"[A-Z]{4}\s*\d{4}"
     t.value = {"type": "COURSE", "value": t.value}
-    return t
-
-
-# THIS MUST BE BELOW COURSE OR IT WILL TAKE PRECEDENCE AND BREAK COURSE RECOGNITION
-def t_PATTERN_GROUP(t):
-    r"(?:\[([A-Z0-9*]{4,9}(?:,\s*[A-Z0-9*]{4,9})*)\]|([A-Z0-9*]{4,9}))"
-    # Really, patterns should only be of length 4 and 8, but the university mispelled it once
-    # in CINE2025 with the pattern ****3****, so we'll just pretend it is allowed
-    # Not breaking behavior as the pattern is zip()'d vs the course code and thus 9th character of the pattern would
-    # never be compared with the course code (which always has a length of 8)
-    if t.value.startswith("["):
-        # It's an array pattern
-        patterns = t.value[1:-1].replace(" ", "").split(",")
-    else:
-        # It's a single pattern
-        patterns = [t.value]
-    t.value = patterns
     return t
 
 
@@ -105,22 +126,34 @@ def t_DIRECTOR_APPROVAL(t):
     return t
 
 
+# This rule is for requirements whose conditions are not well understood.
+def t_UNKNOWN(t):
+    r"(BIO3064)"
+    t.value = {"type": "UNKNOWN", "value": t.value}
+    return t
+
+
+def t_EXAM_REQUIREMENT(t):
+    r"(EXAM|EXA)(?=\s|$|\))"
+    t.value = {"type": "EXAM_REQUIREMENT", "value": t.value}
+    return t
+
+
+def t_DEPARTMENT_REQUIREMENT(t):
+    r"[A-Z]{4}"
+    t.value = {"type": "DEPARTMENT_REQUIREMENT", "value": t.value}
+    return t
+
+
+def t_PROGRAM_REQUIREMENT(t):
+    r"(!)?[0-9]{4}(M)?"
+    t.value = {"type": "PROGRAM_REQUIREMENT", "value": t.value}
+    return t
+
+
 def t_CREDITS_GROUP(t):
     r"\{([0-9]+)\}"
     t.value = int(t.value[1:-1])  # Remove braces and convert to int
-    return t
-
-
-def t_COURSES_AMOUNT_REQUIRED(t):
-    r"\s*(\d+)\s*"
-    t.value = int(t.value.strip(" "))
-    return t
-
-
-# This rule is for requirements whose conditions are not well understood.
-def t_UNKNOWN(t):
-    r"[0-9]{4}|EXAM(?=\s|$|\))"
-    t.value = {"type": "UNKNOWN", "value": t.value}
     return t
 
 
@@ -138,6 +171,8 @@ t_OR = r"O|o|U|u"  # Maybe add Y/O for that one weird course?
 t_AND = r"Y|y|E|e"
 t_LPAREN = r"\("
 t_RPAREN = r"\)"
+t_LBRACKET = r"\["
+t_RBRACKET = r"\]"
 t_FOR = r"PARA"
 
 # Define the precedence of operators
@@ -193,20 +228,20 @@ def p_grouped_term(p):
 
 
 def p_credits_with_pattern_requirement(p):
-    """credits_with_pattern_requirement : PATTERN_GROUP CREDITS_GROUP"""
+    """credits_with_pattern_requirement : LBRACKET prerequisite RBRACKET CREDITS_GROUP"""
+    if p[2].get("type") != "OR":
+        patterns = []
+    else:
+        requisites = p[2].get("conditions")
+        patterns = [
+            requisite["value"]
+            for requisite in requisites
+            if requisite["type"] == "COURSE"
+        ]
     p[0] = {
         "type": "CREDITS_WITH_PATTERN_REQUIREMENT",
-        "patterns": p[1],
-        "credits": p[2],
-    }
-
-
-def p_courses_with_pattern_requirement(p):
-    """courses_with_pattern_requirement : PATTERN_GROUP COURSES_AMOUNT_REQUIRED"""
-    p[0] = {
-        "type": "COURSES_WITH_PATTERN_REQUIREMENT",
-        "patterns": p[1],
-        "courses": p[2],
+        "patterns": patterns,
+        "credits": p[4],
     }
 
 
@@ -217,8 +252,12 @@ def p_term(p):
     | DIRECTOR_APPROVAL
     | GRADUATION_STATUS_REQUIREMENT
     | ENGLISH_LEVEL_REQUIREMENT
+    | CREDITS_WITH_PATTERN_REQUIREMENT
     | credits_with_pattern_requirement
-    | courses_with_pattern_requirement
+    | COURSES_WITH_PATTERN_REQUIREMENT
+    | PROGRAM_REQUIREMENT
+    | DEPARTMENT_REQUIREMENT
+    | EXAM_REQUIREMENT
     | UNKNOWN"""
     p[0] = p[1]
 

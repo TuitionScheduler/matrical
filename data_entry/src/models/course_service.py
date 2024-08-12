@@ -1,5 +1,6 @@
 from src.database import Course, engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, aliased
+from sqlalchemy import func, distinct
 
 
 class CourseService:
@@ -34,8 +35,30 @@ class CourseService:
         self.session.close()
         return course
 
-    def getAllCourses(self, term, year) -> list[Course]:
+    def getAllCourses(self, term: str, year: int) -> list[Course]:
         self.session.begin()
         courses = self.session.query(Course).filter_by(year=year, term=term).all()
         self.session.close()
         return courses
+
+    def getLatestCourses(self) -> list[Course]:
+        # Subquery to get the max year for each course_code
+        subquery = (
+            self.session.query(
+                Course.course_code, func.max(Course.year).label("max_year")
+            )
+            .group_by(Course.course_code)
+            .subquery()
+        )
+
+        latest_courses = (
+            self.session.query(Course)
+            .join(
+                subquery,
+                (Course.course_code == subquery.c.course_code)
+                & (Course.year == subquery.c.max_year),
+            )
+            .distinct(Course.course_code)
+            .all()
+        )
+        return latest_courses

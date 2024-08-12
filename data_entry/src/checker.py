@@ -33,7 +33,19 @@ def main():
     print(requisite_analysis_result)
 
 
-def lemahn():
+def find_unknowns():
+    # finds all courses we currently can't parse the requirements of
+    cs = CourseService()
+
+    interestedCourseObjects = cs.getLatestCourses()
+    parsedPrereqs = map(
+        lambda c: parse_prerequisites(c.prerequisites) if c else {},
+        interestedCourseObjects,
+    )
+    [print(pReq, end="\n\n") for pReq in parsedPrereqs if pReq.get("type") == "UNKNOWN"]
+
+
+def test_patterns_cases():  # Some courses whose prerequisites involve patterns ie. CIIC****{12}
     cs = CourseService()
     interestedCourses = [
         {"course_code": "ADMI6006"},
@@ -56,12 +68,30 @@ def lemahn():
         lambda c: parse_prerequisites(c.prerequisites) if c else {},
         interestedCourseObjects,
     )
-    print(*list(parsedPrereqs), sep="\n")
+    print(*list(parsedPrereqs), sep="\n\n")
 
 
-def try_parse():
+def try_parse():  # Some historically tricky cases
     print(lexer_tester("MENOS DE 30 CRS PARA GRADUACION"))
+    print(lexer_tester("QUIM4998{3}"))
+    print(lexer_tester("(1204 Y (3RO O 4TO))"))
+    print(
+        lexer_tester("BIOL4015 O BIOL3052 O (BIOL3062 Y BIO3064)")
+    )  # Note how BIOL is missing an L here
+    print(lexer_tester("(MUSI3171 Y MUSI3231) O EXAM"))
+    print(lexer_tester("EXA O EXA DIAG MATE"))  # No idea what EXA DIAG MATE is
+    print(lexer_tester("EXA"))
+    print(lexer_tester("DIR Y (4TO O 5TO)"))
+    print(lexer_tester("0503 Y !0503M Y ****{48}"))
+    print(
+        lexer_tester(
+            "INGL3231 Y [INGL3236 O INGL3238 O INGL3268 O INGL4107 O INGL4108]{6}"
+        )
+    )
+    print(lexer_tester("NIVEL_AVAN_INGL > #3"))
+    print(lexer_tester("(FISI3172 O FISI3162) Y (MATE3063 O MATE3185) Y !0502 Y !0507"))
+    print(lexer_tester("GRADUADO Y DIR"))
 
 
 if __name__ == "__main__":
-    try_parse()
+    find_unknowns()
