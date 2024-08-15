@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "matrical-data-entry"
-version = "0.1.0"
+version = "0.1.1"
 description = "A collection of utilities to obtain UPRM course data"
 license = "Proprietary"   
 authors = ["Kelvin Gonzalez <kelvin.gonzalez11@upr.edu>", "Alejandro Cruzado <alejandro.cruzado@upr.edu>"]

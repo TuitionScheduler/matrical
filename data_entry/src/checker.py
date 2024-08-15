@@ -42,7 +42,15 @@ def find_unknowns():
         lambda c: parse_prerequisites(c.prerequisites) if c else {},
         interestedCourseObjects,
     )
-    [print(pReq, end="\n\n") for pReq in parsedPrereqs if pReq.get("type") == "UNKNOWN"]
+    ogWithparsed = zip(
+        [c.prerequisites for c in interestedCourseObjects], parsedPrereqs
+    )
+    ogUnknowns = [og for og, pReq in ogWithparsed if pReq.get("type") == "UNKNOWN"]
+    for og in ogUnknowns:
+        print("OG:", og)
+        lexer_tester(og)
+    if len(ogUnknowns) < 1:
+        print("No Unknowns found, all prerequisites in the DB were successfully parsed")
 
 
 def test_patterns_cases():  # Some courses whose prerequisites involve patterns ie. CIIC****{12}

@@ -16,6 +16,7 @@ tokens = (
     "DEPARTMENT_REQUIREMENT",
     "PROGRAM_REQUIREMENT",
     "DIRECTOR_APPROVAL",
+    "ANDOR",
     "OR",
     "AND",
     "LPAREN",
@@ -134,7 +135,7 @@ def t_UNKNOWN(t):
 
 
 def t_EXAM_REQUIREMENT(t):
-    r"(EXAM|EXA)(?=\s|$|\))"
+    r"(EXA\s*DIAG\s*MATE)|((EXAM|EXA)(?=\s|$|\)))"
     t.value = {"type": "EXAM_REQUIREMENT", "value": t.value}
     return t
 
@@ -167,8 +168,9 @@ def t_error(t):
     t.lexer.skip(1)
 
 
-t_OR = r"O|o|U|u"  # Maybe add Y/O for that one weird course?
-t_AND = r"Y|y|E|e"
+t_ANDOR = r"(Y/O)"
+t_AND = r"[YyEe](?!/)|(O Y)"
+t_OR = r"[OoUu](?!(\sY))"
 t_LPAREN = r"\("
 t_RPAREN = r"\)"
 t_LBRACKET = r"\["
@@ -179,6 +181,7 @@ t_FOR = r"PARA"
 precedence = (
     ("left", "FOR"),
     ("left", "OR"),
+    ("left", "ANDOR"),
     ("left", "AND"),
 )
 
@@ -227,7 +230,7 @@ def p_grouped_term(p):
     p[0] = p[2]
 
 
-def p_credits_with_pattern_requirement(p):
+def p_credits_with_pattern_requirement_or(p):
     """credits_with_pattern_requirement : LBRACKET prerequisite RBRACKET CREDITS_GROUP"""
     if p[2].get("type") != "OR":
         patterns = []
@@ -245,6 +248,48 @@ def p_credits_with_pattern_requirement(p):
     }
 
 
+def p_andor_group(p):
+    """andor_group : andor_group ANDOR COURSE
+    | COURSE ANDOR COURSE
+    """
+    if p[1]["type"] == "COURSE":
+        p[0] = {"type": "ANDOR", "value": [p[1], p[3]]}
+    elif p[1]["type"] == "ANDOR":
+        p[1]["value"].extend(p[3])
+        p[0] = p[1]
+
+
+def p_credits_with_pattern_requirement_andor(p):
+    """credits_with_pattern_requirement : CREDITS_GROUP LPAREN andor_group RPAREN
+    | CREDITS_GROUP LPAREN COURSE RPAREN
+    """
+    if p[3].get("type") == "ANDOR":
+        patterns = p[3]["value"]
+    else:
+        patterns = [p[3]["value"]]
+    p[0] = {
+        "type": "CREDITS_WITH_PATTERN_REQUIREMENT",
+        "patterns": patterns,
+        "credits": p[1],
+    }
+
+
+def p_credits_with_pattern_requirement_inverted(p):
+    """credits_with_pattern_requirement : CREDITS_GROUP DEPARTMENT_REQUIREMENT"""
+
+    patterns = [p[2]["value"]]
+    p[0] = {
+        "type": "CREDITS_WITH_PATTERN_REQUIREMENT",
+        "patterns": patterns,
+        "credits": p[1],
+    }
+
+
+def p_credits_with_pattern_requirement(p):
+    """credits_with_pattern_requirement : CREDITS_WITH_PATTERN_REQUIREMENT"""
+    p[0] = p[1]
+
+
 def p_term(p):
     """prerequisite : CREDITS_TO_GRADUATION_REQUIREMENT
     | YEAR_REQUIREMENT
@@ -252,7 +297,6 @@ def p_term(p):
     | DIRECTOR_APPROVAL
     | GRADUATION_STATUS_REQUIREMENT
     | ENGLISH_LEVEL_REQUIREMENT
-    | CREDITS_WITH_PATTERN_REQUIREMENT
     | credits_with_pattern_requirement
     | COURSES_WITH_PATTERN_REQUIREMENT
     | PROGRAM_REQUIREMENT
