@@ -52,7 +52,7 @@ class RecommendationSystem:
         match requisites["type"]:
             case "CREDITS_TO_GRADUATION_REQUIREMENT":
                 return (
-                    requisites["value"] > 160 - student.completedCredits
+                    requisites["value"] > (160 - student.completedCredits)
                 ), ""  # TODO: tie this to creds of degree instead of hardcode
             case "ENGLISH_LEVEL_REQUIREMENT":
                 match requisites["comparator"]:
@@ -122,6 +122,8 @@ class RecommendationSystem:
                     else:
                         return False, f"Must be enrolled in {requiredCourse}"
                 return False, f"Missing {requiredCourse}"
+            case "EXAM_REQUIREMENT":
+                return (False, "")  # TODO: implement
             case "DIRECTOR_APPROVAL":
                 return hasDirectorApproval, (
                     "" if hasDirectorApproval else "Requires Director Approval"
@@ -134,6 +136,13 @@ class RecommendationSystem:
                     department for department, year in student.enrolledDegrees
                 ]
                 return (isInDept, "" if isInDept else f"Not in {requiredDept}")
+            case "PROGRAM_REQUIREMENT":
+                # TODO: make this actually work by mapping departments to programs or viceversa
+                requiredProgram = requisites["value"]
+                isInDept = requiredProgram in [
+                    department for department, year in student.enrolledDegrees
+                ]
+                return (isInDept, "" if isInDept else f"Not in {requiredProgram}")
             case "GRADUATION_STATUS_REQUIREMENT":
                 correctStatus = requisites["value"] == student.graduation_status
                 return correctStatus, (
