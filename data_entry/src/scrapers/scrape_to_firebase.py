@@ -144,7 +144,9 @@ if __name__ == "__main__":
 
     print(f"Finished scraping in {str(time.time() - start_time)} seconds")
 
-    with open("../output_files/dept_stats.csv", "w") as file:
+    if not os.path.isdir("output_files"):
+        os.makedirs("output_files")
+    with open("output_files/dept_stats.csv", "w") as file:
         file.write("Department,Bytes,CourseCount,SectionCount\n")
         for dept in dept_stats:
             file.write(
