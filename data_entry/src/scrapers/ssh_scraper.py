@@ -1,6 +1,6 @@
 from typing import Tuple
-from paramiko import AutoAddPolicy, BadAuthenticationType, SSHClient, Channel
-from paramiko.auth_strategy import Password
+from paramiko import AutoAddPolicy, BadAuthenticationType, SSHClient, Channel, SSHConfig
+from paramiko.auth_strategy import Password, AuthStrategy
 import re
 import sys
 from sqlalchemy import and_, create_engine, select, update
@@ -14,7 +14,7 @@ from src.models.enums import Term
 from src.parsers.ansi_parser import parse_department_page
 
 MAX_RETRIES = 3
-TASK_COUNT = 25
+MAX_TASK_COUNT = 25
 TIMEOUT_TIME = 60
 TERMS = (
     [Term.SECOND_SEMESTER] * 5
@@ -44,10 +44,10 @@ def get_term_year(term: str | None = None) -> Tuple[str, int]:
     return (term, year)
 
 
-async def send_input(chan: Channel, inputs: list[Tuple[str, int]]) -> bool:
+async def send_input(chan: Channel, inputs: list[Tuple[str, float]]) -> bool:
     res = 0
     for x in inputs:
-        res = chan.send(x[0])
+        res = chan.send(x[0].encode("ansi"))
         if x[1] >= 0:
             await asyncio.sleep(x[1])
     return res != 0
@@ -72,7 +72,7 @@ async def setup(chan: Channel, term: str):
     await send_input(chan, [(term_input, -1)])
 
 
-def log_department_page(dept: str, raw_content: str) -> dict:
+def log_department_page(dept: str, raw_content: str) -> None:
     with open(f"output_files/{dept}.ansi", "a") as f:
         f.write(raw_content)
         f.write("\n")
@@ -82,12 +82,13 @@ def commit_department(scraped_courses: dict, term: str, year: int, Session):
     db_term = putty_to_db_terms[term]
     with Session() as session:
         for course_code, sections in scraped_courses.items():
+            no_lab_course_code = course_code.rstrip("L")
             for section_dict in sections:
                 section = (
                     session.query(Section)
                     .join(Course)
                     .filter(
-                        Course.course_code == course_code,
+                        Course.course_code == no_lab_course_code,
                         Course.term == db_term,
                         Course.year == year,
                         Section.section_code == section_dict["section_code"],
@@ -107,6 +108,11 @@ def commit_department(scraped_courses: dict, term: str, year: int, Session):
         session.commit()
 
 
+class PuttyAuth(AuthStrategy):
+    def get_sources(self):
+        yield Password("estudiante", lambda: "")
+
+
 async def worker(queue: asyncio.Queue, Session, term: str):
     ssh = SSHClient()
     ssh.set_missing_host_key_policy(AutoAddPolicy())
@@ -115,7 +121,7 @@ async def worker(queue: asyncio.Queue, Session, term: str):
         "rumad.uprm.edu",
         username="estudiante",
         password="",
-        auth_strategy=Password("estudiante", lambda: ""),
+        auth_strategy=PuttyAuth(ssh_config=SSHConfig()),
     )
 
     chan = ssh.invoke_shell()
@@ -144,7 +150,7 @@ async def worker(queue: asyncio.Queue, Session, term: str):
                 course = parsed_page.get("course_code", None)
                 if year is None and "year" in parsed_page:
                     year = parsed_page["year"]
-                if course is None:
+                if course is None or len(parsed_page["sections"]) == 0:
                     log_department_page(department, raw_department_result)
                     await send_input(chan, [("\n", 0.5)])
                     raw_department_result = await read_channel(chan)
@@ -154,7 +160,8 @@ async def worker(queue: asyncio.Queue, Session, term: str):
                 courses[course].extend(parsed_page["sections"].values())
                 await send_input(chan, [("\n", 0.5)])
                 raw_department_result = await read_channel(chan)
-
+            if year is None:
+                _, year = get_term_year(term)
             print(f"Finished scraping {len(courses)} courses from {department}")
             commit_department(courses, term, year, Session)
 
@@ -164,7 +171,7 @@ async def worker(queue: asyncio.Queue, Session, term: str):
                 "rumad.uprm.edu",
                 username="estudiante",
                 password="",
-                auth_strategy=Password("estudiante", lambda: ""),
+                auth_strategy=PuttyAuth(ssh_config=SSHConfig()),
             )
             await asyncio.sleep(0)
             chan = ssh.invoke_shell()
@@ -197,15 +204,15 @@ async def main():
             await queue.put(department)
 
         tasks = []
-        for _ in range(TASK_COUNT):
+        task_count = min(len(departments), MAX_TASK_COUNT)
+        for _ in range(task_count):
             task = asyncio.create_task(worker(queue, Session, term))
             tasks.append(task)
 
         # Add sentinel values to signal workers to stop
-        for _ in range(TASK_COUNT):
+        for _ in range(task_count):
             await queue.put(None)
 
-        # await queue.join()
         await asyncio.gather(*tasks)
 
         if len(failures) == 0:
