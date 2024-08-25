@@ -14,7 +14,7 @@ from src.models.enums import Term
 from src.parsers.ansi_parser import parse_department_page
 
 MAX_RETRIES = 3
-TASK_COUNT = 15
+TASK_COUNT = 25
 TIMEOUT_TIME = 60
 TERMS = (
     [Term.SECOND_SEMESTER] * 5
@@ -107,10 +107,7 @@ def commit_department(scraped_courses: dict, term: str, year: int, Session):
         session.commit()
 
 
-async def find_departments(departments: list[str], Session, term: str):
-    if len(departments) == 0:
-        return
-
+async def worker(queue: asyncio.Queue, Session, term: str):
     ssh = SSHClient()
     ssh.set_missing_host_key_policy(AutoAddPolicy())
 
@@ -124,24 +121,24 @@ async def find_departments(departments: list[str], Session, term: str):
     chan = ssh.invoke_shell()
     print(f"Opened channel {hex(id(chan))}")
     await setup(chan, term)
-    print(f"Channel {hex(id(chan))} scraping {departments}")
-    year = None
-    for department in departments:
-        try:
-            await send_input(
-                chan,
-                [
-                    (f"{department}\n", 5),
-                ],
-            )
 
+    year = None
+    while True:
+        try:
+            department = await queue.get()
+            if department is None:  # Sentinel value to indicate end of queue
+                break
+
+            print(f"Channel {hex(id(chan))} scraping {department}")
+
+            await send_input(chan, [(f"{department}\n", 5)])
             raw_department_result = await read_channel(chan)
+
             if "< Oprima Enter o [PF4(9)=Fin] >" not in raw_department_result:
                 print(f"No courses in {department}")
                 continue
 
             courses = {}
-            # process first page
             while "< Oprima Enter o [PF4(9)=Fin] >" in raw_department_result:
                 parsed_page = parse_department_page(raw_department_result)
                 course = parsed_page.get("course_code", None)
@@ -149,21 +146,18 @@ async def find_departments(departments: list[str], Session, term: str):
                     year = parsed_page["year"]
                 if course is None:
                     log_department_page(department, raw_department_result)
-                    # read next page
                     await send_input(chan, [("\n", 0.5)])
                     raw_department_result = await read_channel(chan)
                     continue
-                if course not in parsed_page:
+                if course not in courses:
                     courses[course] = []
-                for section in parsed_page["sections"].values():
-                    courses[course].append(section)
-                # navigate to next page
-                # read next page
+                courses[course].extend(parsed_page["sections"].values())
                 await send_input(chan, [("\n", 0.5)])
                 raw_department_result = await read_channel(chan)
+
             print(f"Finished scraping {len(courses)} courses from {department}")
-            # commit scraped courses to the database
             commit_department(courses, term, year, Session)
+
         except socket.error:
             print(f"Socket disconnected while scraping {department}; reconnecting")
             ssh.connect(
@@ -175,34 +169,14 @@ async def find_departments(departments: list[str], Session, term: str):
             await asyncio.sleep(0)
             chan = ssh.invoke_shell()
             await setup(chan, term)
-        # except Exception as e:
-        #     print(f"Exception {e} occurred while scraping {department}")
-        #     failures.add(department)
-        #     await send_input(chan, [("9\n", -1), (term_input, -1)])
+            await queue.put(department)  # Put the department back in the queue
+        except Exception as e:
+            print(f"Exception {e} occurred while scraping {department}")
+            failures.add(department)
+            await send_input(chan, [("9\n", -1), (term_input, -1)])
 
     chan.close()
     ssh.close()
-
-
-def split_list_into_sublists(
-    input_list: list[str], num_sublists: int
-) -> list[list[str]]:
-    if not input_list:
-        return [[]] * num_sublists
-
-    avg_length = len(input_list) // num_sublists
-    remainder = len(input_list) % num_sublists
-
-    sublists = []
-    current_index = 0
-
-    for _ in range(num_sublists):
-        sublist_length = avg_length + 1 if remainder > 0 else avg_length
-        sublists.append(input_list[current_index : current_index + sublist_length])
-        current_index += sublist_length
-        remainder -= 1
-
-    return sublists
 
 
 async def main():
@@ -210,27 +184,38 @@ async def main():
     term = sys.argv[1] if len(sys.argv) > 1 else Term.FIRST_SEMESTER.value
 
     with open("input_files/departments.txt") as file:
-        departments = split_list_into_sublists(
-            [line.strip() for line in file], TASK_COUNT
-        )
+        departments = [line.strip() for line in file]
 
     start_time = time()
     retries = 0
     engine = create_engine("sqlite:///courses.db", echo=False)
     Session = sessionmaker(bind=engine)
-    while retries < MAX_RETRIES:
-        tasks = []
-        for department_group in departments:
-            tasks.append(find_departments(department_group, Session, term))
 
+    while retries < MAX_RETRIES:
+        queue = asyncio.Queue()
+        for department in departments:
+            await queue.put(department)
+
+        tasks = []
+        for _ in range(TASK_COUNT):
+            task = asyncio.create_task(worker(queue, Session, term))
+            tasks.append(task)
+
+        # Add sentinel values to signal workers to stop
+        for _ in range(TASK_COUNT):
+            await queue.put(None)
+
+        # await queue.join()
         await asyncio.gather(*tasks)
 
         if len(failures) == 0:
             break
-        departments = split_list_into_sublists(list(failures), TASK_COUNT)
+
+        departments = list(failures)
         failures = set()
         print("Scraping previously failed courses")
         retries += 1
+
     print("Time elapsed: " + str(time() - start_time))
 
 
