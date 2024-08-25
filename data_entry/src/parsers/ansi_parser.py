@@ -17,7 +17,7 @@ section_code_pattern = re.compile(
 )
 capacity_pattern = re.compile(r"\[([0-9]+);63H\s*(\d+)\s*\[[0-9]+;67H")
 utilized_pattern = re.compile(r"\[([0-9]+);69H\s*(\d+)\s*\[[0-9]+;74H")
-remaining_pattern = re.compile(r"\[([0-9]+);75H\s*(\d+)\s*\[[0-9]+;80H")
+remaining_pattern = re.compile(r"\[([0-9]+);75H\s*(\d+-?)\s*\[[0-9]+;80H")
 
 # TODO: complete this pattern
 " [12;43H[12;47H 1[12;49H[12;50Hseccion[12;63H  45[12;67H[12;69H  24 [12;74H[12;75H  21 [12;80H[22;1H [22;48H< Oprima Enter o [PF4(9)=Fin] >[22;79H[22;79H"
@@ -42,7 +42,7 @@ def parse_department_page(raw_content: str) -> dict:
     utilized_matches = re.findall(utilized_pattern, simplified_content)
     remaining_matches = re.findall(remaining_pattern, simplified_content)
 
-    extracted_data = {"sections": {}}
+    extracted_data: dict = {"sections": {}}
     if course_code_match:
         row, course_code = course_code_match.groups()
         extracted_data["course_code"] = course_code.replace(" ", "")
@@ -62,7 +62,9 @@ def parse_department_page(raw_content: str) -> dict:
             "section_code": section_code,
             "capacity": int(capacity),
             "utilized": int(utilized),
-            "remaining": int(remaining),
+            "remaining": (
+                int(remaining) if remaining[-1] != "-" else -1 * int(remaining[:-1])
+            ),
         }
 
     if term_year_match:
@@ -72,7 +74,7 @@ def parse_department_page(raw_content: str) -> dict:
     return extracted_data
 
 
-"""
+r"""
 Below is some unused scraping code that took enough time to write that I'd rather not just delete it all
 course_name_pattern = re.compile(r"\[5;35H(\w+(?:\s+\w+)?)\s*\[5;61H")
 move_cursor_pattern = re.compile(r"\[(\d+);(\d+)[Hf]")
