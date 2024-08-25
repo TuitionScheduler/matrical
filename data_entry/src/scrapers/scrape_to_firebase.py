@@ -1,4 +1,4 @@
-from src.scrapers.scraper import scrape_department
+from src.scrapers.web_scraper import scrape_department
 from src.constants import number_to_term, spanish_term_to_map
 import concurrent.futures
 import sys

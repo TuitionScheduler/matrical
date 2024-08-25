@@ -1,7 +1,7 @@
 import json
 import sys
 import time
-from src.scrapers.scraper import scrape_department
+from src.scrapers.web_scraper import scrape_department
 import concurrent.futures
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
