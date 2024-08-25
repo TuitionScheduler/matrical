@@ -50,8 +50,8 @@ class Section(Base):
     section_code = Column(String(5), nullable=False)
     meetings = Column(String)  # comma separated
     modality = Column(String)
-    capacity = Column(Integer)
-    taken = Column(Integer)
+    capacity = Column(Integer, default=0)
+    taken = Column(Integer, default=0)
     reserved = Column(Boolean)
     professors = Column(String)  # comma separated
     misc = Column(String)  # comma separated
