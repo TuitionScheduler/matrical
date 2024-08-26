@@ -151,7 +151,6 @@ async def worker(queue: asyncio.Queue, Session, term: str):
                 if year is None and "year" in parsed_page:
                     year = parsed_page["year"]
                 if course is None or len(parsed_page["sections"]) == 0:
-                    log_department_page(department, raw_department_result)
                     await send_input(chan, [("\n", 0.5)])
                     raw_department_result = await read_channel(chan)
                     continue
