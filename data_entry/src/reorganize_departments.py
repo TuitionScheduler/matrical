@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, desc, func, select
 from sqlalchemy.orm import sessionmaker
-from src.database import Course
+from src.database import Course, Section
 
 
 engine = create_engine("sqlite:///courses.db")
@@ -20,14 +20,23 @@ with Session() as session:
     latest_two_years = [year[0] for year in latest_two_years]
 
     # Query to count courses per department for the latest two years
-    course_count_per_department = (
-        session.query(Course.department, func.count(Course.id).label("course_count"))
+    section_count_per_department_query = (
+        select(Course.department, func.count(Section.id).label("section_count"))
+        .join(Section, onclause=Section.course_id == Course.id)
         .filter(Course.year.in_(latest_two_years))
         .group_by(Course.department)
-        .all()
     )
-    for department, course_count in course_count_per_department:
-        dept_courses[department] = course_count
+    section_count_per_department = session.execute(
+        section_count_per_department_query
+    ).all()
+    # (
+    #     session.query(Course.department, func.count(Section.id).label("course_count"))
+    #     .filter(Course.year.in_(latest_two_years))
+    #     .group_by(Course.department)
+    #     .all()
+    # )
+    for department, section_count in section_count_per_department:
+        dept_courses[department] = section_count
 
 with open("input_files/departments.txt", "w+") as f:
     for dept in sorted(
