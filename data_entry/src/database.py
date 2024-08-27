@@ -8,8 +8,7 @@ from sqlalchemy import (
     Index,
     UniqueConstraint,
 )
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
 
@@ -23,7 +22,7 @@ class Program(Base):
 
 class Course(Base):
     __tablename__ = "courses"
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    cid = Column(Integer, primary_key=True, autoincrement=True)
     course_code = Column(String(10), nullable=False)
     course_name = Column(String)
     year = Column(Integer, nullable=False)
@@ -36,7 +35,6 @@ class Course(Base):
     # Define a one-to-many relationship between Course and Section
     sections = relationship("Section", back_populates="course")
 
-    # Create indexes for term and year
     __table_args__ = (
         Index("idx_term", term),
         Index("idx_year", year),
@@ -46,9 +44,9 @@ class Course(Base):
 
 class Section(Base):
     __tablename__ = "sections"
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    sid = Column(Integer, primary_key=True, autoincrement=True)
     section_code = Column(String(5), nullable=False)
-    meetings = Column(String)  # comma separated
+    meetings_text = Column(String)  # comma separated
     modality = Column(String)
     capacity = Column(Integer, default=0)
     taken = Column(Integer, default=0)
@@ -57,29 +55,30 @@ class Section(Base):
     misc = Column(String)  # comma separated
 
     # Define a many-to-one relationship between Section and Course
-    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    cid = Column(Integer, ForeignKey("courses.cid"), nullable=False)
     course = relationship("Course", back_populates="sections")
 
-    # Define a one-to-many relationship between Section and Schedule
-    schedules = relationship("Schedule", back_populates="section")
+    # Define a one-to-many relationship between Section and Meeting
+    meetings = relationship("Meeting", back_populates="section")
+
+    # Define a one-to-many relationship between Section and GradeDistribution
     grade_distributions = relationship("GradeDistribution", back_populates="section")
-    __table_args__ = (
-        UniqueConstraint("section_code", "course_id", name="unique_sections"),
-    )
+
+    __table_args__ = (UniqueConstraint("section_code", "cid", name="unique_sections"),)
 
 
-class Schedule(Base):
-    __tablename__ = "schedules"
-    id = Column(Integer, primary_key=True, autoincrement=True)
+class Meeting(Base):
+    __tablename__ = "meetings"
+    mid = Column(Integer, primary_key=True, autoincrement=True)
     building = Column(String)
     room = Column(String)
     days = Column(String)
     start_time = Column(String)
     end_time = Column(String)
 
-    # Define a many-to-one relationship between Schedule and Section
-    section_id = Column(Integer, ForeignKey("sections.id"), nullable=False)
-    section = relationship("Section", back_populates="schedules")
+    # Define a many-to-one relationship between Meeting and Section
+    sid = Column(Integer, ForeignKey("sections.sid"), nullable=False)
+    section = relationship("Section", back_populates="meetings")
 
 
 class GradeDistribution(Base):
@@ -87,7 +86,7 @@ class GradeDistribution(Base):
     tid = Column(
         Integer, primary_key=True, autoincrement=True
     )  # tid->table id to not overlap with Incomplete D
-    section_id = Column(Integer, ForeignKey("sections.id"), nullable=False)
+    sid = Column(Integer, ForeignKey("sections.sid"), nullable=False)
     A = Column(Integer, default=0, nullable=False)
     B = Column(Integer, default=0, nullable=False)
     C = Column(Integer, default=0, nullable=False)

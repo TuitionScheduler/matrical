@@ -40,9 +40,9 @@ def import_data(excel_file, academic_year):
                 continue
 
             # Query to get the section ID
-            j = join(Section, Course, Section.course_id == Course.id)
+            j = join(Section, Course, Section.cid == Course.cid)
             stmt = (
-                select(Section.id)
+                select(Section.sid)
                 .select_from(j)
                 .where(
                     (Course.course_code == course_code)
@@ -51,9 +51,9 @@ def import_data(excel_file, academic_year):
                     & (Course.term == term)
                 )
             )
-            section_id = session.execute(stmt).scalar_one_or_none()
+            sid = session.execute(stmt).scalar_one_or_none()
 
-            if section_id is None:
+            if sid is None:
                 print(
                     f"Warning: Section not found for course {course_code}, section {row[section_key]}"
                 )
@@ -61,12 +61,10 @@ def import_data(excel_file, academic_year):
 
             # Create or update GradeDistribution
             grade_distribution = (
-                session.query(GradeDistribution)
-                .filter_by(section_id=section_id)
-                .first()
+                session.query(GradeDistribution).filter_by(sid=sid).first()
             )
             if not grade_distribution:
-                grade_distribution = GradeDistribution(section_id=section_id)
+                grade_distribution = GradeDistribution(sid=sid)
                 session.add(grade_distribution)
 
             # Update grade distribution
@@ -102,9 +100,15 @@ def main():
     parser = argparse.ArgumentParser(
         description="Import grade distribution data from Excel file."
     )
-    parser.add_argument("-f", "--excel_file", help="Path to the Excel file")
     parser.add_argument(
-        "-y", "--academic_year", type=int, help="Academic year (e.g., 2023)"
+        "-f", "--excel_file", help="Path to the Excel file", required=True
+    )
+    parser.add_argument(
+        "-y",
+        "--academic_year",
+        type=int,
+        help="Academic year (e.g., 2023)",
+        required=True,
     )
 
     args = parser.parse_args()

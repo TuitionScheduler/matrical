@@ -21,20 +21,14 @@ with Session() as session:
 
     # Query to count courses per department for the latest two years
     section_count_per_department_query = (
-        select(Course.department, func.count(Section.id).label("section_count"))
-        .join(Section, onclause=Section.course_id == Course.id)
+        select(Course.department, func.count(Section.sid).label("section_count"))
+        .join(Section, onclause=Section.cid == Course.cid)
         .filter(Course.year.in_(latest_two_years))
         .group_by(Course.department)
     )
     section_count_per_department = session.execute(
         section_count_per_department_query
     ).all()
-    # (
-    #     session.query(Course.department, func.count(Section.id).label("course_count"))
-    #     .filter(Course.year.in_(latest_two_years))
-    #     .group_by(Course.department)
-    #     .all()
-    # )
     for department, section_count in section_count_per_department:
         dept_courses[department] = section_count
 

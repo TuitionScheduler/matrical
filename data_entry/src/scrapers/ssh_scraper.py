@@ -1,11 +1,11 @@
 from typing import Tuple
-from paramiko import AutoAddPolicy, BadAuthenticationType, SSHClient, Channel, SSHConfig
+from paramiko import AutoAddPolicy, SSHClient, Channel, SSHConfig
 from paramiko.auth_strategy import Password, AuthStrategy
 import re
 import sys
-from sqlalchemy import and_, create_engine, select, update
+from sqlalchemy import create_engine, update
 from sqlalchemy.orm import sessionmaker
-from src.database import Course, Section, Schedule
+from src.database import Course, Section
 from datetime import datetime
 from time import time
 import asyncio
@@ -98,7 +98,7 @@ def commit_department(scraped_courses: dict, term: str, year: int, Session):
                 if section is not None:
                     update_section_query = (
                         update(Section)
-                        .where(Section.id == section.id)
+                        .where(Section.sid == section.sid)
                         .values(
                             capacity=section_dict["capacity"],
                             taken=section_dict["utilized"],
