@@ -3,34 +3,17 @@ from paramiko import AutoAddPolicy, SSHClient, Channel, SSHConfig
 from paramiko.auth_strategy import Password, AuthStrategy
 import re
 import sys
-from sqlalchemy import create_engine, update
-from sqlalchemy.orm import sessionmaker
-from src.database import Course, Section
 from datetime import datetime
 from time import time
 import asyncio
 import socket
 from src.models.enums import Term
 from src.parsers.ansi_parser import parse_department_page
+from src.constants import rumad_to_db_terms, TERMS
 
 MAX_RETRIES = 3
 MAX_TASK_COUNT = 25
 TIMEOUT_TIME = 60
-TERMS = (
-    [Term.SECOND_SEMESTER] * 5
-    + [Term.FIRST_SUMMER]
-    + [Term.SECOND_SUMMER]
-    + [Term.FIRST_SEMESTER] * 5
-)
-putty_to_db_terms = {
-    Term.FIRST_SEMESTER.value: "Fall",
-    Term.SECOND_SEMESTER.value: "Spring",
-    Term.FIRST_SUMMER.value: "FirstSummer",
-    Term.SECOND_SUMMER.value: "SecondSummer",
-}
-
-failures = set()
-term_input = ""
 
 
 def get_term_year(term: str | None = None) -> Tuple[str, int]:
@@ -78,42 +61,14 @@ def log_department_page(dept: str, raw_content: str) -> None:
         f.write("\n")
 
 
-def commit_department(scraped_courses: dict, term: str, year: int, Session):
-    db_term = putty_to_db_terms[term]
-    with Session() as session:
-        for course_code, sections in scraped_courses.items():
-            no_lab_course_code = course_code.rstrip("L")
-            for section_dict in sections:
-                section = (
-                    session.query(Section)
-                    .join(Course)
-                    .filter(
-                        Course.course_code == no_lab_course_code,
-                        Course.term == db_term,
-                        Course.year == year,
-                        Section.section_code == section_dict["section_code"],
-                    )
-                    .first()
-                )
-                if section is not None:
-                    update_section_query = (
-                        update(Section)
-                        .where(Section.sid == section.sid)
-                        .values(
-                            capacity=section_dict["capacity"],
-                            taken=section_dict["utilized"],
-                        )
-                    )
-                    session.execute(update_section_query)
-        session.commit()
-
-
 class PuttyAuth(AuthStrategy):
     def get_sources(self):
         yield Password("estudiante", lambda: "")
 
 
-async def worker(queue: asyncio.Queue, Session, term: str):
+async def worker(
+    queue: asyncio.Queue, failures: set[str], section_availability: dict, term: str
+):
     ssh = SSHClient()
     ssh.set_missing_host_key_policy(AutoAddPolicy())
 
@@ -161,9 +116,8 @@ async def worker(queue: asyncio.Queue, Session, term: str):
                 raw_department_result = await read_channel(chan)
             if year is None:
                 _, year = get_term_year(term)
+            section_availability["courses"].update(courses)
             print(f"Finished scraping {len(courses)} courses from {department}")
-            commit_department(courses, term, year, Session)
-
         except socket.error:
             print(f"Socket disconnected while scraping {department}; reconnecting")
             ssh.connect(
@@ -180,32 +134,37 @@ async def worker(queue: asyncio.Queue, Session, term: str):
             print(f"Exception {e} occurred while scraping {department}")
             failures.add(department)
             await send_input(chan, [("9\n", -1), (term_input, -1)])
-
+    section_availability["year"] = year
     chan.close()
     ssh.close()
 
 
-async def main():
-    global failures
-    term = sys.argv[1] if len(sys.argv) > 1 else Term.FIRST_SEMESTER.value
+async def scrape_rumad_for_availability(rumad_term: str | None):
 
+    failures = set()
+    if rumad_term is None:
+        rumad_term = Term.FIRST_SEMESTER.value
+    section_availability = {
+        "courses": {},
+        "term": rumad_to_db_terms[rumad_term],
+        "year": None,
+    }
     with open("input_files/departments.txt") as file:
         departments = [line.strip() for line in file]
 
-    start_time = time()
     retries = 0
-    engine = create_engine("sqlite:///courses.db", echo=False)
-    Session = sessionmaker(bind=engine)
 
     while retries < MAX_RETRIES:
-        queue = asyncio.Queue()
+        queue: asyncio.Queue[str | None] = asyncio.Queue()
         for department in departments:
             await queue.put(department)
 
         tasks = []
         task_count = min(len(departments), MAX_TASK_COUNT)
         for _ in range(task_count):
-            task = asyncio.create_task(worker(queue, Session, term))
+            task = asyncio.create_task(
+                worker(queue, failures, section_availability, rumad_term)
+            )
             tasks.append(task)
 
         # Add sentinel values to signal workers to stop
@@ -222,8 +181,9 @@ async def main():
         print("Scraping previously failed courses")
         retries += 1
 
-    print("Time elapsed: " + str(time() - start_time))
+    return section_availability
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    _, term, *_ = sys.argv
+    print(asyncio.run(scrape_rumad_for_availability(term)))

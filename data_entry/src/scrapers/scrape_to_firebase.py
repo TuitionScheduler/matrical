@@ -1,5 +1,5 @@
 from src.scrapers.web_scraper import scrape_department
-from src.constants import number_to_term, spanish_term_to_map
+from src.constants import number_to_db_term, spanish_term_to_map
 import concurrent.futures
 import sys
 import time
@@ -108,7 +108,7 @@ if __name__ == "__main__":
         else departmentCoursesEntryInfo.get("termYearScrapeInfo", {})
     )
 
-    oldDepts = termYearScrapeInfo.get(f"{number_to_term[term]}:{year}", {}).get(
+    oldDepts = termYearScrapeInfo.get(f"{number_to_db_term[term]}:{year}", {}).get(
         "departments", []
     )
     # print(oldDepts)
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     # print(newDepts)
     termYearScrapeInfo.update(
         {
-            f"{number_to_term[term]}:{year}": {
+            f"{number_to_db_term[term]}:{year}": {
                 "lastUpdated": datetime.datetime.now(),
                 "departments": scraped_depts,
             }

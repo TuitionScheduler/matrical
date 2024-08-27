@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup, Tag
 import re
 from src.scrapers.scraper_utils import apply_regex
-from src.constants import number_to_term
+from src.constants import db_term_to_number
 
 
 def get_modality(section_code):
@@ -49,9 +49,10 @@ def get_professor_review(professor_ids: list[str], professors_ids_map: dict[str,
 
 
 def scrape_department(
-    department: str, term: str, year: int, professor_ids_map: dict[str, dict]
+    department: str, db_term: str, year: int, professor_ids_map: dict[str, dict]
 ) -> dict | None:
-    url = f"https://www.uprm.edu/registrar/sections/index.php?v1={department.lower()}&v2=&term={term}-{str(year)}&a=s&cmd1=Search"
+    numerical_term = db_term_to_number[db_term]
+    url = f"https://www.uprm.edu/registrar/sections/index.php?v1={department.lower()}&v2=&term={numerical_term}-{str(year)}&a=s&cmd1=Search"
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -68,7 +69,7 @@ def scrape_department(
         courses: dict[str, dict] = {}
         department_obj = {
             "department": department,
-            "term": number_to_term[term],
+            "term": db_term,
             "year": int(year),
             "courses": courses,
         }
@@ -118,7 +119,7 @@ def scrape_department(
             if not courses.get(course_code, False):
                 courses[course_code] = {
                     "courseCode": course_code,
-                    "term": number_to_term[term],
+                    "term": db_term,
                     "year": int(year),
                     "courseName": course_name,
                     "department": department,
