@@ -73,7 +73,7 @@ async def write_to_firebase_task(
                 sum(len(course["sections"]) for course in data["courses"].values()),
             )
         )
-
+        print(f"Saved {department} to Firebase")
         db_queue.task_done()
 
 
@@ -87,7 +87,6 @@ async def pass_through_queue_task(
 
 
 async def scrape_to_firebase(db_term, year, ssh_tasks):
-
     start_time = time.time()
     cred = credentials.Certificate("credentials.json")
     app = firebase_admin.initialize_app(cred)
@@ -177,7 +176,6 @@ async def scrape_to_firebase(db_term, year, ssh_tasks):
             file.write(
                 f"{dept.dept},{dept.bytes},{dept.course_count},{dept.section_count}\n"
             )
-
     await web_queue.join()
     web_scrape_time = time.time()
     await ssh_queue.join()
@@ -195,6 +193,7 @@ Total Time: {round(db_save_time-start_time, 2)} seconds
     )
 
     # clean up tasks and resources
+    client.close()
     for chan in channels:
         chan.close()
     for ssh in clients:
@@ -210,4 +209,6 @@ if __name__ == "__main__":
     db_term = sys.argv[1]
     year = int(sys.argv[2])
     ssh_tasks = int(sys.argv[3])
-    asyncio.run(scrape_to_firebase(db_term=db_term, year=year, ssh_tasks=ssh_tasks))
+
+    with asyncio.Runner() as runner:
+        runner.run(scrape_to_firebase(db_term=db_term, year=year, ssh_tasks=ssh_tasks))

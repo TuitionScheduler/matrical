@@ -66,7 +66,7 @@ class PuttyAuth(AuthStrategy):
         yield Password("estudiante", lambda: "")
 
 
-async def initialize_ssh_channels(clients: list[SSHClient]):
+async def initialize_ssh_channels(clients: list[SSHClient]) -> list[Channel]:
     channels = []
     for ssh in clients:
         ssh.set_missing_host_key_policy(AutoAddPolicy())
@@ -144,16 +144,3 @@ async def ssh_scraper_task(
             channel = (await initialize_ssh_channels([SSHClient()]))[0]
             await ssh_queue.put(department_data)
         ssh_queue.task_done()
-
-
-if __name__ == "__main__":
-    _, term, department, *_ = sys.argv
-    ssh = SSHClient()
-    ssh.connect(
-        "rumad.uprm.edu",
-        username="estudiante",
-        password="",
-        auth_strategy=PuttyAuth(ssh_config=SSHConfig()),
-    )
-    channel = ssh.invoke_shell()
-    # print(asyncio.run(scrape_rumad_for_availability(term)))
