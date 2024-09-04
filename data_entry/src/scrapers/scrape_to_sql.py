@@ -227,6 +227,5 @@ Total Time: {round(db_save_time-start_time, 2)} seconds
 if __name__ == "__main__":
     db_term = sys.argv[1]
     year = int(sys.argv[2])
-    # web_tasks = int(sys.argv[3])
     ssh_tasks = int(sys.argv[3])
     asyncio.run(scrape_to_sql(db_term=db_term, year=year, ssh_tasks=ssh_tasks))

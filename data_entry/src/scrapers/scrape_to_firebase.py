@@ -1,26 +1,23 @@
-from src.scrapers.web_scraper import scrape_department
-from src.constants import number_to_db_term, spanish_term_to_map
-import concurrent.futures
+import firebase_admin.firestore_async
 import sys
 import time
-import firebase_admin
+import json
+import os
+import asyncio
+import firebase_admin.firestore_async as firestore_async
 from firebase_admin import credentials
-from firebase_admin import firestore
+from google.cloud.firestore_v1 import AsyncClient
+
 import datetime
 from src.models.stats import DeptStats
-import json
-from src.scrapers.notification import send_notification
-import os
-
-cred = credentials.Certificate("credentials.json")
-app = firebase_admin.initialize_app(cred)
-db = firestore.client()
-doc_ref = db.collection("DepartmentCourses")
-
-registration_token = os.getenv("FIREBASE_NOTIFICATION_REG_KEY")
-
-dept_stats: list[DeptStats] = []
-scraped_depts = []
+from aiolimiter import AsyncLimiter
+from paramiko import SSHClient
+from src.scrapers.ssh_scraper import (
+    initialize_ssh_channels,
+    ssh_scraper_task,
+)
+from src.constants import db_to_rumad_terms
+from src.scrapers.web_scraper import web_scraper_task
 
 
 def calculate_doc_size(data):
@@ -49,58 +46,110 @@ def calculate_doc_name_size(path):
     return size + 16
 
 
-def runner(department, term, year, professor_ids):
-    global dept_stats, doc_ref
+async def write_to_firebase_task(
+    db_queue: asyncio.Queue,
+    client: AsyncClient,
+    scraped_depts: list[str],
+    dept_stats: list[DeptStats],
+):
+    collection_ref = client.collection("DepartmentCourses")
     while True:
-        try:
-            data = scrape_department(department, term, year, professor_ids)
-        except Exception as e:
-            print(e)
-            print(f"Failed to scrape {department}; trying again")
-        else:
-            if data is not None:
-                doc_ref.document(
-                    f"{data['department']}:{data['term'].replace(' ','')}:{data['year']}"
-                ).set(data)
-                scraped_depts.append(department)
-                # print(data)
-                dept_stats.append(
-                    DeptStats(
-                        department,
-                        calculate_doc_name_size(
-                            f"DepartmentCourses/{department}:{data['term']}:{year}"
-                        )
-                        + calculate_doc_size(data),  # type: ignore
-                        len(data["courses"].keys()),
-                        sum(
-                            len(course["sections"])
-                            for course in data["courses"].values()
-                        ),
-                    )
+        data = await db_queue.get()
+        department = data["department"]
+        term = data["term"]
+        year = data["year"]
+        await collection_ref.document(
+            f"{department}:{term.replace(' ','')}:{year}"
+        ).set(data)
+        scraped_depts.append(department)
+        dept_stats.append(
+            DeptStats(
+                department,
+                calculate_doc_name_size(
+                    f"DepartmentCourses/{department}:{data['term']}:{year}"
                 )
-                print(f"Successfully scraped {department}")
-            else:
-                print(f"No sections found for {department}")
-            break
+                + calculate_doc_size(data),  # type: ignore
+                len(data["courses"].keys()),
+                sum(len(course["sections"]) for course in data["courses"].values()),
+            )
+        )
+
+        db_queue.task_done()
 
 
-if __name__ == "__main__":
-    term, year = sys.argv[1], sys.argv[2]
+async def pass_through_queue_task(
+    source_queue: asyncio.Queue, destination_queue: asyncio.Queue
+):
+    while True:
+        data = await source_queue.get()
+        source_queue.task_done()
+        await destination_queue.put(data)
+
+
+async def scrape_to_firebase(db_term, year, ssh_tasks):
+
+    start_time = time.time()
+    cred = credentials.Certificate("credentials.json")
+    app = firebase_admin.initialize_app(cred)
+    client = firestore_async.client(app)
+
+    dept_stats: list[DeptStats] = []
+    scraped_depts = []
+
     with open("input_files/professor_ids.txt") as file:
         professor_ids = json.load(file)
     with open("input_files/departments.txt") as file:
-        departments = sorted(department.strip() for department in file)
-    start_time = time.time()
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-        for department in departments:
-            executor.submit(runner, department, term, year, professor_ids)
+        departments = [department.strip() for department in file]
+    # Departments will travel like so: File -> Web Queue -> SSH Queue -> DB Queue
+    # ssh queue and db queue have dictionary representations of all the courses in a department
+    web_queue: asyncio.Queue[str] = asyncio.Queue()
+    ssh_queue: asyncio.Queue[dict] = asyncio.Queue()
+    db_queue: asyncio.Queue[dict] = asyncio.Queue()
+    clients = [SSHClient() for _ in range(ssh_tasks)]
+    web_request_limiter = AsyncLimiter(4, 1)
+    # populate Web Queue
+    for department in departments:
+        web_queue.put_nowait(department)
 
-    departmentCoursesEntryInfo: dict | None = (
-        db.collection("DataEntryInformation")
-        .document("DepartmentCourses")
-        .get()
-        .to_dict()
+    # Create and queue up tasks to scrape course data from UPRM course offering website
+    web_scraper_tasks = [
+        asyncio.create_task(
+            web_scraper_task(
+                web_queue,
+                ssh_queue,
+                db_term,
+                year,
+                professor_ids,
+                rate_limit=web_request_limiter,
+            )
+        )
+        for _ in range(4)
+    ]
+
+    # Create and queue up tasks to scrape section availability from UPRM enrollment server
+    channels = await initialize_ssh_channels(clients)
+    if db_term not in db_to_rumad_terms:
+        ssh_scraper_tasks = [
+            asyncio.create_task(pass_through_queue_task(ssh_queue, db_queue))
+        ]
+    else:
+        ssh_scraper_tasks = [
+            asyncio.create_task(
+                ssh_scraper_task(
+                    db_to_rumad_terms[db_term], ssh_queue, db_queue, channel
+                )
+            )
+            for channel in channels
+        ]
+
+    # Create and queue up database task to store scraped departments
+    db_task = asyncio.create_task(
+        write_to_firebase_task(db_queue, client, scraped_depts, dept_stats)
     )
+    departmentCoursesEntryInfoDoc = await (
+        client.collection("DataEntryInformation").document("DepartmentCourses").get()
+    )
+    departmentCoursesEntryInfo: dict | None = departmentCoursesEntryInfoDoc.to_dict()
 
     termYearScrapeInfo = (
         {}
@@ -108,42 +157,18 @@ if __name__ == "__main__":
         else departmentCoursesEntryInfo.get("termYearScrapeInfo", {})
     )
 
-    oldDepts = termYearScrapeInfo.get(f"{number_to_db_term[term]}:{year}", {}).get(
-        "departments", []
-    )
-    # print(oldDepts)
-    # print(scraped_depts)
-    newDepts = sorted(list(set(scraped_depts).difference(set(oldDepts))))
-    # print(newDepts)
+    oldDepts = termYearScrapeInfo.get(f"{db_term}:{year}", {}).get("departments", [])
     termYearScrapeInfo.update(
         {
-            f"{number_to_db_term[term]}:{year}": {
+            f"{db_term}:{year}": {
                 "lastUpdated": datetime.datetime.now(),
                 "departments": scraped_depts,
             }
         }
     )
-    db.collection("DataEntryInformation").document("DepartmentCourses").set(
+    await client.collection("DataEntryInformation").document("DepartmentCourses").set(
         {"termYearScrapeInfo": termYearScrapeInfo}
     )
-
-    def generate_body(depts: list) -> str:
-        if len(depts) == 0:
-            return ""
-        if len(depts) == 1:
-            return f"El departamento {depts[0]} fue añadido."
-        deptsString = f"{', '.join(depts[:-1])} y {depts[-1]}"
-        return f"Los departamentos {deptsString} fueron añadidos."
-
-    if len(newDepts) > 0 and registration_token is not None:
-        send_notification(
-            f"Departamentos nuevos para el {spanish_term_to_map[term]} de {year}",
-            generate_body(newDepts),
-            registration_token,
-        )
-
-    print(f"Finished scraping in {str(time.time() - start_time)} seconds")
-
     if not os.path.isdir("output_files"):
         os.makedirs("output_files")
     with open("output_files/dept_stats.csv", "w") as file:
@@ -152,3 +177,37 @@ if __name__ == "__main__":
             file.write(
                 f"{dept.dept},{dept.bytes},{dept.course_count},{dept.section_count}\n"
             )
+
+    await web_queue.join()
+    web_scrape_time = time.time()
+    await ssh_queue.join()
+    ssh_scrape_time = time.time()
+    await db_queue.join()
+    db_save_time = time.time()
+    print(
+        f"""
+Time Breakdown:
+Course Offering Web Scraping: {round(web_scrape_time-start_time, 2)} seconds
+Section Availability SSH Scraping: {round(ssh_scrape_time-web_scrape_time, 2)} seconds
+Database Storing: {round(db_save_time-ssh_scrape_time, 2)} seconds
+Total Time: {round(db_save_time-start_time, 2)} seconds
+          """
+    )
+
+    # clean up tasks and resources
+    for chan in channels:
+        chan.close()
+    for ssh in clients:
+        ssh.close()
+    db_task.cancel()
+    for task in web_scraper_tasks:
+        task.cancel()
+    for task in ssh_scraper_tasks:
+        task.cancel()
+
+
+if __name__ == "__main__":
+    db_term = sys.argv[1]
+    year = int(sys.argv[2])
+    ssh_tasks = int(sys.argv[3])
+    asyncio.run(scrape_to_firebase(db_term=db_term, year=year, ssh_tasks=ssh_tasks))
