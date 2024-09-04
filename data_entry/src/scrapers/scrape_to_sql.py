@@ -7,13 +7,13 @@ import time
 import aiohttp
 import re
 import asyncio
+from aiolimiter import AsyncLimiter
 from paramiko import Channel, SSHClient
 from sqlalchemy import select
 from src.parsers.schedule_parser import parse_schedule
 from src.scrapers.ssh_scraper import (
     initialize_ssh_channels,
-    scrape_department_availability,
-    setup,
+    ssh_scraper_task,
 )
 from src.database import Course, Section, Meeting, Base
 from src.parsers.schedule_parser import parse_schedule
@@ -31,51 +31,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import selectinload
 
-from src.scrapers.web_scraper import scrape_department
-
-
-async def web_scraper_task(
-    web_queue: asyncio.Queue,
-    ssh_queue: asyncio.Queue,
-    db_term: str,
-    year: int,
-    professor_ids: dict,
-):
-    async with aiohttp.ClientSession() as session:
-        while True:
-            department = await web_queue.get()
-            try:
-                data = await scrape_department(
-                    session, department, db_term, year, professor_ids
-                )
-                if data:
-                    await ssh_queue.put(data)
-                    print(f"Successfully scraped courses for {department}")
-                else:
-                    print(f"No course data found for {department}")
-            except:
-                print(f"Encountered error while scraping courses for {department}")
-            web_queue.task_done()
-
-
-async def ssh_scraper_task(
-    rumad_term: str, ssh_queue: asyncio.Queue, db_queue: asyncio.Queue, channel: Channel
-):
-    await setup(channel, rumad_term)
-    while True:
-        department_data = await ssh_queue.get()
-        try:
-            updated_data = await scrape_department_availability(
-                channel, department_data
-            )
-            await db_queue.put(updated_data)
-        except socket.error:
-            print(
-                f"Socket disconnected while scraping {department_data['department']}; reconnecting"
-            )
-            channel = (await initialize_ssh_channels([SSHClient()]))[0]
-            await ssh_queue.put(department_data)
-        ssh_queue.task_done()
+from src.scrapers.web_scraper import web_scraper_task
 
 
 async def write_to_database_task(db_queue: asyncio.Queue, async_engine: AsyncEngine):
@@ -201,16 +157,24 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
     ssh_queue: asyncio.Queue[dict] = asyncio.Queue()
     db_queue: asyncio.Queue[dict] = asyncio.Queue()
     clients = [SSHClient() for _ in range(ssh_tasks)]
+    web_request_limiter = AsyncLimiter(4, 1)
     # populate Web Queue
     for department in departments:
         web_queue.put_nowait(department)
 
     # Create and queue up tasks to scrape course data from UPRM course offering website
-    # Limited to 1 task to avoid rate limiting issues for now
     web_scraper_tasks = [
         asyncio.create_task(
-            web_scraper_task(web_queue, ssh_queue, db_term, year, professor_ids)
+            web_scraper_task(
+                web_queue,
+                ssh_queue,
+                db_term,
+                year,
+                professor_ids,
+                rate_limit=web_request_limiter,
+            )
         )
+        for _ in range(4)
     ]
 
     # Create and queue up tasks to scrape section availability from UPRM enrollment server

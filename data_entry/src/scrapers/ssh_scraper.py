@@ -126,6 +126,26 @@ from {department}"
     return department_data
 
 
+async def ssh_scraper_task(
+    rumad_term: str, ssh_queue: asyncio.Queue, db_queue: asyncio.Queue, channel: Channel
+):
+    await setup(channel, rumad_term)
+    while True:
+        department_data = await ssh_queue.get()
+        try:
+            updated_data = await scrape_department_availability(
+                channel, department_data
+            )
+            await db_queue.put(updated_data)
+        except socket.error:
+            print(
+                f"Socket disconnected while scraping {department_data['department']}; reconnecting"
+            )
+            channel = (await initialize_ssh_channels([SSHClient()]))[0]
+            await ssh_queue.put(department_data)
+        ssh_queue.task_done()
+
+
 if __name__ == "__main__":
     _, term, department, *_ = sys.argv
     ssh = SSHClient()
