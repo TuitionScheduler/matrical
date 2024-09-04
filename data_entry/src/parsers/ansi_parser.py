@@ -45,7 +45,7 @@ def parse_department_page(raw_content: str) -> dict:
     extracted_data: dict = {"sections": {}}
     if course_code_match:
         row, course_code = course_code_match.groups()
-        extracted_data["course_code"] = course_code.replace(" ", "")
+        extracted_data["courseCode"] = course_code.replace(" ", "")
     # parse sections and other data:
     sections_capacities_utilized_remaining = zip(
         section_code_matches, capacity_matches, utilized_matches, remaining_matches
@@ -59,9 +59,9 @@ def parse_department_page(raw_content: str) -> dict:
             print(f"index mismatch between parsed fields: {srow}-{crow}-{urow}-{rrow}")
 
         extracted_data["sections"][srow] = {
-            "section_code": section_code,
+            "sectionCode": section_code,
             "capacity": int(capacity),
-            "utilized": int(utilized),
+            "usage": int(utilized),
             "remaining": (
                 int(remaining) if remaining[-1] != "-" else -1 * int(remaining[:-1])
             ),

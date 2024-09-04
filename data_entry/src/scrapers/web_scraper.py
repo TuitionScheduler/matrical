@@ -1,4 +1,4 @@
-import requests
+import aiohttp
 from bs4 import BeautifulSoup, Tag
 import re
 from src.scrapers.scraper_utils import apply_regex
@@ -48,18 +48,25 @@ def get_professor_review(professor_ids: list[str], professors_ids_map: dict[str,
     return None
 
 
-def scrape_department(
-    department: str, db_term: str, year: int, professor_ids_map: dict[str, dict]
+async def scrape_department(
+    session: aiohttp.ClientSession,
+    department: str,
+    db_term: str,
+    year: int,
+    professor_ids_map: dict[str, dict],
 ) -> dict | None:
     numerical_term = db_term_to_number[db_term]
     url = f"https://www.uprm.edu/registrar/sections/index.php?v1={department.lower()}&v2=&term={numerical_term}-{str(year)}&a=s&cmd1=Search"
-    response = requests.get(url)
 
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, "html.parser")
+    async with session.get(url) as response:
+        if response.status != 200:
+            raise Exception(f"Failed to retrieve data. Status Code: {response.status}")
 
-        if soup.find("h2", text="WebService Error") is not None:
-            raise Exception("Failed to scrape department")
+        content = await response.text()
+        soup = BeautifulSoup(content, "html.parser")
+
+        if soup.find("h2", string="WebService Error") is not None:
+            return None
 
         table = soup.find("table", class_="section_results")
 
@@ -148,5 +155,3 @@ def scrape_department(
             courses[course_code]["sections"].append(section)
 
         return department_obj
-    else:
-        raise Exception(f"Failed to retrieve data. Status Code: {response.status_code}")
