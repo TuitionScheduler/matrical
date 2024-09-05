@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import aiohttp
 from aiolimiter import AsyncLimiter
 from bs4 import BeautifulSoup, Tag
@@ -167,6 +168,7 @@ async def web_scraper_task(
     year: int,
     professor_ids: dict,
     rate_limit: AsyncLimiter,
+    logger: logging.Logger | None = None,
 ):
     async with aiohttp.ClientSession() as session:
         while True:
@@ -177,9 +179,12 @@ async def web_scraper_task(
                 )
                 if data:
                     await ssh_queue.put(data)
-                    print(f"Successfully scraped courses for {department}")
+                    if logger:
+                        logger.info(f"Successfully scraped courses for {department}")
                 else:
-                    print(f"No course data found for {department}")
+                    if logger:
+                        logger.info(f"No course data found for {department}")
             except Exception as e:
-                print(f"Encountered error while scraping courses for {department}: {e}")
+                if logger:
+                    logger.error(f"Error while scraping courses for {department}: {e}")
             web_queue.task_done()

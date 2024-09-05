@@ -1,3 +1,4 @@
+import logging
 import firebase_admin.firestore_async
 import sys
 import time
@@ -51,6 +52,7 @@ async def write_to_firebase_task(
     client: AsyncClient,
     scraped_depts: list[str],
     dept_stats: list[DeptStats],
+    logger: logging.Logger | None = None,
 ):
     collection_ref = client.collection("DepartmentCourses")
     while True:
@@ -73,7 +75,8 @@ async def write_to_firebase_task(
                 sum(len(course["sections"]) for course in data["courses"].values()),
             )
         )
-        print(f"Saved {department} to Firebase")
+        if logger:
+            logger.info(f"Saved {department} to Firebase")
         db_queue.task_done()
 
 
@@ -87,10 +90,20 @@ async def pass_through_queue_task(
 
 
 async def scrape_to_firebase(db_term, year, ssh_tasks):
-    start_time = time.time()
+    # Set up logging
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
+    logging.basicConfig(
+        filename="logs/firebase_scraper.log",
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+    logger = logging.getLogger(__name__)
+    # Setup Firebase access
     cred = credentials.Certificate("credentials.json")
     app = firebase_admin.initialize_app(cred)
     client = firestore_async.client(app)
+    start_time = time.time()
 
     dept_stats: list[DeptStats] = []
     scraped_depts = []
@@ -114,28 +127,37 @@ async def scrape_to_firebase(db_term, year, ssh_tasks):
     web_scraper_tasks = [
         asyncio.create_task(
             web_scraper_task(
-                web_queue,
-                ssh_queue,
-                db_term,
-                year,
-                professor_ids,
+                web_queue=web_queue,
+                ssh_queue=ssh_queue,
+                db_term=db_term,
+                year=year,
+                professor_ids=professor_ids,
                 rate_limit=web_request_limiter,
+                logger=logger,
             )
         )
         for _ in range(4)
     ]
 
     # Create and queue up tasks to scrape section availability from UPRM enrollment server
-    channels = await initialize_ssh_channels(clients)
+    channels = await initialize_ssh_channels(clients=clients, logger=logger)
     if db_term not in db_to_rumad_terms:
         ssh_scraper_tasks = [
-            asyncio.create_task(pass_through_queue_task(ssh_queue, db_queue))
+            asyncio.create_task(
+                pass_through_queue_task(
+                    source_queue=ssh_queue, destination_queue=db_queue
+                )
+            )
         ]
     else:
         ssh_scraper_tasks = [
             asyncio.create_task(
                 ssh_scraper_task(
-                    db_to_rumad_terms[db_term], ssh_queue, db_queue, channel
+                    rumad_term=db_to_rumad_terms[db_term],
+                    ssh_queue=ssh_queue,
+                    db_queue=db_queue,
+                    channel=channel,
+                    logger=logger,
                 )
             )
             for channel in channels
@@ -143,7 +165,7 @@ async def scrape_to_firebase(db_term, year, ssh_tasks):
 
     # Create and queue up database task to store scraped departments
     db_task = asyncio.create_task(
-        write_to_firebase_task(db_queue, client, scraped_depts, dept_stats)
+        write_to_firebase_task(db_queue, client, scraped_depts, dept_stats, logger)
     )
     departmentCoursesEntryInfoDoc = await (
         client.collection("DataEntryInformation").document("DepartmentCourses").get()

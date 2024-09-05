@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import socket
 from sqlite3 import IntegrityError
@@ -34,7 +35,11 @@ from sqlalchemy.orm import selectinload
 from src.scrapers.web_scraper import web_scraper_task
 
 
-async def write_to_database_task(db_queue: asyncio.Queue, async_engine: AsyncEngine):
+async def write_to_database_task(
+    db_queue: asyncio.Queue,
+    async_engine: AsyncEngine,
+    logger: logging.Logger | None = None,
+):
     AsyncSessionLocal = async_sessionmaker(
         async_engine, class_=AsyncSession, expire_on_commit=False
     )
@@ -120,14 +125,21 @@ async def write_to_database_task(db_queue: asyncio.Queue, async_engine: AsyncEng
                                 section.meetings.append(meeting)
                     await session.merge(course)
                 except IntegrityError as e:
-                    print(f"IntegrityError for course {course_code}: {str(e)}")
+                    if logger:
+                        logger.error(
+                            f"IntegrityError for course {course_code}: {str(e)}"
+                        )
                     await session.rollback()
                 except Exception as e:
-                    print(f"Error saving course {course_code} to DB: {str(e)}")
+                    if logger:
+                        logger.error(
+                            f"Error saving course {course_code} to DB: {str(e)}"
+                        )
                     await session.rollback()
                 else:
                     await session.commit()
-                    print(f"Saved {department} to SQL DB")
+                    if logger:
+                        logger.info(f"Saved {department} to SQL DB")
         db_queue.task_done()
 
 
@@ -141,7 +153,15 @@ async def pass_through_queue_task(
 
 
 async def scrape_to_sql(db_term, year, ssh_tasks):
-
+    # Set up logging
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
+    logging.basicConfig(
+        filename="logs/firebase_scraper.log",
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+    logger = logging.getLogger(__name__)
     start_time = time.time()
     engine = create_async_engine("sqlite+aiosqlite:///courses.db", echo=False)
     async with engine.begin() as conn:
@@ -161,40 +181,50 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
     # populate Web Queue
     for department in departments:
         web_queue.put_nowait(department)
-
     # Create and queue up tasks to scrape course data from UPRM course offering website
     web_scraper_tasks = [
         asyncio.create_task(
             web_scraper_task(
-                web_queue,
-                ssh_queue,
-                db_term,
-                year,
-                professor_ids,
+                web_queue=web_queue,
+                ssh_queue=ssh_queue,
+                db_term=db_term,
+                year=year,
+                professor_ids=professor_ids,
                 rate_limit=web_request_limiter,
+                logger=logger,
             )
         )
         for _ in range(4)
     ]
 
     # Create and queue up tasks to scrape section availability from UPRM enrollment server
-    channels = await initialize_ssh_channels(clients)
+    channels = await initialize_ssh_channels(clients=clients, logger=logger)
     if db_term not in db_to_rumad_terms:
         ssh_scraper_tasks = [
-            asyncio.create_task(pass_through_queue_task(ssh_queue, db_queue))
+            asyncio.create_task(
+                pass_through_queue_task(
+                    source_queue=ssh_queue, destination_queue=db_queue
+                )
+            )
         ]
     else:
         ssh_scraper_tasks = [
             asyncio.create_task(
                 ssh_scraper_task(
-                    db_to_rumad_terms[db_term], ssh_queue, db_queue, channel
+                    rumad_term=db_to_rumad_terms[db_term],
+                    ssh_queue=ssh_queue,
+                    db_queue=db_queue,
+                    channel=channel,
+                    logger=logger,
                 )
             )
             for channel in channels
         ]
 
     # Create and queue up database task to store scraped departments
-    db_task = asyncio.create_task(write_to_database_task(db_queue, engine))
+    db_task = asyncio.create_task(
+        write_to_database_task(db_queue=db_queue, async_engine=engine, logger=logger)
+    )
 
     await web_queue.join()
     web_scrape_time = time.time()

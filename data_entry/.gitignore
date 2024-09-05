@@ -6,3 +6,4 @@ output_files/
 parser.out
 parsetab.py
 dist/
+logs/
