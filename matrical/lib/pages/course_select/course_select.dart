@@ -516,7 +516,7 @@ class _CourseSelectState extends State<CourseSelect> {
                           child: ElevatedButton(
                               onPressed: () async {
                                 if (matricalState.selectedCourses.isNotEmpty) {
-                                  _shareCourses(
+                                  await _shareCourses(
                                       context,
                                       matricalState.term,
                                       matricalState.year,
@@ -601,7 +601,7 @@ class _CourseSelectState extends State<CourseSelect> {
   }
 }
 
-void _shareCourses(BuildContext context, Term term, int year,
+Future<void> _shareCourses(BuildContext context, Term term, int year,
     List<CourseWithFilters> courses) async {
   final browser = Browser.detectOrNull(); // Always null when not on web
   /*
@@ -613,9 +613,14 @@ void _shareCourses(BuildContext context, Term term, int year,
     */
   final queryParams = {
     "term": term.databaseKey,
-    "year": year,
-    "courses":
-        courses.map((cs) => "${cs.courseCode}-${cs.sectionCode}").join(",")
+    "year": year.toString(),
+    "courses": courses.map((cs) {
+      String courseString = cs.courseCode;
+      if (cs.sectionCode != "") {
+        courseString += "-${cs.sectionCode}";
+      }
+      return courseString;
+    }).join(",")
   };
   final shareURL = Uri.base.replace(queryParameters: queryParams).toString();
   if (browser != null) {
