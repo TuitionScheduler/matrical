@@ -51,41 +51,43 @@ class _MainAppState extends State<MainApp> {
   void _tryToImportSchedule() {
     final uri = Uri.base;
     final queryParams = uri.queryParameters;
+    try {
+      final termRegex = RegExp(r'^[a-zA-Z]+$');
+      final yearRegex = RegExp(r'^\d+$');
+      if (queryParams.containsKey('term') &&
+          queryParams.containsKey('year') &&
+          queryParams.containsKey('courses')) {
+        print("Attempting to import schedule from $uri");
+        final term = queryParams['term']!;
+        final year = queryParams['year']!;
+        final courses = queryParams['courses']!;
 
-    final termRegex = RegExp(r'^[a-zA-Z]+$');
-    final yearRegex = RegExp(r'^\d+$');
-    final courseListRegex = RegExp(
-        r'^([A-Z]{4}\d{4}(?:-[A-Za-z0-9]{1,5})?)(?:\+[A-Z]{4}\d{4}(?:-[A-Za-z0-9]{1,5})?)*$');
-
-    if (queryParams.containsKey('term') &&
-        queryParams.containsKey('year') &&
-        queryParams.containsKey('courses')) {
-      final term = queryParams['term'];
-      final year = queryParams['year'];
-      final courses = queryParams['courses'];
-
-      if (termRegex.hasMatch(term!) &&
-          yearRegex.hasMatch(year!) &&
-          courseListRegex.hasMatch(courses!)) {
-        // All parameters are valid, update the state
-        final parsedTerm = Term.fromString(term) ?? Term.getPredictedTerm();
-        final parsedYear = int.parse(year);
-        final coursesWithSections = courses.split('+');
-
-        matricalCubitSingleton.updateTerm(parsedTerm);
-        matricalCubitSingleton.updateYear(parsedYear);
-        matricalCubitSingleton
-            .updateCourses(coursesWithSections.map((String cString) {
-          List<String> courseAndSection = cString.split("-");
-          final courseCode = courseAndSection[0];
-          final sectionCode =
-              courseAndSection.length > 1 ? courseAndSection[1] : "";
-          return CourseWithFilters.withoutFilters(
-              courseCode: courseCode, sectionCode: sectionCode);
-        }).toList());
-        matricalCubitSingleton.setPage(MatricalPage.generatedSchedules);
-        clearShareUrl();
+        if (termRegex.hasMatch(term) && yearRegex.hasMatch(year)) {
+          // All parameters are valid, update the state
+          final parsedTerm = Term.fromString(term) ?? Term.getPredictedTerm();
+          final parsedYear = int.parse(year);
+          // + is kept for legacy reasons. Current separator is ,
+          final courseDelimiter = RegExp(r',|\+');
+          final coursesWithSections = courses.split(courseDelimiter);
+          matricalCubitSingleton.updateTerm(parsedTerm);
+          matricalCubitSingleton.updateYear(parsedYear);
+          matricalCubitSingleton
+              .updateCourses(coursesWithSections.map((String cString) {
+            List<String> courseAndSection = cString.split("-");
+            final courseCode = courseAndSection[0];
+            final sectionCode =
+                courseAndSection.length > 1 ? courseAndSection[1] : "";
+            return CourseWithFilters.withoutFilters(
+                courseCode: courseCode, sectionCode: sectionCode);
+          }).toList());
+          matricalCubitSingleton.setPage(MatricalPage.generatedSchedules);
+          clearShareUrl();
+          print("Successfully imported schedule from $uri");
+        }
       }
+    } catch (e) {
+      print(
+          "Encountered error while importing schedule from URL:$uri . Error: $e");
     }
   }
 

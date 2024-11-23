@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 import 'package:info_widget/info_widget.dart';
@@ -17,6 +18,8 @@ import 'package:matrical/services/formatter_service.dart';
 import 'package:matrical/services/stored_preferences.dart';
 import 'package:matrical/widgets/course_filters.dart';
 import 'package:matrical/widgets/import_schedule_dialog.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:web_browser_detect/web_browser_detect.dart';
 
 const officialColor = Color.fromRGBO(9, 144, 45, 1);
 
@@ -508,29 +511,51 @@ class _CourseSelectState extends State<CourseSelect> {
                   const Divider(),
                   Row(
                     children: [
-                      Expanded(
-                        child: Padding(
+                      Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: ElevatedButton(
-                              onPressed: () {
+                              onPressed: () async {
                                 if (matricalState.selectedCourses.isNotEmpty) {
-                                  matricalCubit
-                                      .setPage(MatricalPage.generatedSchedules);
+                                  _shareCourses(
+                                      context,
+                                      matricalState.term,
+                                      matricalState.year,
+                                      matricalState.selectedCourses);
                                 } else {
-                                  ScaffoldMessenger.of(innerContext)
-                                      .hideCurrentSnackBar(); // don't need remove here since snackbar blocks button
-                                  ScaffoldMessenger.of(innerContext)
-                                      .showSnackBar(const SnackBar(
-                                    content:
-                                        Text('Añade cursos antes de generar.'),
-                                  ));
+                                  ScaffoldMessenger.of(context)
+                                    ..hideCurrentSnackBar()
+                                    ..showSnackBar(const SnackBar(
+                                      content: Text(
+                                          'Añade cursos para poder compartir el enlace.'),
+                                    ));
                                 }
                               },
-                              child: const Text("Generar Matrículas")),
+                              child: const Text("Compartir"))),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: FilledButton(
+                            onPressed: () {
+                              if (matricalState.selectedCourses.isNotEmpty) {
+                                matricalCubit
+                                    .setPage(MatricalPage.generatedSchedules);
+                              } else {
+                                ScaffoldMessenger.of(innerContext)
+                                    .hideCurrentSnackBar(); // don't need remove here since snackbar blocks button
+                                ScaffoldMessenger.of(innerContext)
+                                    .showSnackBar(const SnackBar(
+                                  content:
+                                      Text('Añade cursos antes de generar.'),
+                                ));
+                              }
+                            },
+                            child: const Text("Generar Matrículas",
+                                textAlign: TextAlign.center),
+                          ),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(4.0),
                         child: ElevatedButton(
                             onPressed: () {
                               showDialog(
@@ -573,6 +598,46 @@ class _CourseSelectState extends State<CourseSelect> {
             })),
       ),
     );
+  }
+}
+
+void _shareCourses(BuildContext context, Term term, int year,
+    List<CourseWithFilters> courses) async {
+  final browser = Browser.detectOrNull(); // Always null when not on web
+  /*
+      On browsers with access to the webshare API, 
+      use that to share the URL or Text code. Otherwise, fall back to
+      writing the URL to the clipboard.
+      Exceptions: FireFox has WebShare but text isn't properly copied onto it
+
+    */
+  final queryParams = {
+    "term": term.databaseKey,
+    "year": year,
+    "courses":
+        courses.map((cs) => "${cs.courseCode}-${cs.sectionCode}").join(",")
+  };
+  final shareURL = Uri.base.replace(queryParameters: queryParams).toString();
+  if (browser != null) {
+    switch (browser.browserAgent) {
+      case BrowserAgent.Chrome:
+      case BrowserAgent.Edge:
+      case BrowserAgent.EdgeChromium:
+      case BrowserAgent.Safari:
+        await Share.share(shareURL);
+        return; // exit early after a successful share
+      default:
+        break;
+    }
+  }
+
+  await Clipboard.setData(ClipboardData(text: shareURL));
+  if (context.mounted) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(
+        content: Text('Enlace con tus cursos fue copiado a tu dispositivo.'),
+      ));
   }
 }
 

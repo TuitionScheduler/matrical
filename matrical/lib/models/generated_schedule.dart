@@ -237,7 +237,7 @@ class GeneratedSchedule {
       "year": year.toString(),
       "courses": courses
           .map((cs) => "${cs.course.courseCode}-${cs.sectionCode}")
-          .join("+")
+          .join(",")
     };
   }
 
