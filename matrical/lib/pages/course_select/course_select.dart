@@ -511,26 +511,28 @@ class _CourseSelectState extends State<CourseSelect> {
                   const Divider(),
                   Row(
                     children: [
-                      Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: ElevatedButton(
-                              onPressed: () async {
-                                if (matricalState.selectedCourses.isNotEmpty) {
-                                  await _shareCourses(
-                                      context,
-                                      matricalState.term,
-                                      matricalState.year,
-                                      matricalState.selectedCourses);
-                                } else {
-                                  ScaffoldMessenger.of(context)
-                                    ..hideCurrentSnackBar()
-                                    ..showSnackBar(const SnackBar(
-                                      content: Text(
-                                          'Añade cursos para poder compartir el enlace.'),
-                                    ));
-                                }
-                              },
-                              child: const Text("Compartir"))),
+                      if (kIsWeb) // Only show share courses on web
+                        Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: ElevatedButton(
+                                onPressed: () async {
+                                  if (matricalState
+                                      .selectedCourses.isNotEmpty) {
+                                    await _shareCourses(
+                                        context,
+                                        matricalState.term,
+                                        matricalState.year,
+                                        matricalState.selectedCourses);
+                                  } else {
+                                    ScaffoldMessenger.of(context)
+                                      ..hideCurrentSnackBar()
+                                      ..showSnackBar(const SnackBar(
+                                        content: Text(
+                                            'Añade cursos para poder compartir el enlace.'),
+                                      ));
+                                  }
+                                },
+                                child: const Icon(Icons.share_rounded))),
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.all(4.0),
