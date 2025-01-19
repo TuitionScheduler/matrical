@@ -3,6 +3,7 @@ import 'package:matrical/models/blacklist.dart';
 import 'package:matrical/models/department_course.dart';
 import 'package:matrical/models/generated_schedule.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class CourseView extends StatelessWidget {
   final CourseSectionPair pair;
@@ -104,7 +105,7 @@ class CourseView extends StatelessWidget {
                                 "Reuniones:\n\t\t${section.meetings.isNotEmpty ? section.meetings.join("\n\t\t") : "Por acuerdo"}"),
                             SizedBox.fromSize(
                                 size: const Size.fromHeight(textSpacing)),
-                            const Text("Profesores:"),
+                            Text(AppLocalizations.of(context)!.professors),
                           ] +
                           section.professors
                               .map((professor) => Padding(

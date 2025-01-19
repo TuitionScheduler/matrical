@@ -143,7 +143,8 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                     const EdgeInsets.fromLTRB(24, 0, 24, 24),
                                 backgroundColor: Colors.white,
                                 surfaceTintColor: Colors.white,
-                                title: const Text("Opciones"),
+                                title:
+                                    Text(AppLocalizations.of(context)!.options),
                                 content: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -164,9 +165,11 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                             });
                                           },
                                           dropdownMenuEntries: [
-                                                const DropdownMenuEntry<Term?>(
+                                                DropdownMenuEntry<Term?>(
                                                   value: null,
-                                                  label: "Cualquiera",
+                                                  label: AppLocalizations.of(
+                                                          context)!
+                                                      .any,
                                                 )
                                               ] +
                                               Term.values.map((term) {
@@ -409,9 +412,9 @@ class SavedScheduleCard extends StatelessWidget {
 
 Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
   return AlertDialog(
-    title: const Text(
-      "Cursos en horario:",
-      style: TextStyle(
+    title: Text(
+      AppLocalizations.of(context)!.coursesInSchedule,
+      style: const TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 18,
       ),
@@ -448,7 +451,7 @@ Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => ScheduleView(schedule: schedule)));
               },
-              child: const Text("Ver en Semana"),
+              child: Text(AppLocalizations.of(context)!.viewInWeek),
             ),
           ),
           Flexible(
@@ -469,7 +472,7 @@ Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
                 matricalCubitSingleton.updateYear(schedule.schedule.year);
                 matricalCubitSingleton.setPage(MatricalPage.courseSelect);
               },
-              child: const Text("Editar"),
+              child: Text(AppLocalizations.of(context)!.edit),
             ),
           ),
           Flexible(
@@ -493,7 +496,7 @@ Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
                   },
                 );
               },
-              child: const Text("Exportar"),
+              child: Text(AppLocalizations.of(context)!.export),
             ),
           ),
         ],

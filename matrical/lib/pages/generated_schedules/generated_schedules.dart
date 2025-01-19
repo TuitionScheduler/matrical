@@ -108,9 +108,9 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
     schedules.then((value) {
       if (value.isEmpty) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
-                "No encontramos horarios válidos con tus cursos y preferencias.")));
+                AppLocalizations.of(context)!.couldNotFindValidSchedules)));
       }
     });
     currentSchedule = 0;
@@ -185,9 +185,9 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                     schedules.then((value) {
                       if (value.isEmpty) {
                         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text(
-                                "No encontramos horarios válidos con tus cursos y preferencias.")));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(AppLocalizations.of(context)!
+                                .couldNotFindValidSchedules)));
                       }
                     });
                   });
@@ -317,7 +317,8 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                 },
                                               );
                                             },
-                                      child: const Text("Exportar"),
+                                      child: Text(
+                                          AppLocalizations.of(context)!.export),
                                     ),
                                   )),
                                   Flexible(
@@ -347,7 +348,8 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                                   .data![
                                                               currentSchedule]));
                                             },
-                                      child: const Text("Vista"),
+                                      child: Text(
+                                          AppLocalizations.of(context)!.view),
                                     ),
                                   )),
                                   Flexible(
@@ -462,7 +464,8 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                 });
                                               });
                                             },
-                                      child: const Text("Guardar"),
+                                      child: Text(
+                                          AppLocalizations.of(context)!.save),
                                     ),
                                   )),
                                 ],
@@ -585,9 +588,10 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                   ],
                                 ),
                                 InfoWrapper(
-                                  title: "Filtros de Horario",
-                                  content:
-                                      "Al activarlos, puedes limitar el rango de horas y días donde quieres tener clase.",
+                                  title: AppLocalizations.of(context)!
+                                      .scheduleFilters,
+                                  content: AppLocalizations.of(context)!
+                                      .scheduleFiltersDescription,
                                   child: Row(
                                     children: [
                                       const Icon(Icons.filter_alt),
@@ -853,7 +857,8 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
         surfaceTintColor: Colors.white,
         title:
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          const Expanded(child: Text("Preferencias de Horario")),
+          Expanded(
+              child: Text(AppLocalizations.of(context)!.schedulePreferences)),
           InfoWidget(
             infoText:
                 "Aquí puedes controlar cuales horarios serán mostrados primeros basados en tus preferencias.\n\nEsparcido / Denso - Controla si las secciones deben tener espacio entremedio o no.\nPresencial / Por Acuerdo - Modalidad preferida.\nTiempo Preferido para Cursos - Selecciona cuándo tomar los cursos durante el día.\n\nRanking de Profesores - Ordena profesores basado en tus gustos. Presiona en un curso para activar ranking de ese curso.\n\nProfesores Excluídos - Ver y/o incluír de vuelta profesores.\n\nSecciones Excluidas - Ver y/o incluír de vuelta secciones.",

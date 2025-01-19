@@ -417,7 +417,10 @@ class _CourseSectionsState extends State<CourseSections> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: section.meetings.isEmpty
-                              ? [const Text("Por Acuerdo")]
+                              ? [
+                                  Text(
+                                      AppLocalizations.of(context)!.byAgreement)
+                                ]
                               : section.meetings
                                   .map((schedule) => Text(schedule.toString()))
                                   .toList(),

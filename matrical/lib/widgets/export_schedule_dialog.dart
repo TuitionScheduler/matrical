@@ -131,22 +131,22 @@ class _SaveAsImageProgressDialogState extends State<SaveAsImageProgressDialog> {
                   ),
                   Text(
                       success
-                          ? "Imagen guardada exitosamente!"
-                          : "Imagen no pudo ser guardada.",
+                          ? AppLocalizations.of(context)!.successfullySavedImage
+                          : AppLocalizations.of(context)!.failedToSaveImage,
                       style: const TextStyle(fontSize: 18))
                 ],
               );
             case ConnectionState.active:
             case ConnectionState.waiting:
-              return const Column(
+              return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
+                  const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16.0),
                     child: CircularProgressIndicator(),
                   ),
-                  Text("Generando y guardando imagen...",
-                      style: TextStyle(fontSize: 18)),
+                  Text(AppLocalizations.of(context)!.savingImage,
+                      style: const TextStyle(fontSize: 18)),
                 ],
               );
           }

@@ -205,13 +205,13 @@ class _CourseSelectState extends State<CourseSelect> {
                             children: [
                               Row(
                                 children: [
-                                  const Text(
-                                    "Añadir Cursos",
-                                    style: TextStyle(fontSize: 14),
+                                  Text(
+                                    AppLocalizations.of(context)!.addCourses,
+                                    style: const TextStyle(fontSize: 14),
                                   ),
                                   if (!kIsWeb) // Hide import button on web since web uses URL imports
-                                    const Text(" o ",
-                                        style: TextStyle(fontSize: 14)),
+                                    Text(AppLocalizations.of(context)!.o,
+                                        style: const TextStyle(fontSize: 14)),
                                   if (!kIsWeb) // Hide import button on web since web uses URL imports
                                     Padding(
                                         padding: const EdgeInsets.symmetric(
@@ -235,9 +235,11 @@ class _CourseSelectState extends State<CourseSelect> {
                                                       .hideCurrentSnackBar();
                                                   return ScaffoldMessenger.of(
                                                           innerContext)
-                                                      .showSnackBar(const SnackBar(
+                                                      .showSnackBar(SnackBar(
                                                           content: Text(
-                                                              "El código entrado tiene un formato inválido.")));
+                                                              AppLocalizations.of(
+                                                                      context)!
+                                                                  .invalidCode)));
                                                 }
                                                 final newTerm = Term.fromString(
                                                         decodedSchedule.term) ??
@@ -267,13 +269,17 @@ class _CourseSelectState extends State<CourseSelect> {
                                                 }).toList());
                                                 return ScaffoldMessenger.of(
                                                         innerContext)
-                                                    .showSnackBar(const SnackBar(
+                                                    .showSnackBar(SnackBar(
                                                         content: Text(
-                                                            "Horario importado exitosamente.")));
+                                                            AppLocalizations.of(
+                                                                    context)!
+                                                                .successfullyImportedSchedule)));
                                               }
                                             });
                                           },
-                                          child: Text("Importar",
+                                          child: Text(
+                                              AppLocalizations.of(context)!
+                                                  .import,
                                               style: TextStyle(
                                                   color: Colors.green[900],
                                                   fontSize: 14,
@@ -583,11 +589,12 @@ class _CourseSelectState extends State<CourseSelect> {
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
-                                              const Expanded(
-                                                child: Text(
-                                                    "Preferencias de Horario "),
+                                              Expanded(
+                                                child: Text(AppLocalizations.of(
+                                                        context)!
+                                                    .schedulePreferences),
                                               ),
-                                              _preferencesHelp()
+                                              _preferencesHelp(context)
                                             ],
                                           ),
                                           content: PreferencesView(
@@ -656,10 +663,14 @@ Future<void> _shareCourses(BuildContext context, Term term, int year,
   }
 }
 
-Widget _preferencesHelp() {
+Widget _preferencesHelp(BuildContext context) {
   return InfoWidget(
-      infoText:
-          "Aquí puedes controlar cuales horarios serán mostrados primeros basados en tus preferencias.\n\nEsparcido / Denso - Controla si las secciones deben tener espacio entremedio o no.\nPresencial / Por Acuerdo - Modalidad preferida.\nTiempo Preferido para Cursos - Selecciona cuándo tomar los cursos durante el día.",
+      infoText: [
+        AppLocalizations.of(context)!.preferencesHelpOverview,
+        AppLocalizations.of(context)!.preferencesHelpSparseDense,
+        AppLocalizations.of(context)!.preferencesHelpModality,
+        AppLocalizations.of(context)!.preferencesHelpTime
+      ].join("\n\n"),
       iconData: Icons.help,
       iconColor: Colors.black87);
 }
