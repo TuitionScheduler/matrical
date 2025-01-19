@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:matrical/globals/cubits.dart';
 import 'package:matrical/models/generated_schedule_preferences.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class PreferencesView extends StatefulWidget {
   final GeneratedSchedulePreferences preferences;
@@ -27,7 +28,7 @@ class _PreferencesViewState extends State<PreferencesView> {
                         style: const TextStyle(color: Colors.black),
                         children: [
                       TextSpan(
-                          text: "Esparcido",
+                          text: AppLocalizations.of(context)!.sparse,
                           style: TextStyle(
                               fontSize: 18,
                               fontWeight: !widget.preferences.preferDense
@@ -35,7 +36,7 @@ class _PreferencesViewState extends State<PreferencesView> {
                                   : FontWeight.normal)),
                       const TextSpan(text: " / "),
                       TextSpan(
-                          text: "Denso",
+                          text: AppLocalizations.of(context)!.dense,
                           style: TextStyle(
                               fontSize: 18,
                               fontWeight: widget.preferences.preferDense
@@ -65,7 +66,7 @@ class _PreferencesViewState extends State<PreferencesView> {
                         style: const TextStyle(color: Colors.black),
                         children: [
                       TextSpan(
-                          text: "Presencial",
+                          text: AppLocalizations.of(context)!.inperson,
                           style: TextStyle(
                               fontSize: 18,
                               fontWeight: !widget.preferences.preferOnline
@@ -73,7 +74,7 @@ class _PreferencesViewState extends State<PreferencesView> {
                                   : FontWeight.normal)),
                       const TextSpan(text: " / "),
                       TextSpan(
-                          text: "Por Acuerdo",
+                          text: AppLocalizations.of(context)!.byAgreement,
                           style: TextStyle(
                               fontSize: 18,
                               fontWeight: widget.preferences.preferOnline
@@ -97,7 +98,7 @@ class _PreferencesViewState extends State<PreferencesView> {
             expandedInsets: const EdgeInsets.all(0),
             initialSelection: widget.preferences.averageTime,
             requestFocusOnTap: false,
-            label: const Text('Tiempo Preferido para Cursos'),
+            label: Text(AppLocalizations.of(context)!.preferredCourseTimes),
             inputDecorationTheme: const InputDecorationTheme(),
             onSelected: (time) async {
               widget.preferences.averageTime = time;

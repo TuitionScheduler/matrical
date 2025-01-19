@@ -20,6 +20,7 @@ import 'package:matrical/widgets/course_filters.dart';
 import 'package:matrical/widgets/import_schedule_dialog.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:web_browser_detect/web_browser_detect.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 const officialColor = Color.fromRGBO(9, 144, 45, 1);
 
@@ -50,31 +51,29 @@ class _CourseSelectState extends State<CourseSelect> {
     var sectionCode = sectionController?.text ?? "";
     final matricalCubit = BlocProvider.of<MatricalCubit>(context);
     if (!isCourseCode(courseCode)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Curso no tiene el formato esperado (DEPT####).'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context)!.invalidCourseFormat),
       ));
       return;
     }
     if (sectionCode.isNotEmpty && !isSectionCode(sectionCode)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Sección no tiene el formato esperado.'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context)!.invalidSectionFormat),
       ));
       return;
     }
     var course = await CourseService().getCourse(courseCode, term, year);
     if (internetState.connected) {
       if (course == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Curso no disponible para este semestre según nuestra base de datos.'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.courseNotAvailable),
         ));
         return;
       }
       if (sectionCode.isNotEmpty &&
           course.sections.none((s) => s.sectionCode == sectionCode)) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Sección no disponible para este semestre según nuestra base de datos.'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.sectionNotAvailable),
         ));
         return;
       }
@@ -82,17 +81,15 @@ class _CourseSelectState extends State<CourseSelect> {
       matricalCubit.addCourse(courseCode, sectionCode);
     } else {
       if (course == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'No se pudo encontrar el curso en la memoria local. Intente otra vez una vez esté conectado al Internet.'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.courseNotInLocalMemory),
         ));
         return;
       }
       if (sectionCode.isNotEmpty &&
           course.sections.none((s) => s.sectionCode == sectionCode)) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'No se pudo encontrar esa sección para el curso en la memoria local. Intente otra vez una vez esté conectado al Internet.'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.sectionNotInLocalMemory),
         ));
         return;
       }
@@ -130,7 +127,7 @@ class _CourseSelectState extends State<CourseSelect> {
                               expandedInsets: const EdgeInsets.all(0),
                               initialSelection: matricalState.term,
                               requestFocusOnTap: false,
-                              label: const Text('Término'),
+                              label: Text(AppLocalizations.of(context)!.term),
                               onSelected: (term) async {
                                 if (term != null) {
                                   await setSelectedAcademicTerm(term);
@@ -140,9 +137,10 @@ class _CourseSelectState extends State<CourseSelect> {
                                   if (removedAny) {
                                     ScaffoldMessenger.of(context)
                                       ..hideCurrentSnackBar()
-                                      ..showSnackBar(const SnackBar(
+                                      ..showSnackBar(SnackBar(
                                         content: Text(
-                                            'Algunos cursos y/o secciones no pertenecen a este término y/o año.'),
+                                            AppLocalizations.of(context)!
+                                                .removedCoursesWarning),
                                       ));
                                   }
                                   setState(() {});
@@ -165,7 +163,7 @@ class _CourseSelectState extends State<CourseSelect> {
                               expandedInsets: const EdgeInsets.all(0),
                               initialSelection: matricalState.year.toString(),
                               requestFocusOnTap: false,
-                              label: const Text('Año'),
+                              label: Text(AppLocalizations.of(context)!.year),
                               onSelected: (year) async {
                                 if (year != null) {
                                   await setSelectedAcademicYear(
@@ -176,9 +174,10 @@ class _CourseSelectState extends State<CourseSelect> {
                                   if (removedAny) {
                                     ScaffoldMessenger.of(context)
                                       ..hideCurrentSnackBar()
-                                      ..showSnackBar(const SnackBar(
+                                      ..showSnackBar(SnackBar(
                                         content: Text(
-                                            'Algunos cursos y/o secciones no pertenecen a este término y/o año.'),
+                                            AppLocalizations.of(context)!
+                                                .removedCoursesWarning),
                                       ));
                                   }
                                   setState(() {});
@@ -305,9 +304,11 @@ class _CourseSelectState extends State<CourseSelect> {
                                         return TextField(
                                             controller: controller,
                                             focusNode: focusNode,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Curso*',
-                                              hintText: 'ie. CIIC3015',
+                                            decoration: InputDecoration(
+                                              labelText:
+                                                  AppLocalizations.of(context)!
+                                                      .requiredCourseInput,
+                                              hintText: 'e.g. CIIC3015',
                                             ),
                                             textCapitalization:
                                                 TextCapitalization.characters,
@@ -336,9 +337,9 @@ class _CourseSelectState extends State<CourseSelect> {
                                           title: Text(suggestion),
                                         );
                                       },
-                                      errorBuilder: (context, error) =>
-                                          const Text(
-                                              'Error sugiriendo cursos.'),
+                                      errorBuilder: (context, error) => Text(
+                                          AppLocalizations.of(context)!
+                                              .courseAutocompleteError),
                                       emptyBuilder: (context) =>
                                           const SizedBox.shrink(),
                                       onSelected: (suggestion) {
@@ -376,8 +377,9 @@ class _CourseSelectState extends State<CourseSelect> {
                                               );
                                             },
                                             errorBuilder: (context, error) =>
-                                                const Text(
-                                                    'Error sugiriendo secciones.'),
+                                                Text(AppLocalizations.of(
+                                                        context)!
+                                                    .sectionAutocompleteError),
                                             emptyBuilder: (context) =>
                                                 const SizedBox.shrink(),
                                             onSelected: (suggestion) {
@@ -396,10 +398,12 @@ class _CourseSelectState extends State<CourseSelect> {
                                               return TextField(
                                                 controller: controller,
                                                 focusNode: focusNode,
-                                                decoration:
-                                                    const InputDecoration(
-                                                  hintText: 'ie. 070, 001D',
-                                                  labelText: 'Sección',
+                                                decoration: InputDecoration(
+                                                  hintText: 'e.g. 070, 001D',
+                                                  labelText:
+                                                      AppLocalizations.of(
+                                                              context)!
+                                                          .section,
                                                 ),
                                                 textCapitalization:
                                                     TextCapitalization
@@ -526,9 +530,10 @@ class _CourseSelectState extends State<CourseSelect> {
                                   } else {
                                     ScaffoldMessenger.of(context)
                                       ..hideCurrentSnackBar()
-                                      ..showSnackBar(const SnackBar(
+                                      ..showSnackBar(SnackBar(
                                         content: Text(
-                                            'Añade cursos para poder compartir el enlace.'),
+                                            AppLocalizations.of(context)!
+                                                .addCoursesToShare),
                                       ));
                                   }
                                 },
@@ -545,13 +550,15 @@ class _CourseSelectState extends State<CourseSelect> {
                                 ScaffoldMessenger.of(innerContext)
                                     .hideCurrentSnackBar(); // don't need remove here since snackbar blocks button
                                 ScaffoldMessenger.of(innerContext)
-                                    .showSnackBar(const SnackBar(
-                                  content:
-                                      Text('Añade cursos antes de generar.'),
+                                    .showSnackBar(SnackBar(
+                                  content: Text(AppLocalizations.of(context)!
+                                      .addCoursesPriorToGeneratingSchedules),
                                 ));
                               }
                             },
-                            child: const Text("Generar Matrículas",
+                            child: Text(
+                                AppLocalizations.of(context)!
+                                    .generateSchedulesButton,
                                 textAlign: TextAlign.center),
                           ),
                         ),
@@ -642,8 +649,9 @@ Future<void> _shareCourses(BuildContext context, Term term, int year,
   if (context.mounted) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-        content: Text('Enlace con tus cursos fue copiado a tu dispositivo.'),
+      ..showSnackBar(SnackBar(
+        content:
+            Text(AppLocalizations.of(context)!.scheduleLinkCopiedToClipboard),
       ));
   }
 }

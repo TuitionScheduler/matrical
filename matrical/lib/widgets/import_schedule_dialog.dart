@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:info_widget/info_widget.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ImportScheduleModal extends StatelessWidget {
   final TextEditingController importController = TextEditingController();
@@ -14,10 +15,9 @@ class ImportScheduleModal extends StatelessWidget {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text("Importar horario"),
+          Text(AppLocalizations.of(context)!.importScheduleDialog),
           InfoWidget(
-            infoText:
-                "Si te envían un código de horario, puedes copiarlo en esta entrada de texto para importarlo. Puedes exportar códigos de horario la opción de \"Texto\" cuando presionas \"Exportar\" en un horario generado o guardado.",
+            infoText: AppLocalizations.of(context)!.importDialogDescription,
             iconColor: Colors.black87,
             iconData: Icons.help,
           )
@@ -26,13 +26,13 @@ class ImportScheduleModal extends StatelessWidget {
       content: TextField(controller: importController),
       actions: <Widget>[
         TextButton(
-          child: const Text('Cerrar'),
+          child: Text(AppLocalizations.of(context)!.close),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
         TextButton(
-          child: const Text('Comprobar'),
+          child: Text(AppLocalizations.of(context)!.validate),
           onPressed: () {
             FocusManager.instance.primaryFocus?.unfocus(); // close keyboard
             Navigator.of(context).pop(importController.text);

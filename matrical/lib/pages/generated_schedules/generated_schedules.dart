@@ -30,6 +30,7 @@ import 'package:matrical/widgets/info_wrapper.dart';
 import 'package:pair/pair.dart';
 import 'package:sizer/sizer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 const officialColor = Color.fromRGBO(9, 144, 45, 1);
 const TextStyle textStyle = TextStyle(color: Colors.white);
@@ -420,23 +421,30 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                           _savedScheduleBannerTimer
                                                               ?.cancel();
                                                           ScaffoldMessenger.of(
-                                                                  globalKey.currentContext!)
+                                                                  globalKey
+                                                                      .currentContext!)
                                                               .hideCurrentMaterialBanner();
                                                           matricalCubit.setPage(
-                                                              MatricalPage
-                                                                  .savedSchedules);
+                                                            MatricalPage
+                                                                .savedSchedules,
+                                                          );
                                                         },
-                                                        child:
-                                                            const Text('Ver'),
+                                                        child: Text(
+                                                            AppLocalizations.of(
+                                                                    context)!
+                                                                .view),
                                                       ),
                                                     TextButton(
                                                       onPressed: () {
                                                         ScaffoldMessenger.of(
-                                                                globalKey.currentContext!)
+                                                                globalKey
+                                                                    .currentContext!)
                                                             .hideCurrentMaterialBanner();
                                                       },
-                                                      child: const Text(
-                                                          'Descartar'),
+                                                      child: Text(
+                                                          AppLocalizations.of(
+                                                                  context)!
+                                                              .dismiss),
                                                     ),
                                                   ],
                                                 ));

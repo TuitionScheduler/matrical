@@ -16,6 +16,7 @@ import 'package:matrical/pages/saved_schedules/schedule_view.dart';
 import 'package:matrical/services/schedule_service.dart';
 import 'package:matrical/widgets/export_schedule_dialog.dart';
 import 'package:matrical/widgets/import_schedule_dialog.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 List<Widget> splitScheduleCards(List<SavedScheduleCard> cards, int cols,
     int Function(SavedSchedule, SavedSchedule) sort) {
@@ -105,8 +106,9 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: TextField(
-                          decoration: const InputDecoration(
-                            labelText: 'Nombre de Horario',
+                          decoration: InputDecoration(
+                            labelText:
+                                AppLocalizations.of(context)!.scheduleNameInput,
                           ),
                           controller: options.searchController,
                           onChanged: (text) {
@@ -153,7 +155,9 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                               const EdgeInsets.all(0),
                                           initialSelection: options.term,
                                           requestFocusOnTap: false,
-                                          label: const Text('Término'),
+                                          label: Text(
+                                              AppLocalizations.of(context)!
+                                                  .term),
                                           onSelected: (term) {
                                             setState(() {
                                               options.term = term;
@@ -179,7 +183,9 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                               const EdgeInsets.all(0),
                                           initialSelection: options.year,
                                           requestFocusOnTap: false,
-                                          label: const Text('Año'),
+                                          label: Text(
+                                              AppLocalizations.of(context)!
+                                                  .year),
                                           onSelected: (year) {
                                             setState(() {
                                               options.year = year;
@@ -213,7 +219,9 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                               ? options.sortingController.text
                                               : sorting.keys.first,
                                           requestFocusOnTap: false,
-                                          label: const Text('Orden'),
+                                          label: Text(
+                                              AppLocalizations.of(context)!
+                                                  .orderBy),
                                           controller: options.sortingController,
                                           onSelected: (sort) {
                                             setState(() {});
