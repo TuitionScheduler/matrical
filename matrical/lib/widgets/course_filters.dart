@@ -115,12 +115,18 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                       });
                     },
                     isSelected: days,
-                    children: <Widget>[
-                      Text(AppLocalizations.of(context)!.monday),
-                      Text(AppLocalizations.of(context)!.tuesday),
-                      Text(AppLocalizations.of(context)!.wednesday),
-                      Text(AppLocalizations.of(context)!.thursday),
-                      Text(AppLocalizations.of(context)!.friday),
+                    children: const <Widget>[
+                      // TODO(poggecci): re-add days localization once I find a good approach to translate the days data encoded with sections
+                      // Text(AppLocalizations.of(context)!.monday),
+                      // Text(AppLocalizations.of(context)!.tuesday),
+                      // Text(AppLocalizations.of(context)!.wednesday),
+                      // Text(AppLocalizations.of(context)!.thursday),
+                      // Text(AppLocalizations.of(context)!.friday),
+                      Text("L"),
+                      Text("M"),
+                      Text("W"),
+                      Text("J"),
+                      Text("V"),
                     ],
                   ),
                 ),
