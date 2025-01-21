@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:info_widget/info_widget.dart';
 import 'package:matrical/models/course_filters.dart';
 import 'package:matrical/models/course_filters_popup_response.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class CourseFilterPopup extends StatefulWidget {
   const CourseFilterPopup({super.key, required this.filters});
@@ -67,10 +68,10 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Filtros'),
+              Text(AppLocalizations.of(context)!.filters),
               InfoWidget(
                 infoText:
-                    "Los filtros de cursos limitan qué secciones se utilizan para la generación de horarios.",
+                    AppLocalizations.of(context)!.courseFiltersExplanation,
                 iconColor: Colors.black87,
                 iconData: Icons.help,
               )
@@ -84,9 +85,9 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
                   controller: earliestTimeController,
-                  decoration: const InputDecoration(
-                    labelText: 'Comienza Después de',
-                    hintText: 'HH:MM ie. 13:20',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.startsAfter,
+                    hintText: 'HH:MM e.g. 13:20',
                   ),
                   readOnly: true,
                   onTap: () => _selectTime(context, earliestTimeController),
@@ -96,9 +97,9 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
                   controller: latestTimeController,
-                  decoration: const InputDecoration(
-                    labelText: 'Acaba Antes de',
-                    hintText: 'HH:MM ie. 13:20',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.endsBefore,
+                    hintText: 'HH:MM e.g. 13:20',
                   ),
                   readOnly: true,
                   onTap: () => _selectTime(context, latestTimeController),
@@ -114,12 +115,12 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                       });
                     },
                     isSelected: days,
-                    children: const <Widget>[
-                      Text('L'),
-                      Text('M'),
-                      Text('W'),
-                      Text('J'),
-                      Text('V'),
+                    children: <Widget>[
+                      Text(AppLocalizations.of(context)!.monday),
+                      Text(AppLocalizations.of(context)!.tuesday),
+                      Text(AppLocalizations.of(context)!.wednesday),
+                      Text(AppLocalizations.of(context)!.thursday),
+                      Text(AppLocalizations.of(context)!.friday),
                     ],
                   ),
                 ),
@@ -128,9 +129,10 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                 padding: const EdgeInsets.all(8.0),
                 child: TextField(
                   controller: professorsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Profesor(es)',
-                    hintText: 'ie. Juan Pedro, Don Quijote de La Mancha',
+                  decoration: InputDecoration(
+                    labelText:
+                        AppLocalizations.of(context)!.profesorsSingleOrPlural,
+                    hintText: 'e.g. Juan Pedro, Don Quijote de La Mancha',
                   ),
                 ),
               ),
@@ -138,9 +140,10 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                 padding: const EdgeInsets.all(8.0),
                 child: TextField(
                   controller: roomsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Salon(es)',
-                    hintText: 'ie. S 113, CH 403, I 202',
+                  decoration: InputDecoration(
+                    labelText:
+                        AppLocalizations.of(context)!.classroomSingleOrPlural,
+                    hintText: 'e.g. S 113, CH 403, I 202',
                   ),
                 ),
               ),
@@ -150,12 +153,12 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                     expandedInsets: const EdgeInsets.all(0),
                     initialSelection: widget.filters.modality,
                     requestFocusOnTap: false,
-                    label: const Text('Modalidad'),
+                    label: Text(AppLocalizations.of(context)!.modality),
                     onSelected: (value) => {modality = value ?? Modality.any},
                     dropdownMenuEntries: Modality.values.map((term) {
                       return DropdownMenuEntry<Modality>(
                         value: term,
-                        label: term.displayName,
+                        label: term.displayName(context),
                       );
                     }).toList()),
               ),
@@ -177,7 +180,7 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                         Navigator.pop(
                             context, CourseFilterPopupResponse.deleted);
                       },
-                      child: const Text('Borrar Filtros'),
+                      child: Text(AppLocalizations.of(context)!.deleteFilters),
                     ),
                     ElevatedButton(
                       onPressed: () {
@@ -201,7 +204,7 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                         widget.filters.modality = modality;
                         Navigator.pop(context, CourseFilterPopupResponse.saved);
                       },
-                      child: const Text('Guardar Filtros'),
+                      child: Text(AppLocalizations.of(context)!.saveFilters),
                     ),
                   ],
                 ),

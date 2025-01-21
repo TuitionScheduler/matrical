@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:matrical/models/generated_schedule.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SavedSchedule {
   final String name;
@@ -36,14 +38,24 @@ class SavedSchedule {
 }
 
 enum SaveScheduleResult {
-  success("Horario guardado exitosamente!"),
-  hitScheduleLimit(
-      "Límite de horarios alcanzado (300).\nBorra algunos horarios."),
-  failedWrite("Hubo un problema guardando el horario.\nIntente otra vez."),
-  alreadyExists("Ya hay un horario con este nombre."),
-  emptyName("Horario debe tener un nombre.");
+  success,
+  hitScheduleLimit,
+  failedWrite,
+  alreadyExists,
+  emptyName;
 
-  final String message;
-
-  const SaveScheduleResult(this.message);
+  String message(BuildContext context) {
+    switch (this) {
+      case SaveScheduleResult.success:
+        return AppLocalizations.of(context)!.saveScheduleSuccess;
+      case SaveScheduleResult.hitScheduleLimit:
+        return AppLocalizations.of(context)!.saveScheduleHitLimit;
+      case SaveScheduleResult.failedWrite:
+        return AppLocalizations.of(context)!.saveScheduleFailedWrite;
+      case SaveScheduleResult.alreadyExists:
+        return AppLocalizations.of(context)!.saveScheduleAlreadyExists;
+      case SaveScheduleResult.emptyName:
+        return AppLocalizations.of(context)!.saveScheduleEmptyName;
+    }
+  }
 }

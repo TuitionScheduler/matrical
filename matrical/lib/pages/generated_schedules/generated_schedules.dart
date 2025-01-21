@@ -30,6 +30,7 @@ import 'package:matrical/widgets/info_wrapper.dart';
 import 'package:pair/pair.dart';
 import 'package:sizer/sizer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 const officialColor = Color.fromRGBO(9, 144, 45, 1);
 const TextStyle textStyle = TextStyle(color: Colors.white);
@@ -107,9 +108,9 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
     schedules.then((value) {
       if (value.isEmpty) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
-                "No encontramos horarios válidos con tus cursos y preferencias.")));
+                AppLocalizations.of(context)!.couldNotFindValidSchedules)));
       }
     });
     currentSchedule = 0;
@@ -184,9 +185,9 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                     schedules.then((value) {
                       if (value.isEmpty) {
                         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text(
-                                "No encontramos horarios válidos con tus cursos y preferencias.")));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(AppLocalizations.of(context)!
+                                .couldNotFindValidSchedules)));
                       }
                     });
                   });
@@ -316,7 +317,8 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                 },
                                               );
                                             },
-                                      child: const Text("Exportar"),
+                                      child: Text(
+                                          AppLocalizations.of(context)!.export),
                                     ),
                                   )),
                                   Flexible(
@@ -346,7 +348,8 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                                   .data![
                                                               currentSchedule]));
                                             },
-                                      child: const Text("Vista"),
+                                      child: Text(
+                                          AppLocalizations.of(context)!.view),
                                     ),
                                   )),
                                   Flexible(
@@ -396,7 +399,9 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                         MaterialBanner(
                                                   content: Row(
                                                     children: [
-                                                      Text(result.message,
+                                                      Text(
+                                                          result.message(
+                                                              context),
                                                           softWrap: true,
                                                           style:
                                                               const TextStyle(
@@ -420,23 +425,30 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                           _savedScheduleBannerTimer
                                                               ?.cancel();
                                                           ScaffoldMessenger.of(
-                                                                  globalKey.currentContext!)
+                                                                  globalKey
+                                                                      .currentContext!)
                                                               .hideCurrentMaterialBanner();
                                                           matricalCubit.setPage(
-                                                              MatricalPage
-                                                                  .savedSchedules);
+                                                            MatricalPage
+                                                                .savedSchedules,
+                                                          );
                                                         },
-                                                        child:
-                                                            const Text('Ver'),
+                                                        child: Text(
+                                                            AppLocalizations.of(
+                                                                    context)!
+                                                                .view),
                                                       ),
                                                     TextButton(
                                                       onPressed: () {
                                                         ScaffoldMessenger.of(
-                                                                globalKey.currentContext!)
+                                                                globalKey
+                                                                    .currentContext!)
                                                             .hideCurrentMaterialBanner();
                                                       },
-                                                      child: const Text(
-                                                          'Descartar'),
+                                                      child: Text(
+                                                          AppLocalizations.of(
+                                                                  context)!
+                                                              .dismiss),
                                                     ),
                                                   ],
                                                 ));
@@ -454,7 +466,8 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                 });
                                               });
                                             },
-                                      child: const Text("Guardar"),
+                                      child: Text(
+                                          AppLocalizations.of(context)!.save),
                                     ),
                                   )),
                                 ],
@@ -577,9 +590,10 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                   ],
                                 ),
                                 InfoWrapper(
-                                  title: "Filtros de Horario",
-                                  content:
-                                      "Al activarlos, puedes limitar el rango de horas y días donde quieres tener clase.",
+                                  title: AppLocalizations.of(context)!
+                                      .scheduleFilters,
+                                  content: AppLocalizations.of(context)!
+                                      .scheduleFiltersDescription,
                                   child: Row(
                                     children: [
                                       const Icon(Icons.filter_alt),
@@ -845,10 +859,18 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
         surfaceTintColor: Colors.white,
         title:
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          const Expanded(child: Text("Preferencias de Horario")),
+          Expanded(
+              child: Text(AppLocalizations.of(context)!.schedulePreferences)),
           InfoWidget(
-            infoText:
-                "Aquí puedes controlar cuales horarios serán mostrados primeros basados en tus preferencias.\n\nEsparcido / Denso - Controla si las secciones deben tener espacio entremedio o no.\nPresencial / Por Acuerdo - Modalidad preferida.\nTiempo Preferido para Cursos - Selecciona cuándo tomar los cursos durante el día.\n\nRanking de Profesores - Ordena profesores basado en tus gustos. Presiona en un curso para activar ranking de ese curso.\n\nProfesores Excluídos - Ver y/o incluír de vuelta profesores.\n\nSecciones Excluidas - Ver y/o incluír de vuelta secciones.",
+            infoText: [
+              AppLocalizations.of(context)!.preferencesHelpOverview,
+              AppLocalizations.of(context)!.preferencesHelpSparseDense,
+              AppLocalizations.of(context)!.preferencesHelpModality,
+              AppLocalizations.of(context)!.preferencesHelpTime,
+              AppLocalizations.of(context)!.preferencesHelpProfessorRanking,
+              AppLocalizations.of(context)!.preferencesHelpExcludedProfessors,
+              AppLocalizations.of(context)!.preferencesHelpExcludedSections
+            ].join("\n\n"),
             iconColor: Colors.black87,
             iconData: Icons.help,
           )
@@ -878,10 +900,13 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Padding(
-                              padding: EdgeInsets.fromLTRB(0, 8.0, 0, 12.0),
-                              child: Text("Ranking de Profesores:",
-                                  style: TextStyle(
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(0, 8.0, 0, 12.0),
+                              child: Text(
+                                  AppLocalizations.of(context)!
+                                      .professorRanking,
+                                  style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w500)),
                             ),
@@ -1042,19 +1067,20 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
-                                      const Padding(
-                                        padding:
-                                            EdgeInsets.symmetric(vertical: 8.0),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8.0),
                                         child: Text(
-                                          "Profesores Excluidos:",
-                                          style: TextStyle(
+                                          AppLocalizations.of(context)!
+                                              .excludedProfessors,
+                                          style: const TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.w500),
                                         ),
                                       ),
                                       if (state.blacklist.professors.isEmpty)
-                                        const Text(
-                                            "Ningún profesor ha sido excluido")
+                                        Text(AppLocalizations.of(context)!
+                                            .noExcludedProfessor)
                                     ] +
                                     state.blacklist.professors
                                         .map((professor) => Material(
@@ -1131,20 +1157,21 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                    const Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 8.0),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0),
                                       child: Text(
-                                        "Secciones Excluidas:",
-                                        style: TextStyle(
+                                        AppLocalizations.of(context)!
+                                            .excludedSections,
+                                        style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w500),
                                       ),
                                     ),
                                     if (state.blacklist.sections.values
                                         .every((e) => e.isEmpty))
-                                      const Text(
-                                          "Ninguna sección ha sido excluida")
+                                      Text(AppLocalizations.of(context)!
+                                          .noExcludedSection)
                                   ] +
                                   state.blacklist.sections.keys
                                       .map((key) => state
@@ -1186,13 +1213,13 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
                 state.hadUpdate = false;
                 Navigator.of(context).pop(state);
               },
-              child: const Text("Cancelar")),
+              child: Text(AppLocalizations.of(context)!.cancel)),
           TextButton(
               onPressed: () => setState(() {
                     state.hadUpdate = true;
                     Navigator.of(context).pop(state);
                   }),
-              child: const Text("Aplicar"))
+              child: Text(AppLocalizations.of(context)!.apply))
         ],
       ),
     );

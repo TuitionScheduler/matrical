@@ -20,6 +20,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:web_browser_detect/web_browser_detect.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ExportScheduleDialog extends StatelessWidget {
   final List<CourseSectionPair> notPresencialCourses;
@@ -39,17 +40,17 @@ class ExportScheduleDialog extends StatelessWidget {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Exportar como:',
+          Text(
+            AppLocalizations.of(context)!.exportAs,
           ),
-          _exportHelp()
+          _exportHelp(context)
         ],
       ),
       actions: [
         TextButton(
-            child: const Text(
-              'Imagen',
-              style: TextStyle(fontSize: 15),
+            child: Text(
+              AppLocalizations.of(context)!.image,
+              style: const TextStyle(fontSize: 15),
               textAlign: TextAlign.end,
             ),
             onPressed: () {
@@ -59,7 +60,8 @@ class ExportScheduleDialog extends StatelessWidget {
                               saveFuture: exportScheduleAsImage(
                             notPresencialCourses,
                             schedule,
-                            scheduleName ?? 'horario',
+                            scheduleName ??
+                                AppLocalizations.of(context)!.schedule,
                             innerContext,
                           )),
                       useRootNavigator: false)
@@ -68,12 +70,15 @@ class ExportScheduleDialog extends StatelessWidget {
               });
             }),
         TextButton(
-          child: const Text('Calendario',
-              style: TextStyle(fontSize: 15), textAlign: TextAlign.end),
+          child: Text(AppLocalizations.of(context)!.calendar,
+              style: const TextStyle(fontSize: 15), textAlign: TextAlign.end),
           onPressed: () {
             Navigator.of(context).pop(); // Close the dialog
-            exportScheduleAsIcal(schedule,
-                scheduleName ?? "horario"); // Call the method to export as ical
+            exportScheduleAsIcal(
+                schedule,
+                scheduleName ??
+                    AppLocalizations.of(context)!
+                        .schedule); // Call the method to export as ical
           },
         ),
         _exportTextOrLinkButton(context, schedule)
@@ -126,22 +131,22 @@ class _SaveAsImageProgressDialogState extends State<SaveAsImageProgressDialog> {
                   ),
                   Text(
                       success
-                          ? "Imagen guardada exitosamente!"
-                          : "Imagen no pudo ser guardada.",
+                          ? AppLocalizations.of(context)!.successfullySavedImage
+                          : AppLocalizations.of(context)!.failedToSaveImage,
                       style: const TextStyle(fontSize: 18))
                 ],
               );
             case ConnectionState.active:
             case ConnectionState.waiting:
-              return const Column(
+              return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
+                  const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16.0),
                     child: CircularProgressIndicator(),
                   ),
-                  Text("Generando y guardando imagen...",
-                      style: TextStyle(fontSize: 18)),
+                  Text(AppLocalizations.of(context)!.savingImage,
+                      style: const TextStyle(fontSize: 18)),
                 ],
               );
           }
@@ -150,7 +155,7 @@ class _SaveAsImageProgressDialogState extends State<SaveAsImageProgressDialog> {
       actions: <Widget>[
         if (Navigator.of(context).canPop())
           TextButton(
-            child: const Text('Close'),
+            child: Text(AppLocalizations.of(context)!.close),
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -311,10 +316,15 @@ Future<bool> exportScheduleAsIcal(
   return false;
 }
 
-Widget _exportHelp() {
+Widget _exportHelp(BuildContext context) {
   return InfoWidget(
-      infoText:
-          "Imagen: Guarda una imagen del horario en la galería de tu dispositivo\n\nCalendario: Crea y abre un archivo \".ics\" con tu horario. Los archivos \".ics\" pueden ser abiertos por Google Calendar, Outlook, etc. para añadir tus clases a tu calendario.\n\n${kIsWeb ? 'Enlace' : 'Código'}: ${kIsWeb ? 'Genera un enlace que otros usuarios pueden acceder para ver el horario.' : 'Te permite enviar un código con las secciones en este horario. Otros usuarios pueden copiar el código e importarlo en la aplicación mediante la página de Selección de Cursos o la de Horarios Guardados.'}",
+      infoText: [
+        AppLocalizations.of(context)!.imageHelp,
+        AppLocalizations.of(context)!.calendarHelp,
+        kIsWeb
+            ? AppLocalizations.of(context)!.linkHelp
+            : AppLocalizations.of(context)!.codeHelp
+      ].join("\n\n"),
       iconData: Icons.help,
       iconColor: Colors.black87);
 }
@@ -323,8 +333,12 @@ Widget _exportTextOrLinkButton(
     BuildContext context, GeneratedSchedule schedule) {
   final browser = Browser.detectOrNull(); // Always null when not on web
   return TextButton(
-    child: Text(browser != null ? 'Enlace' : 'Texto',
-        style: const TextStyle(fontSize: 15), textAlign: TextAlign.end),
+    child: Text(
+        browser != null
+            ? AppLocalizations.of(context)!.link
+            : AppLocalizations.of(context)!.code,
+        style: const TextStyle(fontSize: 15),
+        textAlign: TextAlign.end),
     onPressed: () async {
       if (browser == null) {
         // TODO(poggecci): share deeplinks when running native on mobile devices instead of Import codes
@@ -354,9 +368,9 @@ Widget _exportTextOrLinkButton(
             if (context.mounted) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
-                ..showSnackBar(const SnackBar(
-                  content:
-                      Text('Enlace con tu horario copiado a tu dispositivo.'),
+                ..showSnackBar(SnackBar(
+                  content: Text(
+                      AppLocalizations.of(context)!.scheduleCopiedToClipboard),
                 ));
             }
             break;

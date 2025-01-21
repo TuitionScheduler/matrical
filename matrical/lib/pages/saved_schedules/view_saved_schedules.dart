@@ -16,6 +16,7 @@ import 'package:matrical/pages/saved_schedules/schedule_view.dart';
 import 'package:matrical/services/schedule_service.dart';
 import 'package:matrical/widgets/export_schedule_dialog.dart';
 import 'package:matrical/widgets/import_schedule_dialog.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 List<Widget> splitScheduleCards(List<SavedScheduleCard> cards, int cols,
     int Function(SavedSchedule, SavedSchedule) sort) {
@@ -62,11 +63,14 @@ class ViewSavedSchedules extends StatefulWidget {
 class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
   Future<List<SavedSchedule>> schedules = Future.value([]);
   List<int> years = [(DateTime.now().year - 1), DateTime.now().year];
-  Map<String, int Function(SavedSchedule, SavedSchedule)> sorting = {
-    "Más Reciente": (a, b) => b.dateCreated.compareTo(a.dateCreated),
-    "Por Nombre": (a, b) =>
+  Map<String Function(BuildContext), int Function(SavedSchedule, SavedSchedule)>
+      sortKinds = {
+    (c) => AppLocalizations.of(c)!.mostRecent: (a, b) =>
+        b.dateCreated.compareTo(a.dateCreated),
+    (c) => AppLocalizations.of(c)!.byName: (a, b) =>
         a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    "Menos Reciente": (a, b) => a.dateCreated.compareTo(b.dateCreated),
+    (c) => AppLocalizations.of(c)!.leastRecent: (a, b) =>
+        a.dateCreated.compareTo(b.dateCreated),
   };
 
   late SavedSchedulesOptions options;
@@ -105,8 +109,9 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: TextField(
-                          decoration: const InputDecoration(
-                            labelText: 'Nombre de Horario',
+                          decoration: InputDecoration(
+                            labelText:
+                                AppLocalizations.of(context)!.scheduleNameInput,
                           ),
                           controller: options.searchController,
                           onChanged: (text) {
@@ -141,7 +146,8 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                     const EdgeInsets.fromLTRB(24, 0, 24, 24),
                                 backgroundColor: Colors.white,
                                 surfaceTintColor: Colors.white,
-                                title: const Text("Opciones"),
+                                title:
+                                    Text(AppLocalizations.of(context)!.options),
                                 content: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -153,22 +159,27 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                               const EdgeInsets.all(0),
                                           initialSelection: options.term,
                                           requestFocusOnTap: false,
-                                          label: const Text('Término'),
+                                          label: Text(
+                                              AppLocalizations.of(context)!
+                                                  .term),
                                           onSelected: (term) {
                                             setState(() {
                                               options.term = term;
                                             });
                                           },
                                           dropdownMenuEntries: [
-                                                const DropdownMenuEntry<Term?>(
+                                                DropdownMenuEntry<Term?>(
                                                   value: null,
-                                                  label: "Cualquiera",
+                                                  label: AppLocalizations.of(
+                                                          context)!
+                                                      .any,
                                                 )
                                               ] +
                                               Term.values.map((term) {
                                                 return DropdownMenuEntry<Term?>(
                                                   value: term,
-                                                  label: term.displayName,
+                                                  label:
+                                                      term.displayName(context),
                                                 );
                                               }).toList()),
                                     ),
@@ -179,16 +190,20 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                               const EdgeInsets.all(0),
                                           initialSelection: options.year,
                                           requestFocusOnTap: false,
-                                          label: const Text('Año'),
+                                          label: Text(
+                                              AppLocalizations.of(context)!
+                                                  .year),
                                           onSelected: (year) {
                                             setState(() {
                                               options.year = year;
                                             });
                                           },
                                           dropdownMenuEntries: [
-                                                const DropdownMenuEntry<int?>(
+                                                DropdownMenuEntry<int?>(
                                                   value: null,
-                                                  label: "Cualquiera",
+                                                  label: AppLocalizations.of(
+                                                          context)!
+                                                      .any,
                                                 )
                                               ] +
                                               years
@@ -211,19 +226,21 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                                   .text
                                                   .isNotEmpty
                                               ? options.sortingController.text
-                                              : sorting.keys.first,
+                                              : sortKinds.keys.first(context),
                                           requestFocusOnTap: false,
-                                          label: const Text('Orden'),
+                                          label: Text(
+                                              AppLocalizations.of(context)!
+                                                  .orderBy),
                                           controller: options.sortingController,
                                           onSelected: (sort) {
                                             setState(() {});
                                           },
-                                          dropdownMenuEntries: sorting.keys
+                                          dropdownMenuEntries: sortKinds.keys
                                               .map<DropdownMenuEntry<String>>(
                                                   (sort) {
                                             return DropdownMenuEntry<String>(
-                                              value: sort,
-                                              label: sort,
+                                              value: sort(context),
+                                              label: sort(context),
                                             );
                                           }).toList()),
                                     )
@@ -269,8 +286,8 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                     ))
                                 .toList(),
                             2,
-                            sorting[options.sortingController.text] ??
-                                sorting.values.first),
+                            sortKinds[options.sortingController.text] ??
+                                sortKinds.values.first),
                       )
                     ]),
                   ),
@@ -287,8 +304,8 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
     }
     final parsedSchedule = GeneratedSchedule.fromImportCode(encodedSchedule);
     if (parsedSchedule == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Código inválido no pudo ser importado.")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.invalidCodeError)));
       return;
     }
     showDialog<SaveScheduleResult?>(
@@ -300,8 +317,9 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
       if (result != null && result == SaveScheduleResult.success) {
         setState(() {
           schedules = getSavedSchedules();
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Horario guardado exitosamente.")));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  AppLocalizations.of(context)!.scheduleSavedSuccessfully)));
         });
       }
     });
@@ -365,13 +383,15 @@ class SavedScheduleCard extends StatelessWidget {
                         ],
                       ),
                       Text(
-                          "${Term.fromString(schedule.schedule.term)?.displayName ?? ''}, ${schedule.schedule.year}",
+                          "${Term.fromString(schedule.schedule.term)?.displayName(context) ?? ''}, ${schedule.schedule.year}",
                           style: const TextStyle(fontSize: 12)),
                       Text(
-                          "Total de Créditos: ${schedule.schedule.getTotalCredits()}",
+                          AppLocalizations.of(context)!.totalCredits(
+                              schedule.schedule.getTotalCredits()),
                           style: const TextStyle(fontSize: 12)),
                       Text(
-                          "Fecha: ${schedule.dateCreated.day}/${schedule.dateCreated.month}/${schedule.dateCreated.year}",
+                          AppLocalizations.of(context)!.dateInput(
+                              "${schedule.dateCreated.day}/${schedule.dateCreated.month}/${schedule.dateCreated.year}"),
                           style: const TextStyle(fontSize: 12)),
                       const Divider(),
                     ] +
@@ -401,9 +421,9 @@ class SavedScheduleCard extends StatelessWidget {
 
 Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
   return AlertDialog(
-    title: const Text(
-      "Cursos en horario:",
-      style: TextStyle(
+    title: Text(
+      AppLocalizations.of(context)!.coursesInSchedule,
+      style: const TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 18,
       ),
@@ -440,7 +460,7 @@ Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => ScheduleView(schedule: schedule)));
               },
-              child: const Text("Ver en Semana"),
+              child: Text(AppLocalizations.of(context)!.viewInWeek),
             ),
           ),
           Flexible(
@@ -461,7 +481,7 @@ Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
                 matricalCubitSingleton.updateYear(schedule.schedule.year);
                 matricalCubitSingleton.setPage(MatricalPage.courseSelect);
               },
-              child: const Text("Editar"),
+              child: Text(AppLocalizations.of(context)!.edit),
             ),
           ),
           Flexible(
@@ -485,7 +505,7 @@ Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
                   },
                 );
               },
-              child: const Text("Exportar"),
+              child: Text(AppLocalizations.of(context)!.export),
             ),
           ),
         ],

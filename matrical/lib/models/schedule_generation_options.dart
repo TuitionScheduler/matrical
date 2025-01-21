@@ -1,49 +1,52 @@
 import 'package:collection/collection.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 enum Term {
-  fall(
-      displayName: "Primer Semestre",
-      databaseKey: "Fall",
-      startMonth: 8,
-      durationInWeeks: 16,
-      startWeek: 2),
+  fall(databaseKey: "Fall", startMonth: 8, durationInWeeks: 16, startWeek: 2),
   spring(
-      displayName: "Segundo Semestre",
-      databaseKey: "Spring",
-      startMonth: 1,
-      durationInWeeks: 16,
-      startWeek: 2),
+      databaseKey: "Spring", startMonth: 1, durationInWeeks: 16, startWeek: 2),
   firstSummer(
-      displayName: "Primer Verano",
       databaseKey: "FirstSummer",
       startMonth: 6,
       durationInWeeks: 4,
       startWeek: 1),
   secondSummer(
-      displayName: "Segundo Verano",
       databaseKey: "SecondSummer",
       startMonth: 7,
       durationInWeeks: 4,
       startWeek: 1),
   extendedSummer(
-      displayName: "Verano Extendido",
       databaseKey: "ExtendedSummer",
       startMonth: 6,
       durationInWeeks: 6,
       startWeek: 1);
 
   const Term(
-      {required this.displayName,
-      required this.databaseKey,
+      {required this.databaseKey,
       required this.startMonth,
       required this.durationInWeeks,
       required this.startWeek});
 
-  final String displayName;
   final String databaseKey;
   final int startMonth;
   final int durationInWeeks;
   final int startWeek;
+
+  String displayName(BuildContext context) {
+    switch (this) {
+      case Term.fall:
+        return AppLocalizations.of(context)!.termFall;
+      case Term.spring:
+        return AppLocalizations.of(context)!.termSpring;
+      case Term.firstSummer:
+        return AppLocalizations.of(context)!.termFirstSummer;
+      case Term.secondSummer:
+        return AppLocalizations.of(context)!.termSecondSummer;
+      case Term.extendedSummer:
+        return AppLocalizations.of(context)!.termExtendedSummer;
+    }
+  }
 
   int getYearOffset() {
     return databaseKey == Term.spring.databaseKey ? 1 : 0;

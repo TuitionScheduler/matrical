@@ -8,6 +8,7 @@ import 'package:matrical/models/weekday.dart';
 import 'package:matrical/pages/generated_schedules/course_view.dart';
 import 'package:matrical/pages/generated_schedules/generated_schedules.dart';
 import 'package:matrical/services/widgets_service.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ScheduleView extends StatelessWidget {
   final SavedSchedule schedule;
@@ -32,7 +33,7 @@ class ScheduleView extends StatelessWidget {
             },
           ),
           title: Text(
-            "Vista de Horario (${schedule.name})",
+            AppLocalizations.of(context)!.scheduleViewWithInput(schedule.name),
             style: const TextStyle(color: Colors.white),
           ),
           centerTitle: false,

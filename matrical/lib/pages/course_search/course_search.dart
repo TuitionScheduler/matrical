@@ -8,12 +8,12 @@ import 'package:matrical/models/course_filters_popup_response.dart';
 import 'package:matrical/models/department_course.dart';
 import 'package:matrical/models/matrical_cubit.dart';
 import 'package:matrical/models/schedule_generation_options.dart';
-import 'package:matrical/services/course_data_entry_info_service.dart';
 import 'package:matrical/services/course_service.dart';
 import 'package:matrical/services/formatter_service.dart';
 import 'package:matrical/services/stored_preferences.dart';
 import 'package:matrical/widgets/course_filters.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 const officialColor = Color.fromRGBO(9, 144, 45, 1);
 
@@ -66,7 +66,7 @@ class _CourseSearchState extends State<CourseSearch> {
                       expandedInsets: const EdgeInsets.all(0),
                       initialSelection: matricalState.term,
                       requestFocusOnTap: false,
-                      label: const Text('Término'),
+                      label: Text(AppLocalizations.of(context)!.term),
                       onSelected: (term) async {
                         if (term != null) {
                           matricalCubit.updateTerm(term);
@@ -76,9 +76,9 @@ class _CourseSearchState extends State<CourseSearch> {
                           if (removedAny) {
                             ScaffoldMessenger.of(context)
                               ..hideCurrentSnackBar()
-                              ..showSnackBar(const SnackBar(
-                                content: Text(
-                                    'Algunos cursos y/o secciones no pertenecen a este término y/o año.'),
+                              ..showSnackBar(SnackBar(
+                                content: Text(AppLocalizations.of(context)!
+                                    .removedCoursesWarning),
                               ));
                           }
                           search(matricalState.lastSearch);
@@ -88,7 +88,7 @@ class _CourseSearchState extends State<CourseSearch> {
                           Term.values.map<DropdownMenuEntry<Term>>((term) {
                         return DropdownMenuEntry<Term>(
                           value: term,
-                          label: term.displayName,
+                          label: term.displayName(context),
                         );
                       }).toList()),
                 ),
@@ -101,7 +101,7 @@ class _CourseSearchState extends State<CourseSearch> {
                       expandedInsets: const EdgeInsets.all(0),
                       initialSelection: matricalState.year.toString(),
                       requestFocusOnTap: false,
-                      label: const Text('Año'),
+                      label: Text(AppLocalizations.of(context)!.year),
                       onSelected: (year) async {
                         if (year != null) {
                           matricalCubit.updateYear(int.parse(year));
@@ -111,9 +111,9 @@ class _CourseSearchState extends State<CourseSearch> {
                           if (removedAny) {
                             ScaffoldMessenger.of(context)
                               ..hideCurrentSnackBar()
-                              ..showSnackBar(const SnackBar(
-                                content: Text(
-                                    'Algunos cursos y/o secciones no pertenecen a este término y/o año.'),
+                              ..showSnackBar(SnackBar(
+                                content: Text(AppLocalizations.of(context)!
+                                    .removedCoursesWarning),
                               ));
                           }
                           search(matricalState.lastSearch);
@@ -155,9 +155,10 @@ class _CourseSearchState extends State<CourseSearch> {
                         controller: controller,
                         focusNode: focusNode,
                         autofocus: false,
-                        decoration: const InputDecoration(
-                          labelText: 'Buscar Curso o Departamento',
-                          hintText: 'ie. CIIC3015, INSO',
+                        decoration: InputDecoration(
+                          labelText:
+                              AppLocalizations.of(context)!.courseSearchInput,
+                          hintText: 'e.g. CIIC3015, INSO',
                         ),
                         textCapitalization: TextCapitalization.characters,
                         inputFormatters: [UpperCaseTextFormatter()],
@@ -170,8 +171,9 @@ class _CourseSearchState extends State<CourseSearch> {
                       title: Text(suggestion),
                     );
                   },
-                  errorBuilder: (context, error) =>
-                      const Text('Error sugiriendo departamentos.'),
+                  errorBuilder: (context, error) => Text(
+                      AppLocalizations.of(context)!
+                          .departmentAutoCompleteError),
                   emptyBuilder: (context) => const SizedBox.shrink(),
                   onSelected: (suggestion) {
                     search(suggestion);
@@ -287,9 +289,20 @@ class _CourseSectionsState extends State<CourseSections> {
           title: Text(
               "${widget.course.courseName} (${widget.course.courseCode})",
               style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text("Créditos: ${widget.course.credits}\n"
-              "Pre-requisitos: ${widget.course.prerequisites.isNotEmpty ? widget.course.prerequisites : "N/A"}\n"
-              "Co-requisitos: ${widget.course.corequisites.isNotEmpty ? widget.course.corequisites : "N/A"}"),
+          subtitle: Text([
+            AppLocalizations.of(context)!
+                .creditsWithInput(widget.course.credits),
+            // ${widget.course.prerequisites.isNotEmpty ? widget.course.prerequisites : "N/A"}
+            AppLocalizations.of(context)!.prerequisitesWithInput(
+                widget.course.prerequisites.isNotEmpty
+                    ? widget.course.prerequisites
+                    : "N/A"),
+
+            AppLocalizations.of(context)!.corequisitesWithInput(
+                widget.course.corequisites.isNotEmpty
+                    ? widget.course.corequisites
+                    : "N/A")
+          ].join("\n")),
           trailing: expanded
               ? const Icon(Icons.arrow_drop_up)
               : Row(mainAxisSize: MainAxisSize.min, children: [
@@ -337,8 +350,10 @@ class _CourseSectionsState extends State<CourseSections> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                                  Text("Sección: ${section.sectionCode}"),
-                                  const Text("Profesores:"),
+                                  Text(AppLocalizations.of(context)!
+                                      .sectionWithInput(section.sectionCode)),
+                                  Text(
+                                      AppLocalizations.of(context)!.professors),
                                 ] +
                                 section.professors
                                     .map((professor) => Padding(
@@ -415,7 +430,10 @@ class _CourseSectionsState extends State<CourseSections> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: section.meetings.isEmpty
-                              ? [const Text("Por Acuerdo")]
+                              ? [
+                                  Text(
+                                      AppLocalizations.of(context)!.byAgreement)
+                                ]
                               : section.meetings
                                   .map((schedule) => Text(schedule.toString()))
                                   .toList(),

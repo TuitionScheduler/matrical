@@ -3,6 +3,7 @@ import 'package:matrical/globals/cubits.dart';
 import 'package:matrical/models/course_filters.dart';
 import 'package:matrical/models/generated_schedule.dart';
 import 'package:matrical/models/matrical_page.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ScheduleTableView extends StatelessWidget {
   final GeneratedSchedule schedule;
@@ -12,9 +13,9 @@ class ScheduleTableView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text(
-        "Cursos en horario:",
-        style: TextStyle(
+      title: Text(
+        AppLocalizations.of(context)!.coursesInSchedule,
+        style: const TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 18,
         ),
@@ -53,7 +54,7 @@ class ScheduleTableView extends StatelessWidget {
             Navigator.of(context).pop(); // dismiss the modal
             matricalCubitSingleton.setPage(MatricalPage.courseSelect);
           },
-          child: const Text("Editar"),
+          child: Text(AppLocalizations.of(context)!.edit),
         )
       ],
     );
@@ -72,11 +73,11 @@ class ScheduleTable extends StatelessWidget {
       dataTextStyle: const TextStyle(fontSize: 12),
       dataRowMaxHeight: double.infinity,
       columnSpacing: 14,
-      columns: const <DataColumn>[
+      columns: <DataColumn>[
         DataColumn(
           label: Text(
-            'Curso',
-            style: TextStyle(
+            "${AppLocalizations.of(context)!.course}:",
+            style: const TextStyle(
               fontSize: 12,
             ),
           ),
@@ -84,8 +85,8 @@ class ScheduleTable extends StatelessWidget {
         DataColumn(
           label: Expanded(
             child: Text(
-              'Horario',
-              style: TextStyle(
+              "${AppLocalizations.of(context)!.schedule}:",
+              style: const TextStyle(
                 fontSize: 12,
               ),
             ),
@@ -93,8 +94,8 @@ class ScheduleTable extends StatelessWidget {
         ),
         DataColumn(
           label: Text(
-            'Profesores',
-            style: TextStyle(
+            AppLocalizations.of(context)!.professors,
+            style: const TextStyle(
               fontSize: 12,
             ),
           ),
@@ -111,7 +112,7 @@ class ScheduleTable extends StatelessWidget {
                           .meetings
                           .map((e) => e.toString())
                           .join(",\n")
-                      : "Por Acuerdo")),
+                      : AppLocalizations.of(context)!.byAgreement)),
                   DataCell(Text(courseSection
                       .getSection()
                       .professors

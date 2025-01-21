@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 class CourseFilters {
   List<String> professors;
   String earliestTime;
@@ -85,27 +88,46 @@ class CourseWithFilters {
 }
 
 enum Modality {
-  remoteSynchronous(displayName: "Remoto Sincrónico", letterCodes: ["E"]),
-  remoteAsynchronous(displayName: "Remoto Asincrónico", letterCodes: ["D"]),
-  hybrid(displayName: "Híbrido", letterCodes: ["H"]),
-  inperson(displayName: "Presencial", letterCodes: ["", "L"]),
-  byagreement(displayName: "Por Acuerdo", letterCodes: ["P", "R", "#", "D"]),
+  remoteSynchronous(databaseName: "Remoto Sincrónico", letterCodes: ["E"]),
+  remoteAsynchronous(databaseName: "Remoto Asincrónico", letterCodes: ["D"]),
+  hybrid(databaseName: "Híbrido", letterCodes: ["H"]),
+  inperson(databaseName: "Presencial", letterCodes: ["", "L"]),
+  byagreement(databaseName: "Por Acuerdo", letterCodes: ["P", "R", "#", "D"]),
   any(
-      displayName: "Cualquiera",
+      databaseName: "Cualquiera",
       letterCodes: ["E", "D", "H", "", "P", "R", "#", "L"]);
 
-  const Modality({required this.displayName, required this.letterCodes});
-  final String displayName;
+  const Modality({required this.databaseName, required this.letterCodes});
+  final String
+      databaseName; // TODO(poggecci): make the db name something neater rather than just the spanish display name
   final List<String> letterCodes;
 
   // Convert Modality to JSON
-  String toJson() => displayName;
+  String toJson() => databaseName;
 
   // Convert JSON to Modality
   static Modality fromJson(String json) {
     return Modality.values.firstWhere(
-      (modality) => modality.displayName == json,
+      (modality) => modality.databaseName == json,
       orElse: () => Modality.any, // Default value if not found
     );
+  }
+
+  // Get the display name for the modality (differs from db name due to intl)
+  String displayName(BuildContext context) {
+    switch (this) {
+      case Modality.remoteSynchronous:
+        return AppLocalizations.of(context)!.remoteSynchronous;
+      case Modality.remoteAsynchronous:
+        return AppLocalizations.of(context)!.remoteAsynchronous;
+      case Modality.hybrid:
+        return AppLocalizations.of(context)!.hybrid;
+      case Modality.inperson:
+        return AppLocalizations.of(context)!.inperson;
+      case Modality.byagreement:
+        return AppLocalizations.of(context)!.byagreement;
+      case Modality.any:
+        return AppLocalizations.of(context)!.any;
+    }
   }
 }

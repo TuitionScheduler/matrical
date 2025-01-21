@@ -1,5 +1,4 @@
 import 'package:bloc/bloc.dart';
-import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
 import 'package:matrical/models/blacklist.dart';
 import 'package:matrical/models/course_filters.dart';
@@ -16,8 +15,7 @@ class MatricalCubit extends Cubit<MatricalState> {
           term: Term.getPredictedTerm(),
           year: Term.getPredictedYear(),
           preferences: GeneratedSchedulePreferences.getDefault(),
-          pageIndex: 0,
-          pageTitle: "Selección de Cursos",
+          page: MatricalPage.courseSelect,
           searchFilters: CourseFilters.empty(),
           lastSearch: null,
           savedSchedulesOptions: SavedSchedulesOptions.empty(),
@@ -33,8 +31,7 @@ class MatricalCubit extends Cubit<MatricalState> {
       Term term,
       int year,
       GeneratedSchedulePreferences preferences,
-      int pageIndex,
-      String pageTitle,
+      MatricalPage page,
       CourseFilters searchFilters,
       String? lastSearch,
       SavedSchedulesOptions savedSchedulesOptions,
@@ -47,8 +44,7 @@ class MatricalCubit extends Cubit<MatricalState> {
       term: term,
       year: year,
       preferences: preferences,
-      pageIndex: pageIndex,
-      pageTitle: pageTitle,
+      page: page,
       searchFilters: searchFilters,
       lastSearch: lastSearch,
       savedSchedulesOptions: savedSchedulesOptions,
@@ -144,8 +140,9 @@ class MatricalCubit extends Cubit<MatricalState> {
     emit(state.copyWith(preferences: newPreferences));
   }
 
+  // Requires the context to access the localized titles
   void setPage(MatricalPage page) {
-    emit(state.copyWith(pageIndex: page.index, pageTitle: page.displayName));
+    emit(state.copyWith(page: page));
   }
 
   void setLastSearch(String? search) {
@@ -171,8 +168,7 @@ class MatricalState extends Equatable {
   final Term term;
   final int year;
   final GeneratedSchedulePreferences preferences;
-  final int pageIndex;
-  final String pageTitle;
+  final MatricalPage page;
   final CourseFilters searchFilters;
   final String? lastSearch;
   final SavedSchedulesOptions savedSchedulesOptions;
@@ -186,8 +182,7 @@ class MatricalState extends Equatable {
     required this.term,
     required this.year,
     required this.preferences,
-    required this.pageIndex,
-    required this.pageTitle,
+    required this.page,
     required this.searchFilters,
     required this.lastSearch,
     required this.savedSchedulesOptions,
@@ -202,8 +197,7 @@ class MatricalState extends Equatable {
     Term? term,
     int? year,
     GeneratedSchedulePreferences? preferences,
-    int? pageIndex,
-    String? pageTitle,
+    MatricalPage? page,
     CourseFilters? searchFilters,
     String? lastSearch,
     SavedSchedulesOptions? savedSchedulesOptions,
@@ -217,8 +211,7 @@ class MatricalState extends Equatable {
       term: term ?? this.term,
       year: year ?? this.year,
       preferences: preferences ?? this.preferences,
-      pageIndex: pageIndex ?? this.pageIndex,
-      pageTitle: pageTitle ?? this.pageTitle,
+      page: page ?? this.page,
       searchFilters: searchFilters ?? this.searchFilters,
       lastSearch: lastSearch ?? this.lastSearch,
       savedSchedulesOptions:
@@ -240,8 +233,7 @@ class MatricalState extends Equatable {
         term,
         year,
         preferences,
-        pageIndex,
-        pageTitle,
+        page,
         searchFilters,
         lastSearch,
         savedSchedulesOptions,

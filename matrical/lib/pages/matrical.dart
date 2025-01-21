@@ -9,6 +9,7 @@ import 'package:matrical/pages/course_select/course_select.dart';
 import 'package:matrical/pages/generated_schedules/generated_schedules.dart';
 import 'package:matrical/pages/saved_schedules/view_saved_schedules.dart';
 import 'package:matrical/widgets/bug_report.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 const officialColor = Color.fromRGBO(9, 144, 45, 1);
 const TextStyle textStyle = TextStyle(color: Colors.white);
@@ -26,18 +27,18 @@ class Matrical extends StatelessWidget {
             key: globalKey,
             appBar: AppBar(
               title: Text(
-                state.pageTitle,
+                state.page.displayName(context),
                 style: textStyle,
               ),
               backgroundColor: officialColor,
-              actions: [BugReport(pageName: state.pageTitle)],
+              actions: [BugReport(pageName: state.page.displayName(context))],
             ),
             body: <Widget>[
               const CourseSelect(),
               const CourseSearch(),
               const ViewSavedSchedules(),
               const GeneratedSchedules(),
-            ][state.pageIndex],
+            ][state.page.index],
             bottomNavigationBar: BottomNavigationBar(
               showUnselectedLabels: true,
               showSelectedLabels: true,
@@ -45,18 +46,21 @@ class Matrical extends StatelessWidget {
                   Colors.black54, // Add color for unselected items
               selectedItemColor: officialColor, // Add color for selected item
 // Ensures the bar matches the AppBar
-              items: const <BottomNavigationBarItem>[
+              items: <BottomNavigationBarItem>[
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.create), label: 'Crear'),
+                    icon: const Icon(Icons.create),
+                    label: AppLocalizations.of(context)!.courseSelectIcon),
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.search), label: 'Cursos'),
+                    icon: const Icon(Icons.search),
+                    label: AppLocalizations.of(context)!.courseSearchIcon),
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.save), label: 'Mis Horarios'),
+                    icon: const Icon(Icons.save),
+                    label: AppLocalizations.of(context)!.savedSchedulesIcon),
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.calendar_month_outlined),
-                    label: 'Generar'),
+                    icon: const Icon(Icons.calendar_month_outlined),
+                    label: AppLocalizations.of(context)!.generateSchedulesIcon),
               ],
-              currentIndex: state.pageIndex,
+              currentIndex: state.page.index,
               onTap: (int index) {
                 final matricalCubit = BlocProvider.of<MatricalCubit>(context);
                 switch (index) {
@@ -75,8 +79,9 @@ class Matrical extends StatelessWidget {
                     } else {
                       ScaffoldMessenger.of(context)
                           .removeCurrentSnackBar(); // Use remove here to account for possible rapid user tapping
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Añade cursos antes de generar.'),
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(AppLocalizations.of(context)!
+                            .addCoursesPriorToGeneratingSchedules),
                       ));
                     }
                     break;

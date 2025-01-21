@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:core';
 
 import 'package:collection/collection.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class Department {
   String department;
@@ -370,14 +372,24 @@ class Professor {
 }
 
 enum Division {
-  lowerDivision(displayName: "Subgraduado", databaseValue: "LowerDivsion"),
-  upperDivision(
-      displayName: "Subgraduado o Graduado", databaseValue: "UpperDivison"),
-  graduate(displayName: "Graduado", databaseValue: "Graduate");
+  lowerDivision(databaseValue: "LowerDivsion"),
+  upperDivision(databaseValue: "UpperDivison"),
+  graduate(databaseValue: "Graduate");
 
-  const Division({required this.displayName, required this.databaseValue});
-  final String displayName;
+  const Division({required this.databaseValue});
   final String databaseValue;
+
+  String displayName(BuildContext context) {
+    switch (this) {
+      case Division.lowerDivision:
+        return AppLocalizations.of(context)!.divisionLower;
+      case Division.upperDivision:
+        return AppLocalizations.of(context)!.divisionUpper;
+      case Division.graduate:
+        return AppLocalizations.of(context)!.divisionGraduate;
+    }
+  }
+
   static Division fromDatabase(String div) {
     return Division.values
             .firstWhereOrNull((element) => element.databaseValue == div) ??

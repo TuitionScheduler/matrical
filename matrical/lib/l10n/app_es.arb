@@ -1,0 +1,218 @@
+{
+  "@@locale": "es",
+  "addCourses": "Añadir Cursos",
+  "addCoursesPriorToGeneratingSchedules": "Añade cursos antes de generar.",
+  "addCoursesToShare": "Añade cursos para poder compartir el enlace.",
+  "afternoon": "Tarde",
+  "any": "Cualquiera",
+  "apply": "Aplicar",
+  "byagreement": "Por Acuerdo",
+  "byAgreement": "Por Acuerdo",
+  "byName": "Por Nombre",
+  "calendar": "Calendario",
+  "calendarHelp": "Calendario: Crea y abre un archivo \".ics\" con tu horario. Los archivos \".ics\" pueden ser abiertos por Google Calendar, Outlook, etc. para añadir tus clases a tu calendario.",
+  "cancel": "Cancelar",
+  "classroomSingleOrPlural": "Salon(es)",
+  "close": "Cerrar",
+  "code": "Texto",
+  "codeHelp": "Código: Te permite enviar un código con las secciones en este horario. Otros usuarios pueden copiar el código e importarlo en la aplicación mediante la página de Selección de Cursos o la de Horarios Guardados.",
+  "corequisitesWithInput": "Co-requisitos: {corequisites}",
+  "@corequisitesWithInput": {
+    "placeholders": {
+      "corequisites": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotFindValidSchedules": "No encontramos horarios válidos con tus cursos y preferencias.",
+  "course": "Curso",
+  "courseAutocompleteError": "Error sugiriendo cursos.",
+  "courseDoesNotExist": "Curso {courseCode} no existe.",
+  "@courseDoesNotExist": {
+    "placeholders": {
+      "courseCode": {
+        "type": "String"
+      }
+    }
+  },
+  "courseFiltersExplanation": "Los filtros de cursos limitan qué secciones se utilizan para la generación de horarios.",
+  "courseNotAvailable": "Curso no disponible para este semestre según nuestra base de datos.",
+  "courseNotInLocalMemory": "No se pudo encontrar el curso en la memoria local. Intente otra vez una vez esté conectado al Internet.",
+  "courseSearch": "Búsqueda de Cursos",
+  "courseSearchIcon": "Cursos",
+  "courseSearchInput": "Buscar Curso o Departamento",
+  "courseSelect": "Selección de Cursos",
+  "courseSelectIcon": "Crear",
+  "coursesInSchedule": "Cursos en horario:",
+  "creditsWithInput": "Créditos: {credits}",
+  "@creditsWithInput": {
+    "placeholders": {
+      "credits": {
+        "type": "int"
+      }
+    }
+  },
+  "dateInput": "Fecha: {dateString}",
+  "@dateInput": {
+    "placeholders": {
+      "dateString": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteFilters": "Borrar Filtros",
+  "dense": "Denso",
+  "departmentAutoCompleteError": "Error sugiriendo departamentos.",
+  "dismiss": "Ocultar",
+  "divisionGraduate": "Graduado",
+  "divisionLower": "Subgraduado",
+  "divisionUpper": "Subgraduado o Graduado",
+  "edit": "Editar",
+  "endsBefore": "Acaba Antes de",
+  "excludedProfessors": "Profesores Excluidos:",
+  "excludedSections": "Secciones Excluidas:",
+  "export": "Exportar",
+  "exportAs": "Exportar como:",
+  "failedToSaveImage": "Imagen no pudo ser guardada.",
+  "filters": "Filtros",
+  "friday": "V",
+  "generatedSchedules": "Horarios Generados",
+  "generateSchedulesButton": "Generar Matrículas",
+  "generateSchedulesIcon": "Generar",
+  "hasIntegratedLab": "Tiene Laboratorio Integrado: {hasIntegratedLab}",
+  "@hasIntegratedLab": {
+    "placeholders": {
+      "hasIntegratedLab": {
+        "type": "String"
+      }
+    }
+  },
+  "hybrid": "Híbrido",
+  "image": "Imagen",
+  "imageHelp": "Imagen: Guarda una imagen del horario en la galería de tu dispositivo.",
+  "import": "Importar",
+  "importDialogDescription": "Si te envían un código de horario, puedes copiarlo en esta entrada de texto para importarlo. Puedes exportar códigos de horario la opción de \"Texto\" cuando presionas \"Exportar\" en un horario generado o guardado.",
+  "importScheduleDialog": "Importar horario",
+  "inperson": "Presencial",
+  "invalidCode": "El código entrado tiene un formato inválido.",
+  "invalidCodeError": "Código inválido no pudo ser importado.",
+  "invalidCourseFormat": "Curso no tiene el formato esperado (DEPT####).",
+  "invalidSectionFormat": "Sección no tiene el formato esperado.",
+  "leastRecent": "Menos Reciente",
+  "levelInput": "Nivel: {level}",
+  "@levelInput": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "link": "Enlace",
+  "linkHelp": "Enlace: Genera un enlace que otros usuarios pueden acceder para ver el horario.",
+  "meetings": "Reuniones:\n\t\t{meetings}",
+  "@meetings": {
+    "placeholders": {
+      "meetings": {
+        "type": "String"
+      }
+    }
+  },
+  "modality": "Modalidad",
+  "monday": "L",
+  "morning": "Mañana",
+  "mostRecent": "Más Reciente",
+  "noExcludedProfessor": "Ningún profesor ha sido excluido",
+  "noExcludedSection": "Ninguna sección ha sido excluida",
+  "noon": "Mediodía",
+  "noPreference": "Sin Preferencia",
+  "options": "Opciones",
+  "or": " o ",
+  "orderBy": "Orden",
+  "preferencesHelpExcludedProfessors": "Profesores Excluídos - Ver y/o incluír de vuelta profesores.",
+  "preferencesHelpExcludedSections": "Secciones Excluidas - Ver y/o incluír de vuelta secciones.",
+  "preferencesHelpModality": "Presencial / Por Acuerdo - Modalidad preferida.",
+  "preferencesHelpOverview": "Aquí puedes controlar cuales horarios serán mostrados primeros basados en tus preferencias.",
+  "preferencesHelpProfessorRanking": "Ranking de Profesores - Ordena profesores basado en tus gustos. Presiona en un curso para activar ranking de ese curso.",
+  "preferencesHelpSparseDense": "Esparcido / Denso - Controla si las secciones deben tener espacio entremedio o no.",
+  "preferencesHelpTime": "Tiempo Preferido para Cursos - Selecciona cuándo tomar los cursos durante el día.",
+  "preferredCourseTimes": "Tiempo Preferido para Cursos",
+  "prerequisitesWithInput": "Pre-requisitos: {prerequisites}",
+  "@prerequisitesWithInput": {
+    "placeholders": {
+      "prerequisites": {
+        "type": "String"
+      }
+    }
+  },
+  "profesorsSingleOrPlural": "Profesor(es)",
+  "professorRanking": "Ranking de Profesores:",
+  "professors": "Profesores:",
+  "remoteAsynchronous": "Remoto Asincrónico",
+  "remoteSynchronous": "Remoto Sincrónico",
+  "removedCoursesWarning": "Algunos cursos y/o secciones no pertenecen a este término y/o año.",
+  "requiredCourseInput": "Curso*",
+  "save": "Guardar",
+  "savedSchedules": "Mis Horarios",
+  "savedSchedulesIcon": "Mis Horarios",
+  "saveFilters": "Guardar Filtros",
+  "saveScheduleAlreadyExists": "Horario con este nombre ya existe.",
+  "saveScheduleDialog": "Guardar Horario",
+  "saveScheduleEmptyName": "Horario debe tener un nombre.",
+  "saveScheduleFailedWrite": "Hubo un problema guardando el horario.\nIntente otra vez.",
+  "saveScheduleHitLimit": "Límite de horarios alcanzado (300).\nBorra algunos horarios.",
+  "saveScheduleSuccess": "Horario guardado exitosamente!",
+  "savingImage": "Generando y guardando imagen...",
+  "schedule": "Horario",
+  "scheduleCopiedToClipboard": "Enlace con tu horario copiado a tu dispositivo.",
+  "scheduleFilters": "Filtros de Horario",
+  "scheduleFiltersDescription": "Al activarlos, puedes limitar el rango de horas y días donde quieres tener clase.",
+  "scheduleLinkCopiedToClipboard": "Enlace con tus cursos fue copiado a tu dispositivo.",
+  "scheduleNameInput": "Nombre de Horario",
+  "schedulePreferences": "Preferencias de Horario",
+  "scheduleSavedSuccessfully": "Horario guardado exitosamente.",
+  "scheduleViewWithInput": "Vista de Horario ({scheduleName})",
+  "@scheduleViewWithInput": {
+    "placeholders": {
+      "scheduleName": {
+        "type": "String"
+      }
+    }
+  },
+  "section": "Sección",
+  "sectionAutocompleteError": "Error sugiriendo secciones.",
+  "sectionNotAvailable": "Sección no disponible para este semestre según nuestra base de datos.",
+  "sectionNotInLocalMemory": "No se pudo encontrar esa sección para el curso en la memoria local. Intente otra vez una vez esté conectado al Internet.",
+  "sectionWithInput": "Sección: {section}",
+  "@sectionWithInput": {
+    "placeholders": {
+      "section": {
+        "type": "String"
+      }
+    }
+  },
+  "sparse": "Esparcido",
+  "startsAfter": "Comienza Después de",
+  "successfullyImportedSchedule": "Horario importado exitosamente.",
+  "successfullySavedImage": "Imagen guardada exitosamente!",
+  "term": "Término",
+  "termExtendedSummer": "Verano Extendido",
+  "termFall": "Primer Semestre",
+  "termFirstSummer": "Primer Verano",
+  "termSecondSummer": "Segundo Verano",
+  "termSpring": "Segundo Semestre",
+  "thursday": "J",
+  "totalCredits": "Total de Créditos: {totalCredits}",
+  "@totalCredits": {
+    "placeholders": {
+      "totalCredits": {
+        "type": "int"
+      }
+    }
+  },
+  "tuesday": "M",
+  "validate": "Validar",
+  "view": "Vista",
+  "viewInWeek": "Ver en Semana",
+  "wednesday": "W",
+  "year": "Año"
+}

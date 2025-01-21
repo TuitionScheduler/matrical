@@ -13,6 +13,8 @@ import 'package:matrical/models/matrical_page.dart';
 import 'package:matrical/models/schedule_generation_options.dart';
 import 'package:matrical/pages/matrical.dart';
 import 'package:sizer/sizer.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 Future<void> main() async {
   await setUp();
@@ -96,6 +98,11 @@ class _MainAppState extends State<MainApp> {
     return Sizer(
       builder: (context, orientation, deviceType) {
         return MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: const [
+            Locale('en'), // English
+            Locale('es'), // Spanish
+          ],
           home: MultiBlocProvider(
             providers: [
               BlocProvider.value(value: matricalCubitSingleton),
