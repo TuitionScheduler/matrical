@@ -82,27 +82,41 @@ class CourseView extends StatelessWidget {
                             child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                            Text("Créditos: ${course.credits}"),
+                            Text(AppLocalizations.of(context)!
+                                .creditsWithInput(course.credits)),
                             SizedBox.fromSize(
                                 size: const Size.fromHeight(textSpacing)),
                             Text(
-                                "Pre-requisitos: ${course.prerequisites.isNotEmpty ? course.prerequisites : "N/A"}"),
+                              AppLocalizations.of(context)!
+                                  .prerequisitesWithInput(
+                                      course.prerequisites.isNotEmpty
+                                          ? course.prerequisites
+                                          : "N/A"),
+                            ),
                             SizedBox.fromSize(
                                 size: const Size.fromHeight(textSpacing)),
                             Text(
-                                "Co-requisitos: ${course.corequisites.isNotEmpty ? course.corequisites : "N/A"}"),
+                              AppLocalizations.of(context)!
+                                  .corequisitesWithInput(
+                                      course.corequisites.isNotEmpty
+                                          ? course.corequisites
+                                          : "N/A"),
+                            ),
                             SizedBox.fromSize(
                                 size: const Size.fromHeight(textSpacing)),
-                            Text(
-                                "Nivel: ${Division.fromDatabase(course.division).displayName}"),
+                            Text(AppLocalizations.of(context)!.levelInput(
+                                Division.fromDatabase(course.division)
+                                    .displayName(context))),
                             SizedBox.fromSize(
                                 size: const Size.fromHeight(textSpacing)),
-                            Text(
-                                "Tiene Laboratorio Integrado: ${course.hasIntegratedLab ? "✔" : "✖"}"),
+                            Text(AppLocalizations.of(context)!.hasIntegratedLab(
+                                course.hasIntegratedLab ? "✔" : "✖")),
                             SizedBox.fromSize(
                                 size: const Size.fromHeight(textSpacing)),
-                            Text(
-                                "Reuniones:\n\t\t${section.meetings.isNotEmpty ? section.meetings.join("\n\t\t") : "Por acuerdo"}"),
+                            Text(AppLocalizations.of(context)!.meetings(section
+                                    .meetings.isNotEmpty
+                                ? section.meetings.join("\n\t\t")
+                                : AppLocalizations.of(context)!.byAgreement)),
                             SizedBox.fromSize(
                                 size: const Size.fromHeight(textSpacing)),
                             Text(AppLocalizations.of(context)!.professors),

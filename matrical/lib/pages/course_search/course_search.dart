@@ -88,7 +88,7 @@ class _CourseSearchState extends State<CourseSearch> {
                           Term.values.map<DropdownMenuEntry<Term>>((term) {
                         return DropdownMenuEntry<Term>(
                           value: term,
-                          label: term.displayName,
+                          label: term.displayName(context),
                         );
                       }).toList()),
                 ),
@@ -289,9 +289,20 @@ class _CourseSectionsState extends State<CourseSections> {
           title: Text(
               "${widget.course.courseName} (${widget.course.courseCode})",
               style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text("Créditos: ${widget.course.credits}\n"
-              "Pre-requisitos: ${widget.course.prerequisites.isNotEmpty ? widget.course.prerequisites : "N/A"}\n"
-              "Co-requisitos: ${widget.course.corequisites.isNotEmpty ? widget.course.corequisites : "N/A"}"),
+          subtitle: Text([
+            AppLocalizations.of(context)!
+                .creditsWithInput(widget.course.credits),
+            // ${widget.course.prerequisites.isNotEmpty ? widget.course.prerequisites : "N/A"}
+            AppLocalizations.of(context)!.prerequisitesWithInput(
+                widget.course.prerequisites.isNotEmpty
+                    ? widget.course.prerequisites
+                    : "N/A"),
+
+            AppLocalizations.of(context)!.corequisitesWithInput(
+                widget.course.corequisites.isNotEmpty
+                    ? widget.course.corequisites
+                    : "N/A")
+          ].join("\n")),
           trailing: expanded
               ? const Icon(Icons.arrow_drop_up)
               : Row(mainAxisSize: MainAxisSize.min, children: [
@@ -339,8 +350,10 @@ class _CourseSectionsState extends State<CourseSections> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                                  Text("Sección: ${section.sectionCode}"),
-                                  const Text("Profesores:"),
+                                  Text(AppLocalizations.of(context)!
+                                      .sectionWithInput(section.sectionCode)),
+                                  Text(
+                                      AppLocalizations.of(context)!.professors),
                                 ] +
                                 section.professors
                                     .map((professor) => Padding(

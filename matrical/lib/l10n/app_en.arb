@@ -3,8 +3,12 @@
   "addCourses": "Add Courses",
   "addCoursesPriorToGeneratingSchedules": "Add courses before generating.",
   "addCoursesToShare": "Add courses to be able to share the link.",
+  "afternoon": "Afternoon",
   "any": "Any",
+  "apply": "Apply",
+  "byagreement": "By Agreement",
   "byAgreement": "By Agreement",
+  "byName": "By Name",
   "calendar": "Calendar",
   "calendarHelp": "Calendar: Creates and opens a .ics file with your schedule. ICS files can be opened by Google Calendar, Outlook, etc. to register the schedule in your app of choice.",
   "cancel": "Cancel",
@@ -12,6 +16,14 @@
   "close": "Close",
   "code": "Code",
   "codeHelp": "Code: Lets you send a code that other users can copy to import your schedule by pasting the code in the Saved Schedules page.",
+  "corequisitesWithInput": "Co-requisites: {corequisites}",
+  "@corequisitesWithInput": {
+    "placeholders": {
+      "corequisites": {
+        "type": "String"
+      }
+    }
+  },
   "couldNotFindValidSchedules": "Couldn't find schedules with your courses and preferences.",
   "course": "Course",
   "courseAutocompleteError": "Error suggesting courses.",
@@ -31,13 +43,34 @@
   "courseSearchInput": "Search Course or Department",
   "courseSelect": "Course Selection",
   "courseSelectIcon": "Create",
-  "coursesInSchedule": "Courses in Schedule:",
+  "coursesInSchedule": "Courses in schedule:",
+  "creditsWithInput": "Credits: {credits}",
+  "@creditsWithInput": {
+    "placeholders": {
+      "credits": {
+        "type": "int"
+      }
+    }
+  },
+  "dateInput": "Created On: {dateString}",
+  "@dateInput": {
+    "placeholders": {
+      "dateString": {
+        "type": "String"
+      }
+    }
+  },
   "deleteFilters": "Delete Filters",
   "dense": "Dense",
   "departmentAutoCompleteError": "Error suggesting departments.",
   "dismiss": "Dismiss",
+  "divisionGraduate": "Graduate",
+  "divisionLower": "Undergraduate",
+  "divisionUpper": "Undergraduate or Graduate",
   "edit": "Edit",
   "endsBefore": "Ends Before",
+  "excludedProfessors": "Excluded Professors:",
+  "excludedSections": "Excluded Sections:",
   "export": "Export",
   "exportAs": "Export as:",
   "failedToSaveImage": "Image couldn't be saved.",
@@ -46,6 +79,15 @@
   "generatedSchedules": "Generated Schedules",
   "generateSchedulesButton": "Generate Schedules",
   "generateSchedulesIcon": "Generate",
+  "hasIntegratedLab": "Course Includes Lab: {hasIntegratedLab}",
+  "@hasIntegratedLab": {
+    "placeholders": {
+      "hasIntegratedLab": {
+        "type": "String"
+      }
+    }
+  },
+  "hybrid": "Hybrid",
   "image": "Image",
   "imageHelp": "Image: Saves an image of the schedule on your device.",
   "import": "Import",
@@ -53,29 +95,69 @@
   "importScheduleDialog": "Import Schedule",
   "inperson": "In-person",
   "invalidCode": "Entered code has an invalid format",
+  "invalidCodeError": "Invalid code couldn't be imported.",
   "invalidCourseFormat": "Course does not have the expected format (DEPT####).",
   "invalidSectionFormat": "Section does not have the expected format.",
+  "leastRecent": "Oldest",
+  "levelInput": "Level: {level}",
+  "@levelInput": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
   "link": "Link",
   "linkHelp": "Link: Generate a link that other users can access to view your schedule.",
+  "meetings": "Meetings:\\n\\t\\t{meetings}",
+  "@meetings": {
+    "placeholders": {
+      "meetings": {
+        "type": "String"
+      }
+    }
+  },
   "modality": "Modality",
   "monday": "M",
-  "o": " or ",
+  "morning": "Morning",
+  "mostRecent": "Newest",
+  "noExcludedProfessor": "No professor has been excluded",
+  "noExcludedSection": "No course section has been excluded",
+  "noon": "Noon",
+  "noPreference": "No Preference",
   "options": "Options",
+  "or": " or ",
   "orderBy": "Order By",
   "preferencesHelpModality": "In-person / By Agreement (Remote) - Preferred Modality.",
   "preferencesHelpOverview": "Here you can control what schedules are shown first based on your preferences.",
-  "preferencesHelpSparseDense": "Sparse / Dense - Controls if the sections should have space in between them or not.",
+  "preferencesHelpSparseDense": "Sparse / Dense - Determines if the sections in the schedule should have free time in between them. The densest schedule is one where all your courses are packed into the fewest number of days with the lowest amount of free time between classes.",
   "preferencesHelpTime": "Preferred Times - Choose when you want to take courses during the day.",
   "preferredCourseTimes": "Preferred Course Times",
+  "prerequisitesWithInput": "Prerequisites: {prerequisites}",
+  "@prerequisitesWithInput": {
+    "placeholders": {
+      "prerequisites": {
+        "type": "String"
+      }
+    }
+  },
   "profesorsSingleOrPlural": "Professor(s)",
+  "professorRanking": "Professor Ranking:",
   "professors": "Professors:",
+  "remoteAsynchronous": "Asynchronous Remote",
+  "remoteSynchronous": "Synchronous Remote",
   "removedCoursesWarning": "Some courses and/or sections do not belong to this term and/or year.",
   "requiredCourseInput": "Course*",
   "save": "Save",
   "savedSchedules": "My Schedules",
   "savedSchedulesIcon": "My Schedules",
   "saveFilters": "Save Filters",
+  "saveScheduleAlreadyExists": "A schedule with this name already exists.",
   "saveScheduleDialog": "Save Schedule",
+  "saveScheduleEmptyName": "Schedule must have a name.",
+  "saveScheduleFailedWrite": "There was a problem saving the schedule.\nTry again.",
+  "saveScheduleHitLimit": "Schedule limit reached (300).\nDelete some schedules.",
+  "saveScheduleSuccess": "Schedule saved successfully!",
   "savingImage": "generating and saving image...",
   "schedule": "schedule",
   "scheduleCopiedToClipboard": "Link with your schedule copied to your device.",
@@ -84,16 +166,46 @@
   "scheduleLinkCopiedToClipboard": "Link with your courses was copied to your device.",
   "scheduleNameInput": "Schedule Name",
   "schedulePreferences": "Schedule Preferences",
+  "scheduleSavedSuccessfully": "Schedule was saved successfully.",
+  "scheduleViewWithInput": "Schedule View ({scheduleName})",
+  "@scheduleViewWithInput": {
+    "placeholders": {
+      "scheduleName": {
+        "type": "String"
+      }
+    }
+  },
   "section": "Section",
   "sectionAutocompleteError": "Error suggesting sections.",
   "sectionNotAvailable": "Section not available for this semester according to our database.",
   "sectionNotInLocalMemory": "Could not find that section for the course in local memory. Try again once connected to the Internet.",
+  "sectionWithInput": "Section: {section}",
+  "@sectionWithInput": {
+    "placeholders": {
+      "section": {
+        "type": "String"
+      }
+    }
+  },
   "sparse": "Sparse",
   "startsAfter": "Starts After",
   "successfullyImportedSchedule": "Successfully imported schedule.",
   "successfullySavedImage": "Image saved successfully!",
   "term": "Term",
+  "termExtendedSummer": "Extended Summer",
+  "termFall": "Fall Semester",
+  "termFirstSummer": "First Summer",
+  "termSecondSummer": "Second Summer",
+  "termSpring": "Spring Semester",
   "thursday": "Th",
+  "totalCredits": "Total Credits: {totalCredits}",
+  "@totalCredits": {
+    "placeholders": {
+      "totalCredits": {
+        "type": "int"
+      }
+    }
+  },
   "tuesday": "T",
   "validate": "Validate",
   "view": "View",

@@ -158,7 +158,7 @@ class _CourseFilterPopupState extends State<CourseFilterPopup> {
                     dropdownMenuEntries: Modality.values.map((term) {
                       return DropdownMenuEntry<Modality>(
                         value: term,
-                        label: term.displayName,
+                        label: term.displayName(context),
                       );
                     }).toList()),
               ),

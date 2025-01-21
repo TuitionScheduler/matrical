@@ -399,7 +399,9 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                         MaterialBanner(
                                                   content: Row(
                                                     children: [
-                                                      Text(result.message,
+                                                      Text(
+                                                          result.message(
+                                                              context),
                                                           softWrap: true,
                                                           style:
                                                               const TextStyle(
@@ -860,8 +862,14 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
           Expanded(
               child: Text(AppLocalizations.of(context)!.schedulePreferences)),
           InfoWidget(
-            infoText:
-                "Aquí puedes controlar cuales horarios serán mostrados primeros basados en tus preferencias.\n\nEsparcido / Denso - Controla si las secciones deben tener espacio entremedio o no.\nPresencial / Por Acuerdo - Modalidad preferida.\nTiempo Preferido para Cursos - Selecciona cuándo tomar los cursos durante el día.\n\nRanking de Profesores - Ordena profesores basado en tus gustos. Presiona en un curso para activar ranking de ese curso.\n\nProfesores Excluídos - Ver y/o incluír de vuelta profesores.\n\nSecciones Excluidas - Ver y/o incluír de vuelta secciones.",
+            infoText: [
+              AppLocalizations.of(context)!.preferencesHelpOverview,
+              AppLocalizations.of(context)!.preferencesHelpSparseDense,
+              AppLocalizations.of(context)!.preferencesHelpModality,
+              "Tiempo Preferido para Cursos - Selecciona cuándo tomar los cursos durante el día.",
+              "Ranking de Profesores - Ordena profesores basado en tus gustos. Presiona en un curso para activar ranking de ese curso.\n\nProfesores Excluídos - Ver y/o incluír de vuelta profesores.",
+              "Secciones Excluidas - Ver y/o incluír de vuelta secciones."
+            ].join("\n\n"),
             iconColor: Colors.black87,
             iconData: Icons.help,
           )
@@ -891,10 +899,13 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Padding(
-                              padding: EdgeInsets.fromLTRB(0, 8.0, 0, 12.0),
-                              child: Text("Ranking de Profesores:",
-                                  style: TextStyle(
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(0, 8.0, 0, 12.0),
+                              child: Text(
+                                  AppLocalizations.of(context)!
+                                      .professorRanking,
+                                  style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w500)),
                             ),
@@ -1055,19 +1066,20 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
-                                      const Padding(
-                                        padding:
-                                            EdgeInsets.symmetric(vertical: 8.0),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8.0),
                                         child: Text(
-                                          "Profesores Excluidos:",
-                                          style: TextStyle(
+                                          AppLocalizations.of(context)!
+                                              .excludedProfessors,
+                                          style: const TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.w500),
                                         ),
                                       ),
                                       if (state.blacklist.professors.isEmpty)
-                                        const Text(
-                                            "Ningún profesor ha sido excluido")
+                                        Text(AppLocalizations.of(context)!
+                                            .noExcludedProfessor)
                                     ] +
                                     state.blacklist.professors
                                         .map((professor) => Material(
@@ -1144,20 +1156,21 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                    const Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 8.0),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0),
                                       child: Text(
-                                        "Secciones Excluidas:",
-                                        style: TextStyle(
+                                        AppLocalizations.of(context)!
+                                            .excludedSections,
+                                        style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w500),
                                       ),
                                     ),
                                     if (state.blacklist.sections.values
                                         .every((e) => e.isEmpty))
-                                      const Text(
-                                          "Ninguna sección ha sido excluida")
+                                      Text(AppLocalizations.of(context)!
+                                          .noExcludedSection)
                                   ] +
                                   state.blacklist.sections.keys
                                       .map((key) => state
@@ -1199,13 +1212,13 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
                 state.hadUpdate = false;
                 Navigator.of(context).pop(state);
               },
-              child: const Text("Cancelar")),
+              child: Text(AppLocalizations.of(context)!.cancel)),
           TextButton(
               onPressed: () => setState(() {
                     state.hadUpdate = true;
                     Navigator.of(context).pop(state);
                   }),
-              child: const Text("Aplicar"))
+              child: Text(AppLocalizations.of(context)!.apply))
         ],
       ),
     );

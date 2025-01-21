@@ -104,22 +104,22 @@ class _PreferencesViewState extends State<PreferencesView> {
               widget.preferences.averageTime = time;
               matricalCubitSingleton.updatePreferences(widget.preferences);
             },
-            dropdownMenuEntries: const [
+            dropdownMenuEntries: [
               DropdownMenuEntry<double?>(
                 value: null,
-                label: "Sin Preferencia",
+                label: AppLocalizations.of(context)!.noPreference,
               ),
               DropdownMenuEntry<double?>(
                 value: 8,
-                label: "Mañana",
+                label: AppLocalizations.of(context)!.morning,
               ),
               DropdownMenuEntry<double?>(
                 value: 12,
-                label: "Mediodía",
+                label: AppLocalizations.of(context)!.noon,
               ),
               DropdownMenuEntry<double?>(
                 value: 16,
-                label: "Tarde",
+                label: AppLocalizations.of(context)!.afternoon,
               ),
             ])
       ],

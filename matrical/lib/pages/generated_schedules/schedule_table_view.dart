@@ -13,9 +13,9 @@ class ScheduleTableView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text(
-        "Cursos en horario:",
-        style: TextStyle(
+      title: Text(
+        AppLocalizations.of(context)!.coursesInSchedule,
+        style: const TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 18,
         ),
@@ -54,7 +54,7 @@ class ScheduleTableView extends StatelessWidget {
             Navigator.of(context).pop(); // dismiss the modal
             matricalCubitSingleton.setPage(MatricalPage.courseSelect);
           },
-          child: const Text("Editar"),
+          child: Text(AppLocalizations.of(context)!.edit),
         )
       ],
     );
@@ -112,7 +112,7 @@ class ScheduleTable extends StatelessWidget {
                           .meetings
                           .map((e) => e.toString())
                           .join(",\n")
-                      : "Por Acuerdo")),
+                      : AppLocalizations.of(context)!.byAgreement)),
                   DataCell(Text(courseSection
                       .getSection()
                       .professors

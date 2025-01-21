@@ -63,11 +63,14 @@ class ViewSavedSchedules extends StatefulWidget {
 class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
   Future<List<SavedSchedule>> schedules = Future.value([]);
   List<int> years = [(DateTime.now().year - 1), DateTime.now().year];
-  Map<String, int Function(SavedSchedule, SavedSchedule)> sorting = {
-    "Más Reciente": (a, b) => b.dateCreated.compareTo(a.dateCreated),
-    "Por Nombre": (a, b) =>
+  Map<String Function(BuildContext), int Function(SavedSchedule, SavedSchedule)>
+      sortKinds = {
+    (c) => AppLocalizations.of(c)!.mostRecent: (a, b) =>
+        b.dateCreated.compareTo(a.dateCreated),
+    (c) => AppLocalizations.of(c)!.byName: (a, b) =>
         a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    "Menos Reciente": (a, b) => a.dateCreated.compareTo(b.dateCreated),
+    (c) => AppLocalizations.of(c)!.leastRecent: (a, b) =>
+        a.dateCreated.compareTo(b.dateCreated),
   };
 
   late SavedSchedulesOptions options;
@@ -175,7 +178,8 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                               Term.values.map((term) {
                                                 return DropdownMenuEntry<Term?>(
                                                   value: term,
-                                                  label: term.displayName,
+                                                  label:
+                                                      term.displayName(context),
                                                 );
                                               }).toList()),
                                     ),
@@ -195,9 +199,11 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                             });
                                           },
                                           dropdownMenuEntries: [
-                                                const DropdownMenuEntry<int?>(
+                                                DropdownMenuEntry<int?>(
                                                   value: null,
-                                                  label: "Cualquiera",
+                                                  label: AppLocalizations.of(
+                                                          context)!
+                                                      .any,
                                                 )
                                               ] +
                                               years
@@ -220,7 +226,7 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                                   .text
                                                   .isNotEmpty
                                               ? options.sortingController.text
-                                              : sorting.keys.first,
+                                              : sortKinds.keys.first(context),
                                           requestFocusOnTap: false,
                                           label: Text(
                                               AppLocalizations.of(context)!
@@ -229,12 +235,12 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                           onSelected: (sort) {
                                             setState(() {});
                                           },
-                                          dropdownMenuEntries: sorting.keys
+                                          dropdownMenuEntries: sortKinds.keys
                                               .map<DropdownMenuEntry<String>>(
                                                   (sort) {
                                             return DropdownMenuEntry<String>(
-                                              value: sort,
-                                              label: sort,
+                                              value: sort(context),
+                                              label: sort(context),
                                             );
                                           }).toList()),
                                     )
@@ -280,8 +286,8 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                     ))
                                 .toList(),
                             2,
-                            sorting[options.sortingController.text] ??
-                                sorting.values.first),
+                            sortKinds[options.sortingController.text] ??
+                                sortKinds.values.first),
                       )
                     ]),
                   ),
@@ -298,8 +304,8 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
     }
     final parsedSchedule = GeneratedSchedule.fromImportCode(encodedSchedule);
     if (parsedSchedule == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Código inválido no pudo ser importado.")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.invalidCodeError)));
       return;
     }
     showDialog<SaveScheduleResult?>(
@@ -311,8 +317,9 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
       if (result != null && result == SaveScheduleResult.success) {
         setState(() {
           schedules = getSavedSchedules();
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Horario guardado exitosamente.")));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  AppLocalizations.of(context)!.scheduleSavedSuccessfully)));
         });
       }
     });
@@ -376,13 +383,15 @@ class SavedScheduleCard extends StatelessWidget {
                         ],
                       ),
                       Text(
-                          "${Term.fromString(schedule.schedule.term)?.displayName ?? ''}, ${schedule.schedule.year}",
+                          "${Term.fromString(schedule.schedule.term)?.displayName(context) ?? ''}, ${schedule.schedule.year}",
                           style: const TextStyle(fontSize: 12)),
                       Text(
-                          "Total de Créditos: ${schedule.schedule.getTotalCredits()}",
+                          AppLocalizations.of(context)!.totalCredits(
+                              schedule.schedule.getTotalCredits()),
                           style: const TextStyle(fontSize: 12)),
                       Text(
-                          "Fecha: ${schedule.dateCreated.day}/${schedule.dateCreated.month}/${schedule.dateCreated.year}",
+                          AppLocalizations.of(context)!.dateInput(
+                              "${schedule.dateCreated.day}/${schedule.dateCreated.month}/${schedule.dateCreated.year}"),
                           style: const TextStyle(fontSize: 12)),
                       const Divider(),
                     ] +

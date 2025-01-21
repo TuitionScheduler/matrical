@@ -149,7 +149,7 @@ class _CourseSelectState extends State<CourseSelect> {
                               dropdownMenuEntries: Term.values.map((term) {
                                 return DropdownMenuEntry<Term>(
                                   value: term,
-                                  label: term.displayName,
+                                  label: term.displayName(context),
                                 );
                               }).toList()),
                         ),
@@ -210,7 +210,7 @@ class _CourseSelectState extends State<CourseSelect> {
                                     style: const TextStyle(fontSize: 14),
                                   ),
                                   if (!kIsWeb) // Hide import button on web since web uses URL imports
-                                    Text(AppLocalizations.of(context)!.o,
+                                    Text(AppLocalizations.of(context)!.or,
                                         style: const TextStyle(fontSize: 14)),
                                   if (!kIsWeb) // Hide import button on web since web uses URL imports
                                     Padding(
@@ -249,8 +249,8 @@ class _CourseSelectState extends State<CourseSelect> {
 
                                                 matricalCubit.updateYear(
                                                     decodedSchedule.year);
-                                                termController.text =
-                                                    newTerm.displayName;
+                                                termController.text = newTerm
+                                                    .displayName(context);
                                                 yearController.text =
                                                     decodedSchedule.year
                                                         .toString();
