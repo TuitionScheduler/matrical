@@ -161,7 +161,7 @@
   "saveScheduleFailedWrite": "There was a problem saving the schedule.\nTry again.",
   "saveScheduleHitLimit": "Schedule limit reached (300).\nDelete some schedules.",
   "saveScheduleSuccess": "Schedule saved successfully!",
-  "savingImage": "generating and saving image...",
+  "savingImage": "Generating and saving image...",
   "schedule": "Schedule",
   "scheduleCopiedToClipboard": "Link with your schedule copied to your device.",
   "scheduleFilters": "Schedule Filters",
