@@ -866,9 +866,10 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
               AppLocalizations.of(context)!.preferencesHelpOverview,
               AppLocalizations.of(context)!.preferencesHelpSparseDense,
               AppLocalizations.of(context)!.preferencesHelpModality,
-              "Tiempo Preferido para Cursos - Selecciona cuándo tomar los cursos durante el día.",
-              "Ranking de Profesores - Ordena profesores basado en tus gustos. Presiona en un curso para activar ranking de ese curso.\n\nProfesores Excluídos - Ver y/o incluír de vuelta profesores.",
-              "Secciones Excluidas - Ver y/o incluír de vuelta secciones."
+              AppLocalizations.of(context)!.preferencesHelpTime,
+              AppLocalizations.of(context)!.preferencesHelpProfessorRanking,
+              AppLocalizations.of(context)!.preferencesHelpExcludedProfessors,
+              AppLocalizations.of(context)!.preferencesHelpExcludedSections
             ].join("\n\n"),
             iconColor: Colors.black87,
             iconData: Icons.help,

@@ -76,7 +76,7 @@ class ScheduleTable extends StatelessWidget {
       columns: <DataColumn>[
         DataColumn(
           label: Text(
-            AppLocalizations.of(context)!.course,
+            "${AppLocalizations.of(context)!.course}:",
             style: const TextStyle(
               fontSize: 12,
             ),
@@ -85,7 +85,7 @@ class ScheduleTable extends StatelessWidget {
         DataColumn(
           label: Expanded(
             child: Text(
-              AppLocalizations.of(context)!.schedule,
+              "${AppLocalizations.of(context)!.schedule}:",
               style: const TextStyle(
                 fontSize: 12,
               ),
