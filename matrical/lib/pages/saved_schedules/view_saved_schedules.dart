@@ -63,16 +63,6 @@ class ViewSavedSchedules extends StatefulWidget {
 class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
   Future<List<SavedSchedule>> schedules = Future.value([]);
   List<int> years = [(DateTime.now().year - 1), DateTime.now().year];
-  Map<String Function(BuildContext), int Function(SavedSchedule, SavedSchedule)>
-      sortKinds = {
-    (c) => AppLocalizations.of(c)!.mostRecent: (a, b) =>
-        b.dateCreated.compareTo(a.dateCreated),
-    (c) => AppLocalizations.of(c)!.byName: (a, b) =>
-        a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    (c) => AppLocalizations.of(c)!.leastRecent: (a, b) =>
-        a.dateCreated.compareTo(b.dateCreated),
-  };
-
   late SavedSchedulesOptions options;
 
   @override
@@ -218,29 +208,27 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                     const Divider(),
                                     Padding(
                                       padding: const EdgeInsets.all(4.0),
-                                      child: DropdownMenu<String>(
+                                      child: DropdownMenu<SortKind>(
                                           expandedInsets:
                                               const EdgeInsets.all(0),
-                                          initialSelection: options
-                                                  .sortingController
-                                                  .text
-                                                  .isNotEmpty
-                                              ? options.sortingController.text
-                                              : sortKinds.keys.first(context),
+                                          initialSelection:
+                                              options.selectedSort ??
+                                                  SortKind.mostRecent,
                                           requestFocusOnTap: false,
                                           label: Text(
                                               AppLocalizations.of(context)!
                                                   .orderBy),
-                                          controller: options.sortingController,
                                           onSelected: (sort) {
-                                            setState(() {});
+                                            setState(() {
+                                              options.selectedSort = sort;
+                                            });
                                           },
-                                          dropdownMenuEntries: sortKinds.keys
-                                              .map<DropdownMenuEntry<String>>(
+                                          dropdownMenuEntries: SortKind.values
+                                              .map<DropdownMenuEntry<SortKind>>(
                                                   (sort) {
-                                            return DropdownMenuEntry<String>(
-                                              value: sort(context),
-                                              label: sort(context),
+                                            return DropdownMenuEntry<SortKind>(
+                                              value: sort,
+                                              label: sort.displayName(context),
                                             );
                                           }).toList()),
                                     )
@@ -286,8 +274,8 @@ class _ViewSavedSchedulesState extends State<ViewSavedSchedules> {
                                     ))
                                 .toList(),
                             2,
-                            sortKinds[options.sortingController.text] ??
-                                sortKinds.values.first),
+                            options.selectedSort?.sortFunction ??
+                                SortKind.mostRecent.sortFunction),
                       )
                     ]),
                   ),
@@ -390,7 +378,11 @@ class SavedScheduleCard extends StatelessWidget {
                               schedule.schedule.getTotalCredits()),
                           style: const TextStyle(fontSize: 12)),
                       Text(
-                          AppLocalizations.of(context)!.dateInput(
+                          AppLocalizations.of(context)!.lastUpdated(
+                              "${schedule.dateCreated.day}/${schedule.dateCreated.month}/${schedule.dateCreated.year}"),
+                          style: const TextStyle(fontSize: 12)),
+                      Text(
+                          AppLocalizations.of(context)!.createdOn(
                               "${schedule.dateCreated.day}/${schedule.dateCreated.month}/${schedule.dateCreated.year}"),
                           style: const TextStyle(fontSize: 12)),
                       const Divider(),
@@ -471,6 +463,7 @@ Widget _savedScheduleModal(BuildContext context, SavedSchedule schedule) {
               ),
               onPressed: () {
                 Navigator.of(context).pop();
+                matricalCubitSingleton.setScheduleBeingUpdated(schedule.name);
                 matricalCubitSingleton.updateCourses(schedule.schedule.courses
                     .map((csp) => CourseWithFilters.withoutFilters(
                         courseCode: csp.course.courseCode,

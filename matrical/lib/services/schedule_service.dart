@@ -342,8 +342,8 @@ Future<SaveScheduleResult> deleteSavedSchedule(String name) async {
   return await writeSavedSchedules(schedules);
 }
 
-Future<SaveScheduleResult> saveSchedule(
-    GeneratedSchedule schedule, String name) async {
+Future<SaveScheduleResult> saveSchedule(GeneratedSchedule schedule, String name,
+    {bool allowOverwriteExisting = false}) async {
   var mySchedules = await getSavedSchedules();
   if (mySchedules.length >= 300) {
     return SaveScheduleResult.hitScheduleLimit;
@@ -352,10 +352,19 @@ Future<SaveScheduleResult> saveSchedule(
   if (trimmedName.isEmpty) {
     return SaveScheduleResult.emptyName;
   }
+  DateTime newDate = DateTime.now();
   SavedSchedule newSchedule = SavedSchedule(
-      name: trimmedName, dateCreated: DateTime.now(), schedule: schedule);
-  if (mySchedules.any((element) => element.name == trimmedName)) {
-    return SaveScheduleResult.alreadyExists;
+      name: trimmedName,
+      dateCreated: newDate,
+      lastUpdated: newDate,
+      schedule: schedule);
+  int existingIndex = mySchedules.indexWhere((s) => s.name == trimmedName);
+  if (existingIndex != -1) {
+    if (!allowOverwriteExisting) return SaveScheduleResult.alreadyExists;
+    mySchedules[existingIndex] = newSchedule;
+    return await writeSavedSchedules(mySchedules) == SaveScheduleResult.success
+        ? SaveScheduleResult.overwriteExisting
+        : SaveScheduleResult.failedWrite;
   }
   mySchedules.add(newSchedule);
   return await writeSavedSchedules(mySchedules);

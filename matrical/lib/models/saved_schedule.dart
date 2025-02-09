@@ -6,15 +6,20 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 class SavedSchedule {
   final String name;
   final DateTime dateCreated;
+  final DateTime lastUpdated;
   final GeneratedSchedule schedule;
 
   SavedSchedule(
-      {required this.name, required this.dateCreated, required this.schedule});
+      {required this.name,
+      required this.dateCreated,
+      required this.lastUpdated,
+      required this.schedule});
 
   Map<String, dynamic> toJson() {
     return {
       'name': name,
       'dateCreated': dateCreated.toIso8601String(),
+      'lastUpdated': lastUpdated.toIso8601String(),
       'schedule': schedule.toJson(),
     };
   }
@@ -23,6 +28,7 @@ class SavedSchedule {
     return SavedSchedule(
       name: json['name'],
       dateCreated: DateTime.parse(json['dateCreated']),
+      lastUpdated: DateTime.parse(json['lastUpdated']),
       schedule: GeneratedSchedule.fromJson(json['schedule']),
     );
   }
@@ -41,6 +47,7 @@ enum SaveScheduleResult {
   success,
   hitScheduleLimit,
   failedWrite,
+  overwriteExisting,
   alreadyExists,
   emptyName;
 
@@ -54,6 +61,8 @@ enum SaveScheduleResult {
         return AppLocalizations.of(context)!.saveScheduleFailedWrite;
       case SaveScheduleResult.alreadyExists:
         return AppLocalizations.of(context)!.saveScheduleAlreadyExists;
+      case SaveScheduleResult.overwriteExisting:
+        return AppLocalizations.of(context)!.saveScheduleOverwriteExisting;
       case SaveScheduleResult.emptyName:
         return AppLocalizations.of(context)!.saveScheduleEmptyName;
     }

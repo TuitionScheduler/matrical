@@ -71,6 +71,7 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
   late int currentPreferencesTab;
   late RangeValues dayRangeValues;
   late RangeValues timeRangeValues;
+  late String scheduleBeingUpdated; // "" if no schedule is being updated
 
   @override
   void initState() {
@@ -114,6 +115,7 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
       }
     });
     currentSchedule = 0;
+    scheduleBeingUpdated = state.scheduleBeingUpdated;
     super.initState();
   }
 
@@ -370,22 +372,26 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                               snapshot.data!.isEmpty
                                           ? null
                                           : () {
-                                              showDialog<SaveScheduleResult?>(
-                                                context: context,
-                                                useRootNavigator: false,
-                                                builder: (BuildContext
-                                                    innerContext) {
-                                                  return SaveScheduleDialog(
-                                                    currentSchedule: snapshot
-                                                            .data![
-                                                        currentSchedule], // Make sure to pass the actual current schedule object
-                                                  );
-                                                },
-                                              ).then((result) {
+                                              updateExistingOrSaveNewSchedule(
+                                                      context,
+                                                      snapshot.data![
+                                                          currentSchedule],
+                                                      scheduleBeingUpdated)
+                                                  .then((result) {
                                                 if (result == null) return;
-                                                final icon = result ==
-                                                        SaveScheduleResult
-                                                            .success
+                                                // Clear the name since we finished modifying it.
+                                                setState(() {
+                                                  scheduleBeingUpdated = "";
+                                                  matricalCubit
+                                                      .setScheduleBeingUpdated(
+                                                          "");
+                                                });
+                                                final icon = (result ==
+                                                            SaveScheduleResult
+                                                                .success ||
+                                                        result ==
+                                                            SaveScheduleResult
+                                                                .overwriteExisting)
                                                     ? const Icon(
                                                         Icons.check,
                                                         color: Colors.green,
@@ -418,8 +424,11 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                   ),
                                                   actions: [
                                                     if (result ==
-                                                        SaveScheduleResult
-                                                            .success)
+                                                            SaveScheduleResult
+                                                                .success ||
+                                                        result ==
+                                                            SaveScheduleResult
+                                                                .overwriteExisting)
                                                       TextButton(
                                                         onPressed: () {
                                                           _savedScheduleBannerTimer
@@ -1224,4 +1233,21 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
       ),
     );
   }
+}
+
+Future<SaveScheduleResult?> updateExistingOrSaveNewSchedule(
+    BuildContext context,
+    GeneratedSchedule schedule,
+    String scheduleBeingUpdated) {
+  if (scheduleBeingUpdated.isNotEmpty) {
+    return saveSchedule(schedule, scheduleBeingUpdated,
+        allowOverwriteExisting: true);
+  }
+  return showDialog<SaveScheduleResult?>(
+    context: context,
+    useRootNavigator: false,
+    builder: (BuildContext innerContext) {
+      return SaveScheduleDialog(currentSchedule: schedule);
+    },
+  );
 }
