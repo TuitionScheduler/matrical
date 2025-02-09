@@ -52,8 +52,16 @@
       }
     }
   },
-  "dateInput": "Created On: {dateString}",
-  "@dateInput": {
+  "createdOn": "Created On: {dateString}",
+  "@createdOn": {
+    "placeholders": {
+      "dateString": {
+        "type": "String"
+      }
+    }
+  },
+  "lastUpdated": "Last Updated: {dateString}",
+  "@lastUpdated": {
     "placeholders": {
       "dateString": {
         "type": "String"
@@ -121,6 +129,7 @@
   "monday": "M",
   "morning": "Morning",
   "mostRecent": "Newest",
+  "no": "No",
   "noExcludedProfessor": "No professor has been excluded",
   "noExcludedSection": "No course section has been excluded",
   "noon": "Noon",
@@ -160,6 +169,7 @@
   "saveScheduleEmptyName": "Schedule must have a name.",
   "saveScheduleFailedWrite": "There was a problem saving the schedule.\nTry again.",
   "saveScheduleHitLimit": "Schedule limit reached (300).\nDelete some schedules.",
+  "saveScheduleOverwriteExisting": "Updated existing schedule!",
   "saveScheduleSuccess": "Schedule saved successfully!",
   "savingImage": "Generating and saving image...",
   "schedule": "Schedule",
@@ -168,6 +178,7 @@
   "scheduleFiltersDescription": "Upon activating them, you can limit the times and days for the classes.",
   "scheduleLinkCopiedToClipboard": "Link with your courses was copied to your device.",
   "scheduleNameInput": "Schedule Name",
+  "scheduleOverwriteConfirmDialog": "Are you sure you want to overwrite this schedule?",
   "schedulePreferences": "Schedule Preferences",
   "scheduleSavedSuccessfully": "Schedule was saved successfully.",
   "scheduleViewWithInput": "Schedule View ({scheduleName})",
@@ -214,5 +225,6 @@
   "view": "View",
   "viewInWeek": "View in Week",
   "wednesday": "W",
-  "year": "Year"
+  "year": "Year",
+  "yes": "Yes"
 }

@@ -52,8 +52,16 @@
       }
     }
   },
-  "dateInput": "Fecha: {dateString}",
-  "@dateInput": {
+  "createdOn": "Creado en: {dateString}",
+  "@createdOn": {
+    "placeholders": {
+      "dateString": {
+        "type": "String"
+      }
+    }
+  },
+  "lastUpdated": "Modificado en: {dateString}",
+  "@lastUpdated": {
     "placeholders": {
       "dateString": {
         "type": "String"
@@ -121,6 +129,7 @@
   "monday": "L",
   "morning": "Mañana",
   "mostRecent": "Más Reciente",
+  "no": "No",
   "noExcludedProfessor": "Ningún profesor ha sido excluido",
   "noExcludedSection": "Ninguna sección ha sido excluida",
   "noon": "Mediodía",
@@ -160,6 +169,7 @@
   "saveScheduleEmptyName": "Horario debe tener un nombre.",
   "saveScheduleFailedWrite": "Hubo un problema guardando el horario.\nIntente otra vez.",
   "saveScheduleHitLimit": "Límite de horarios alcanzado (300).\nBorra algunos horarios.",
+  "saveScheduleOverwriteExisting": "Horario actualizado.",
   "saveScheduleSuccess": "Horario guardado exitosamente!",
   "savingImage": "Generando y guardando imagen...",
   "schedule": "Horario",
@@ -168,6 +178,7 @@
   "scheduleFiltersDescription": "Al activarlos, puedes limitar el rango de horas y días donde quieres tener clase.",
   "scheduleLinkCopiedToClipboard": "Enlace con tus cursos fue copiado a tu dispositivo.",
   "scheduleNameInput": "Nombre de Horario",
+  "scheduleOverwriteConfirmDialog": "¿Estás seguro que quieres reemplazar este horario?",
   "schedulePreferences": "Preferencias de Horario",
   "scheduleSavedSuccessfully": "Horario guardado exitosamente.",
   "scheduleViewWithInput": "Vista de Horario ({scheduleName})",
@@ -214,5 +225,6 @@
   "view": "Vista",
   "viewInWeek": "Ver en Semana",
   "wednesday": "W",
-  "year": "Año"
+  "year": "Año",
+  "yes": "Sí"
 }

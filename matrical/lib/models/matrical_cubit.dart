@@ -11,19 +11,19 @@ import 'package:matrical/services/course_service.dart';
 class MatricalCubit extends Cubit<MatricalState> {
   MatricalCubit()
       : super(MatricalState(
-          selectedCourses: const [],
-          term: Term.getPredictedTerm(),
-          year: Term.getPredictedYear(),
-          preferences: GeneratedSchedulePreferences.getDefault(),
-          page: MatricalPage.courseSelect,
-          searchFilters: CourseFilters.empty(),
-          lastSearch: null,
-          savedSchedulesOptions: SavedSchedulesOptions.empty(),
-          blacklist: Blacklist.empty(),
-          generatedSchedulesFilters: CourseFilters.empty(),
-          generatedSchedulesEditMode: false,
-          generatedSchedulesCurrentPreferencesTab: 0,
-        ));
+            selectedCourses: const [],
+            term: Term.getPredictedTerm(),
+            year: Term.getPredictedYear(),
+            preferences: GeneratedSchedulePreferences.getDefault(),
+            page: MatricalPage.courseSelect,
+            searchFilters: CourseFilters.empty(),
+            lastSearch: null,
+            savedSchedulesOptions: SavedSchedulesOptions.empty(),
+            blacklist: Blacklist.empty(),
+            generatedSchedulesFilters: CourseFilters.empty(),
+            generatedSchedulesEditMode: false,
+            generatedSchedulesCurrentPreferencesTab: 0,
+            scheduleBeingUpdated: ""));
 
   /// Initialize with default values
   void initialize(
@@ -38,22 +38,23 @@ class MatricalCubit extends Cubit<MatricalState> {
       Blacklist blacklist,
       CourseFilters generatedSchedulesFilters,
       bool generatedSchedulesEditMode,
-      int generatedSchedulesCurrentPreferencesTab) {
+      int generatedSchedulesCurrentPreferencesTab,
+      String scheduleBeingUpdated) {
     emit(MatricalState(
-      selectedCourses: courses,
-      term: term,
-      year: year,
-      preferences: preferences,
-      page: page,
-      searchFilters: searchFilters,
-      lastSearch: lastSearch,
-      savedSchedulesOptions: savedSchedulesOptions,
-      blacklist: blacklist,
-      generatedSchedulesFilters: generatedSchedulesFilters,
-      generatedSchedulesEditMode: generatedSchedulesEditMode,
-      generatedSchedulesCurrentPreferencesTab:
-          generatedSchedulesCurrentPreferencesTab,
-    ));
+        selectedCourses: courses,
+        term: term,
+        year: year,
+        preferences: preferences,
+        page: page,
+        searchFilters: searchFilters,
+        lastSearch: lastSearch,
+        savedSchedulesOptions: savedSchedulesOptions,
+        blacklist: blacklist,
+        generatedSchedulesFilters: generatedSchedulesFilters,
+        generatedSchedulesEditMode: generatedSchedulesEditMode,
+        generatedSchedulesCurrentPreferencesTab:
+            generatedSchedulesCurrentPreferencesTab,
+        scheduleBeingUpdated: scheduleBeingUpdated));
   }
 
   void updateCourses(List<CourseWithFilters> newCourses) {
@@ -161,6 +162,10 @@ class MatricalCubit extends Cubit<MatricalState> {
     emit(state.copyWith(
         generatedSchedulesCurrentPreferencesTab: currentPreferencesTab));
   }
+
+  void setScheduleBeingUpdated(String? scheduleName) {
+    emit(state.copyWith(scheduleBeingUpdated: scheduleName));
+  }
 }
 
 class MatricalState extends Equatable {
@@ -176,55 +181,57 @@ class MatricalState extends Equatable {
   final CourseFilters generatedSchedulesFilters;
   final bool generatedSchedulesEditMode;
   final int generatedSchedulesCurrentPreferencesTab;
+  final String scheduleBeingUpdated; // empty when none is being modified
 
-  const MatricalState({
-    required this.selectedCourses,
-    required this.term,
-    required this.year,
-    required this.preferences,
-    required this.page,
-    required this.searchFilters,
-    required this.lastSearch,
-    required this.savedSchedulesOptions,
-    required this.blacklist,
-    required this.generatedSchedulesFilters,
-    required this.generatedSchedulesEditMode,
-    required this.generatedSchedulesCurrentPreferencesTab,
-  });
+  const MatricalState(
+      {required this.selectedCourses,
+      required this.term,
+      required this.year,
+      required this.preferences,
+      required this.page,
+      required this.searchFilters,
+      required this.lastSearch,
+      required this.savedSchedulesOptions,
+      required this.blacklist,
+      required this.generatedSchedulesFilters,
+      required this.generatedSchedulesEditMode,
+      required this.generatedSchedulesCurrentPreferencesTab,
+      required this.scheduleBeingUpdated});
 
-  MatricalState copyWith({
-    List<CourseWithFilters>? selectedCourses,
-    Term? term,
-    int? year,
-    GeneratedSchedulePreferences? preferences,
-    MatricalPage? page,
-    CourseFilters? searchFilters,
-    String? lastSearch,
-    SavedSchedulesOptions? savedSchedulesOptions,
-    Blacklist? blacklist,
-    CourseFilters? generatedSchedulesFilters,
-    bool? generatedSchedulesEditMode,
-    int? generatedSchedulesCurrentPreferencesTab,
-  }) {
+  MatricalState copyWith(
+      {List<CourseWithFilters>? selectedCourses,
+      Term? term,
+      int? year,
+      GeneratedSchedulePreferences? preferences,
+      MatricalPage? page,
+      CourseFilters? searchFilters,
+      String? lastSearch,
+      SavedSchedulesOptions? savedSchedulesOptions,
+      Blacklist? blacklist,
+      CourseFilters? generatedSchedulesFilters,
+      bool? generatedSchedulesEditMode,
+      int? generatedSchedulesCurrentPreferencesTab,
+      String? scheduleBeingUpdated}) {
     return MatricalState(
-      selectedCourses: selectedCourses ?? this.selectedCourses,
-      term: term ?? this.term,
-      year: year ?? this.year,
-      preferences: preferences ?? this.preferences,
-      page: page ?? this.page,
-      searchFilters: searchFilters ?? this.searchFilters,
-      lastSearch: lastSearch ?? this.lastSearch,
-      savedSchedulesOptions:
-          savedSchedulesOptions ?? this.savedSchedulesOptions,
-      blacklist: blacklist ?? this.blacklist,
-      generatedSchedulesFilters:
-          generatedSchedulesFilters ?? this.generatedSchedulesFilters,
-      generatedSchedulesEditMode:
-          generatedSchedulesEditMode ?? this.generatedSchedulesEditMode,
-      generatedSchedulesCurrentPreferencesTab:
-          generatedSchedulesCurrentPreferencesTab ??
-              this.generatedSchedulesCurrentPreferencesTab,
-    );
+        selectedCourses: selectedCourses ?? this.selectedCourses,
+        term: term ?? this.term,
+        year: year ?? this.year,
+        preferences: preferences ?? this.preferences,
+        page: page ?? this.page,
+        searchFilters: searchFilters ?? this.searchFilters,
+        lastSearch: lastSearch ?? this.lastSearch,
+        savedSchedulesOptions:
+            savedSchedulesOptions ?? this.savedSchedulesOptions,
+        blacklist: blacklist ?? this.blacklist,
+        generatedSchedulesFilters:
+            generatedSchedulesFilters ?? this.generatedSchedulesFilters,
+        generatedSchedulesEditMode:
+            generatedSchedulesEditMode ?? this.generatedSchedulesEditMode,
+        generatedSchedulesCurrentPreferencesTab:
+            generatedSchedulesCurrentPreferencesTab ??
+                this.generatedSchedulesCurrentPreferencesTab,
+        scheduleBeingUpdated:
+            scheduleBeingUpdated ?? this.scheduleBeingUpdated);
   }
 
   @override
@@ -241,5 +248,6 @@ class MatricalState extends Equatable {
         generatedSchedulesFilters,
         generatedSchedulesEditMode,
         generatedSchedulesCurrentPreferencesTab,
+        scheduleBeingUpdated
       ];
 }
