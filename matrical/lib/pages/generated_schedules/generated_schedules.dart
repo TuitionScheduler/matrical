@@ -402,65 +402,71 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                                       );
                                                 ScaffoldMessenger.of(context)
                                                     .showMaterialBanner(
-                                                        MaterialBanner(
-                                                  content: Row(
-                                                    children: [
-                                                      Text(
-                                                          result.message(
-                                                              context),
-                                                          softWrap: true,
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontSize:
-                                                                      15)),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .fromLTRB(
-                                                                8, 0, 8, 0),
-                                                        child: icon,
+                                                  MaterialBanner(
+                                                    content: Row(
+                                                      children: [
+                                                        Text(
+                                                            result.message(
+                                                                context),
+                                                            softWrap: true,
+                                                            style:
+                                                                const TextStyle(
+                                                                    fontSize:
+                                                                        15)),
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .fromLTRB(
+                                                                  8, 0, 8, 0),
+                                                          child: icon,
+                                                        )
+                                                      ],
+                                                    ),
+                                                    actions: [
+                                                      Row(
+                                                        children: [
+                                                          if (result ==
+                                                                  SaveScheduleResult
+                                                                      .success ||
+                                                              result ==
+                                                                  SaveScheduleResult
+                                                                      .overwriteExisting)
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                _savedScheduleBannerTimer
+                                                                    ?.cancel();
+                                                                ScaffoldMessenger.of(
+                                                                        globalKey
+                                                                            .currentContext!)
+                                                                    .hideCurrentMaterialBanner();
+                                                                matricalCubit
+                                                                    .setPage(
+                                                                  MatricalPage
+                                                                      .savedSchedules,
+                                                                );
+                                                              },
+                                                              child: Text(
+                                                                  AppLocalizations.of(
+                                                                          context)!
+                                                                      .view),
+                                                            ),
+                                                          TextButton(
+                                                            onPressed: () {
+                                                              ScaffoldMessenger.of(
+                                                                      globalKey
+                                                                          .currentContext!)
+                                                                  .hideCurrentMaterialBanner();
+                                                            },
+                                                            child: Text(
+                                                                AppLocalizations.of(
+                                                                        context)!
+                                                                    .dismiss),
+                                                          ),
+                                                        ],
                                                       )
                                                     ],
                                                   ),
-                                                  actions: [
-                                                    if (result ==
-                                                            SaveScheduleResult
-                                                                .success ||
-                                                        result ==
-                                                            SaveScheduleResult
-                                                                .overwriteExisting)
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          _savedScheduleBannerTimer
-                                                              ?.cancel();
-                                                          ScaffoldMessenger.of(
-                                                                  globalKey
-                                                                      .currentContext!)
-                                                              .hideCurrentMaterialBanner();
-                                                          matricalCubit.setPage(
-                                                            MatricalPage
-                                                                .savedSchedules,
-                                                          );
-                                                        },
-                                                        child: Text(
-                                                            AppLocalizations.of(
-                                                                    context)!
-                                                                .view),
-                                                      ),
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        ScaffoldMessenger.of(
-                                                                globalKey
-                                                                    .currentContext!)
-                                                            .hideCurrentMaterialBanner();
-                                                      },
-                                                      child: Text(
-                                                          AppLocalizations.of(
-                                                                  context)!
-                                                              .dismiss),
-                                                    ),
-                                                  ],
-                                                ));
+                                                );
                                                 _savedScheduleBannerTimer
                                                     ?.cancel();
                                                 // Start a new timer
