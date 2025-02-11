@@ -28,7 +28,7 @@ class SavedSchedule {
     return SavedSchedule(
       name: json['name'],
       dateCreated: DateTime.parse(json['dateCreated']),
-      lastUpdated: DateTime.parse(json['lastUpdated']),
+      lastUpdated: DateTime.parse(json['lastUpdated'] ?? json['dateCreated']),
       schedule: GeneratedSchedule.fromJson(json['schedule']),
     );
   }
