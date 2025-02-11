@@ -361,7 +361,8 @@ Future<SaveScheduleResult> saveSchedule(GeneratedSchedule schedule, String name,
   int existingIndex = mySchedules.indexWhere((s) => s.name == trimmedName);
   if (existingIndex != -1) {
     if (!allowOverwriteExisting) return SaveScheduleResult.alreadyExists;
-    mySchedules[existingIndex] = newSchedule;
+    mySchedules[existingIndex] = newSchedule.copyWith(
+        dateCreated: mySchedules[existingIndex].dateCreated);
     return await writeSavedSchedules(mySchedules) == SaveScheduleResult.success
         ? SaveScheduleResult.overwriteExisting
         : SaveScheduleResult.failedWrite;

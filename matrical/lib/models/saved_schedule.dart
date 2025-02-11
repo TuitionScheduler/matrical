@@ -33,6 +33,18 @@ class SavedSchedule {
     );
   }
 
+  SavedSchedule copyWith(
+      {String? name,
+      DateTime? dateCreated,
+      DateTime? lastUpdated,
+      GeneratedSchedule? schedule}) {
+    return SavedSchedule(
+        name: name ?? this.name,
+        dateCreated: dateCreated ?? this.dateCreated,
+        lastUpdated: lastUpdated ?? this.lastUpdated,
+        schedule: schedule ?? this.schedule);
+  }
+
   @override
   String toString() {
     return jsonEncode(toJson());
