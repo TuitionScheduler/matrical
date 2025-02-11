@@ -372,12 +372,17 @@ class _GeneratedSchedulesState extends State<GeneratedSchedules> {
                                               snapshot.data!.isEmpty
                                           ? null
                                           : () {
-                                              updateExistingOrSaveNewSchedule(
-                                                      context,
-                                                      snapshot.data![
-                                                          currentSchedule],
-                                                      scheduleBeingUpdated)
-                                                  .then((result) {
+                                              showDialog<SaveScheduleResult?>(
+                                                context: context,
+                                                useRootNavigator: false,
+                                                builder: (BuildContext
+                                                    innerContext) {
+                                                  return SaveScheduleDialog(
+                                                      currentSchedule:
+                                                          snapshot.data![
+                                                              currentSchedule]);
+                                                },
+                                              ).then((result) {
                                                 if (result == null) return;
                                                 // Clear the name since we finished modifying it.
                                                 setState(() {
@@ -1239,21 +1244,4 @@ class _SchedulePreferencesDialogState extends State<SchedulePreferencesDialog> {
       ),
     );
   }
-}
-
-Future<SaveScheduleResult?> updateExistingOrSaveNewSchedule(
-    BuildContext context,
-    GeneratedSchedule schedule,
-    String scheduleBeingUpdated) {
-  if (scheduleBeingUpdated.isNotEmpty) {
-    return saveSchedule(schedule, scheduleBeingUpdated,
-        allowOverwriteExisting: true);
-  }
-  return showDialog<SaveScheduleResult?>(
-    context: context,
-    useRootNavigator: false,
-    builder: (BuildContext innerContext) {
-      return SaveScheduleDialog(currentSchedule: schedule);
-    },
-  );
 }

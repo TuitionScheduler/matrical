@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:matrical/globals/cubits.dart';
 import 'package:matrical/models/generated_schedule.dart';
 import 'package:matrical/services/schedule_service.dart';
 
@@ -23,6 +24,8 @@ class _SaveScheduleDialogState extends State<SaveScheduleDialog> {
   @override
   void initState() {
     super.initState();
+    _scheduleNameController.text =
+        matricalCubitSingleton.state.scheduleBeingUpdated;
     _scheduleNameController.addListener(() {
       scheduleName = _scheduleNameController.text;
     });
@@ -64,7 +67,10 @@ class _SaveScheduleDialogState extends State<SaveScheduleDialog> {
   }
 
   void _attemptSave(BuildContext context, String name) {
-    saveSchedule(widget.currentSchedule, name).then((result) {
+    saveSchedule(widget.currentSchedule, name,
+            allowOverwriteExisting:
+                matricalCubitSingleton.state.scheduleBeingUpdated.isNotEmpty)
+        .then((result) {
       Navigator.of(context).pop(result);
     });
   }
