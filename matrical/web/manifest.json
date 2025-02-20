@@ -1,7 +1,7 @@
 {
   "name": "matrical",
   "short_name": "matrical",
-  "start_url": "/matrical/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#09902D",
   "theme_color": "#09902D",
