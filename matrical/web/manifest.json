@@ -1,8 +1,8 @@
 {
   "name": "matrical",
   "short_name": "matrical",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#09902D",
   "theme_color": "#09902D",
