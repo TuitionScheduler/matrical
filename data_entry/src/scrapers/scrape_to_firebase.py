@@ -52,7 +52,6 @@ async def write_to_firebase_task(
     client: AsyncClient,
     scraped_depts: list[str],
     dept_stats: list[DeptStats],
-    logger: logging.Logger | None = None,
 ):
     collection_ref = client.collection("DepartmentCourses")
     while True:
@@ -75,8 +74,7 @@ async def write_to_firebase_task(
                 sum(len(course["sections"]) for course in data["courses"].values()),
             )
         )
-        if logger:
-            logger.info(f"Saved {department} to Firebase")
+        logging.info(f"Saved {department} to Firebase")
         db_queue.task_done()
 
 
@@ -94,11 +92,10 @@ async def scrape_to_firebase(db_term, year, ssh_tasks):
     if not os.path.exists("logs"):
         os.makedirs("logs")
     logging.basicConfig(
-        filename="logs/firebase_scraper.log",
+        filename=f"logs/firebase_scraper_run_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log",
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
-    logger = logging.getLogger(__name__)
     # Setup Firebase access
     cred = credentials.Certificate("credentials.json")
     app = firebase_admin.initialize_app(cred)
@@ -133,14 +130,13 @@ async def scrape_to_firebase(db_term, year, ssh_tasks):
                 year=year,
                 professor_ids=professor_ids,
                 rate_limit=web_request_limiter,
-                logger=logger,
             )
         )
         for _ in range(4)
     ]
 
     # Create and queue up tasks to scrape section availability from UPRM enrollment server
-    channels = await initialize_ssh_channels(clients=clients, logger=logger)
+    channels = await initialize_ssh_channels(clients=clients)
     if db_term not in db_to_rumad_terms:
         ssh_scraper_tasks = [
             asyncio.create_task(
@@ -157,7 +153,6 @@ async def scrape_to_firebase(db_term, year, ssh_tasks):
                     ssh_queue=ssh_queue,
                     db_queue=db_queue,
                     channel=channel,
-                    logger=logger,
                 )
             )
             for channel in channels
@@ -165,31 +160,9 @@ async def scrape_to_firebase(db_term, year, ssh_tasks):
 
     # Create and queue up database task to store scraped departments
     db_task = asyncio.create_task(
-        write_to_firebase_task(db_queue, client, scraped_depts, dept_stats, logger)
-    )
-    departmentCoursesEntryInfoDoc = await (
-        client.collection("DataEntryInformation").document("DepartmentCourses").get()
-    )
-    departmentCoursesEntryInfo: dict | None = departmentCoursesEntryInfoDoc.to_dict()
-
-    termYearScrapeInfo = (
-        {}
-        if departmentCoursesEntryInfo is None
-        else departmentCoursesEntryInfo.get("termYearScrapeInfo", {})
+        write_to_firebase_task(db_queue, client, scraped_depts, dept_stats)
     )
 
-    oldDepts = termYearScrapeInfo.get(f"{db_term}:{year}", {}).get("departments", [])
-    termYearScrapeInfo.update(
-        {
-            f"{db_term}:{year}": {
-                "lastUpdated": datetime.datetime.now(),
-                "departments": scraped_depts,
-            }
-        }
-    )
-    await client.collection("DataEntryInformation").document("DepartmentCourses").set(
-        {"termYearScrapeInfo": termYearScrapeInfo}
-    )
     if not os.path.isdir("output_files"):
         os.makedirs("output_files")
     with open("output_files/dept_stats.csv", "w") as file:
@@ -204,7 +177,33 @@ async def scrape_to_firebase(db_term, year, ssh_tasks):
     ssh_scrape_time = time.time()
     await db_queue.join()
     db_save_time = time.time()
-    print(
+
+    departmentCoursesEntryInfoDocRef = client.collection(
+        "DataEntryInformation"
+    ).document("DepartmentCourses")
+
+    await departmentCoursesEntryInfoDocRef.set(
+        document_data={
+            f"termYearScrapeInfo": {
+                f"{db_term}:{year}": {
+                    "departments": scraped_depts,
+                    "lastUpdated": datetime.datetime.now(),
+                }
+            }
+        },
+        merge=True,
+    )
+
+    # termYearScrapeInfo[f"{db_term}:{year}"] = {
+    #     "lastUpdated": datetime.datetime.now(),
+    #     "departments": scraped_depts,
+    # }
+
+    # await client.collection("DataEntryInformation").document("DepartmentCourses").set(
+    #     {"termYearScrapeInfo": termYearScrapeInfo}
+    # )
+
+    logging.info(
         f"""
 Time Breakdown:
 Course Offering Web Scraping: {round(web_scrape_time-start_time, 2)} seconds
@@ -234,3 +233,4 @@ if __name__ == "__main__":
 
     with asyncio.Runner() as runner:
         runner.run(scrape_to_firebase(db_term=db_term, year=year, ssh_tasks=ssh_tasks))
+    exit()

@@ -67,9 +67,7 @@ class PuttyAuth(AuthStrategy):
         yield Password("estudiante", lambda: "")
 
 
-async def initialize_ssh_channels(
-    clients: list[SSHClient], logger: logging.Logger | None = None
-) -> list[Channel]:
+async def initialize_ssh_channels(clients: list[SSHClient]) -> list[Channel]:
     channels = []
     for ssh in clients:
         ssh.set_missing_host_key_policy(AutoAddPolicy())
@@ -80,25 +78,21 @@ async def initialize_ssh_channels(
             auth_strategy=PuttyAuth(ssh_config=SSHConfig()),
         )
         channel = ssh.invoke_shell()
-        if logger:
-            logger.info(f"Opened channel {hex(id(channel))}")
+        logging.info(f"Opened channel {hex(id(channel))}")
         channels.append(channel)
     return channels
 
 
-async def scrape_department_availability(
-    channel, department_data: dict, logger: logging.Logger | None = None
-):
+async def scrape_department_availability(channel, department_data: dict):
     department = department_data["department"]
     scraped_year = None
-    if logger:
-        logger.info(f"Channel {hex(id(channel))} scraping {department}")
+
+    logging.info(f"Channel {hex(id(channel))} scraping {department}")
     await send_input(channel, [(f"{department}\n", 5)])
     raw_department_result = await read_channel(channel)
 
     if "< Oprima Enter o [PF4(9)=Fin] >" not in raw_department_result:
-        if logger:
-            logger.warning(f"No section availability data found for {department}")
+        logging.warning(f"No section availability data found for {department}")
         return department_data
 
     courses = {}
@@ -118,10 +112,9 @@ async def scrape_department_availability(
         raw_department_result = await read_channel(channel)
 
     if scraped_year is None or scraped_year != department_data["year"]:
-        if logger:
-            logger.warning(
-                f"Scraped year {scraped_year} does not match expected year {department_data['year']} for {department}"
-            )
+        logging.warning(
+            f"Scraped year {scraped_year} does not match expected year {department_data['year']} for {department}"
+        )
         return department_data
 
     for course_data in department_data["courses"].values():
@@ -130,10 +123,9 @@ async def scrape_department_availability(
                 if existingSection["sectionCode"] == scrapedSection["sectionCode"]:
                     existingSection["capacity"] = scrapedSection["capacity"]
                     existingSection["usage"] = scrapedSection["usage"]
-    if logger:
-        logger.info(
-            f"Finished scraping section availability for {len(courses)} courses from {department}"
-        )
+    logging.info(
+        f"Finished scraping section availability for {len(courses)} courses from {department}"
+    )
     return department_data
 
 
@@ -142,21 +134,19 @@ async def ssh_scraper_task(
     ssh_queue: asyncio.Queue,
     db_queue: asyncio.Queue,
     channel: Channel,
-    logger: logging.Logger | None = None,
 ):
     await setup(channel, rumad_term)
     while True:
         department_data = await ssh_queue.get()
         try:
             updated_data = await scrape_department_availability(
-                channel, department_data, logger
+                channel, department_data
             )
             await db_queue.put(updated_data)
         except socket.error:
-            if logger:
-                logger.error(
-                    f"Socket disconnected while scraping {department_data['department']}; reconnecting"
-                )
+            logging.error(
+                f"Socket disconnected while scraping {department_data['department']}; reconnecting"
+            )
             channel = (await initialize_ssh_channels([SSHClient()]))[0]
             await ssh_queue.put(department_data)
         ssh_queue.task_done()

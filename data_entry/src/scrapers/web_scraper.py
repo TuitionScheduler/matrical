@@ -168,7 +168,6 @@ async def web_scraper_task(
     year: int,
     professor_ids: dict,
     rate_limit: AsyncLimiter,
-    logger: logging.Logger | None = None,
 ):
     async with aiohttp.ClientSession() as session:
         while True:
@@ -179,12 +178,9 @@ async def web_scraper_task(
                 )
                 if data:
                     await ssh_queue.put(data)
-                    if logger:
-                        logger.info(f"Successfully scraped courses for {department}")
+                    logging.info(f"Successfully scraped courses for {department}")
                 else:
-                    if logger:
-                        logger.info(f"No course data found for {department}")
+                    logging.info(f"No course data found for {department}")
             except Exception as e:
-                if logger:
-                    logger.error(f"Error while scraping courses for {department}: {e}")
+                logging.error(f"Error while scraping courses for {department}: {e}")
             web_queue.task_done()

@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-import socket
+import datetime
 from sqlite3 import IntegrityError
 import sys
 import time
@@ -9,7 +9,7 @@ import aiohttp
 import re
 import asyncio
 from aiolimiter import AsyncLimiter
-from paramiko import Channel, SSHClient
+from paramiko import SSHClient
 from sqlalchemy import select
 from src.parsers.schedule_parser import parse_schedule
 from src.scrapers.ssh_scraper import (
@@ -38,7 +38,6 @@ from src.scrapers.web_scraper import web_scraper_task
 async def write_to_database_task(
     db_queue: asyncio.Queue,
     async_engine: AsyncEngine,
-    logger: logging.Logger | None = None,
 ):
     AsyncSessionLocal = async_sessionmaker(
         async_engine, class_=AsyncSession, expire_on_commit=False
@@ -125,21 +124,14 @@ async def write_to_database_task(
                                 section.meetings.append(meeting)
                     await session.merge(course)
                 except IntegrityError as e:
-                    if logger:
-                        logger.error(
-                            f"IntegrityError for course {course_code}: {str(e)}"
-                        )
+                    logging.error(f"IntegrityError for course {course_code}: {str(e)}")
                     await session.rollback()
                 except Exception as e:
-                    if logger:
-                        logger.error(
-                            f"Error saving course {course_code} to DB: {str(e)}"
-                        )
+                    logging.error(f"Error saving course {course_code} to DB: {str(e)}")
                     await session.rollback()
                 else:
                     await session.commit()
-                    if logger:
-                        logger.info(f"Saved {department} to SQL DB")
+                    logging.info(f"Saved {department} to SQL DB")
         db_queue.task_done()
 
 
@@ -157,11 +149,10 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
     if not os.path.exists("logs"):
         os.makedirs("logs")
     logging.basicConfig(
-        filename="logs/firebase_scraper.log",
+        filename=f"logs/sql_scraper_run_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log",
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
-    logger = logging.getLogger(__name__)
     start_time = time.time()
     engine = create_async_engine("sqlite+aiosqlite:///courses.db", echo=False)
     async with engine.begin() as conn:
@@ -191,14 +182,13 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
                 year=year,
                 professor_ids=professor_ids,
                 rate_limit=web_request_limiter,
-                logger=logger,
             )
         )
         for _ in range(4)
     ]
 
     # Create and queue up tasks to scrape section availability from UPRM enrollment server
-    channels = await initialize_ssh_channels(clients=clients, logger=logger)
+    channels = await initialize_ssh_channels(clients=clients)
     if db_term not in db_to_rumad_terms:
         ssh_scraper_tasks = [
             asyncio.create_task(
@@ -215,7 +205,6 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
                     ssh_queue=ssh_queue,
                     db_queue=db_queue,
                     channel=channel,
-                    logger=logger,
                 )
             )
             for channel in channels
@@ -223,7 +212,7 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
 
     # Create and queue up database task to store scraped departments
     db_task = asyncio.create_task(
-        write_to_database_task(db_queue=db_queue, async_engine=engine, logger=logger)
+        write_to_database_task(db_queue=db_queue, async_engine=engine)
     )
 
     await web_queue.join()
@@ -232,7 +221,7 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
     ssh_scrape_time = time.time()
     await db_queue.join()
     db_save_time = time.time()
-    print(
+    logging.info(
         f"""
 Time Breakdown:
 Course Offering Web Scraping: {round(web_scrape_time-start_time, 2)} seconds
