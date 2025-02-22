@@ -21,7 +21,7 @@ class StudentRecord:
     ]  # 4 letter code and the year enrolled ie (INSO,2019)
     completed_courses: List[CourseRecord]
     graduation_status: str  # Undergraduate or Graduate
-    english_level: int  # ranges between 1-3 depending on taking the PNA and scoring well on the College Board
+    english_level: int  # ranges between 1-4 depending on taking the PNA and scoring well on the College Board
 
     @property
     def completedCredits(self) -> int:
