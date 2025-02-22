@@ -12,6 +12,7 @@ from aiolimiter import AsyncLimiter
 from paramiko import SSHClient
 from sqlalchemy import select
 from src.parsers.schedule_parser import parse_schedule
+from src.scrapers.log_utils import ScraperTarget, configure_logging
 from src.scrapers.ssh_scraper import (
     initialize_ssh_channels,
     ssh_scraper_task,
@@ -146,13 +147,7 @@ async def pass_through_queue_task(
 
 async def scrape_to_sql(db_term, year, ssh_tasks):
     # Set up logging
-    if not os.path.exists("logs"):
-        os.makedirs("logs")
-    logging.basicConfig(
-        filename=f"logs/sql_scraper_run_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log",
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-    )
+    configure_logging(ScraperTarget.SQLite)
     start_time = time.time()
     engine = create_async_engine("sqlite+aiosqlite:///courses.db", echo=False)
     async with engine.begin() as conn:

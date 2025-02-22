@@ -13,6 +13,7 @@ import datetime
 from src.models.stats import DeptStats
 from aiolimiter import AsyncLimiter
 from paramiko import SSHClient
+from src.scrapers.log_utils import ScraperTarget, configure_logging
 from src.scrapers.ssh_scraper import (
     initialize_ssh_channels,
     ssh_scraper_task,
@@ -21,7 +22,7 @@ from src.constants import db_to_rumad_terms
 from src.scrapers.web_scraper import web_scraper_task
 
 
-def calculate_doc_size(data):
+def calculate_doc_size(data: dict | str | bool | list | None) -> int:
     if isinstance(data, dict):
         size = 0
         for key, value in data.items():
@@ -37,7 +38,12 @@ def calculate_doc_size(data):
     elif isinstance(data, (datetime.datetime, float, int)):
         return 8
     elif isinstance(data, list):
-        return sum([calculate_doc_size(item) for item in data])
+        return sum([calculate_doc_size(item) for item in data], start=0)
+    else:
+        logging.warning(
+            f"Tried to calculate document size for unknown data type: {type(data)}"
+        )
+        return 0
 
 
 def calculate_doc_name_size(path):
@@ -89,13 +95,7 @@ async def pass_through_queue_task(
 
 async def scrape_to_firebase(db_term, year, ssh_tasks):
     # Set up logging
-    if not os.path.exists("logs"):
-        os.makedirs("logs")
-    logging.basicConfig(
-        filename=f"logs/firebase_scraper_run_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log",
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-    )
+    configure_logging(ScraperTarget.Firebase)
     # Setup Firebase access
     cred = credentials.Certificate("credentials.json")
     app = firebase_admin.initialize_app(cred)
