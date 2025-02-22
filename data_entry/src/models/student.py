@@ -34,6 +34,7 @@ class StudentRecord:
             + 1
         )
 
+    # for requirements like BIOL{12} -> 12 BIOL credits
     def departmentCredits(self, department: str) -> int:
         return sum(
             [
