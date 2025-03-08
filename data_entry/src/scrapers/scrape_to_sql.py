@@ -7,7 +7,7 @@ import argparse
 import asyncio
 from aiolimiter import AsyncLimiter
 from paramiko import SSHClient
-from sqlalchemy import select
+from sqlalchemy import delete
 from src.parsers.schedule_parser import parse_schedule
 from src.scrapers.log_utils import ScraperTarget, configure_logging
 from src.scrapers.ssh_scraper import (
@@ -47,6 +47,8 @@ async def write_to_database_task(
         async with AsyncSessionLocal() as session:
             with session.no_autoflush:
                 try:
+                    # Go through all the courses, delete existing db records, then batch add all the new records
+                    courses = []
                     for course_code, course_data in data["courses"].items():
                         course = Course(
                             course_code=course_code,
@@ -89,16 +91,26 @@ async def write_to_database_task(
                                     end_time=meetingDict["end_time"],
                                 )
                                 section.meetings.append(meeting)
-                        await session.merge(course)
+
+                        # delete the existing version of the course and add the new one to the db
+                        course_delete_query = delete(Course).where(
+                            Course.course_code == course_code
+                            and Course.term == term
+                            and Course.year == year
+                        )
+                        await session.execute(course_delete_query)
+                        courses.append(course)
                     try:
+                        logging.info(
+                            f"DB Task: Adding {len(courses)} courses to SQL DB"
+                        )
+                        session.add_all(courses)
                         await asyncio.wait_for(session.commit(), timeout=30)
                         logging.info(f"DB Task: Saved {department} to SQL DB")
                     except asyncio.TimeoutError:
                         logging.warning(f"DB Task: Commit timeout for {department}.")
                 except IntegrityError as e:
-                    logging.exception(
-                        f"DB Task: IntegrityError for course {course_code}: {str(e)}"
-                    )
+                    logging.exception(f"DB Task: IntegrityError for {course}: {str(e)}")
                     await session.rollback()
                 except Exception as e:
                     logging.exception(

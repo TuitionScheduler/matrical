@@ -33,7 +33,9 @@ class Course(Base):
     corequisites = Column(String)
 
     # Define a one-to-many relationship between Course and Section
-    sections = relationship("Section", back_populates="course")
+    sections = relationship(
+        "Section", back_populates="course", cascade="all, delete, delete-orphan"
+    )
 
     __table_args__ = (
         Index("idx_term", term),
@@ -59,7 +61,9 @@ class Section(Base):
     course = relationship("Course", back_populates="sections")
 
     # Define a one-to-many relationship between Section and Meeting
-    meetings = relationship("Meeting", back_populates="section")
+    meetings = relationship(
+        "Meeting", back_populates="section", cascade="all, delete, delete-orphan"
+    )
 
     # Define a one-to-many relationship between Section and GradeDistribution
     grade_distributions = relationship("GradeDistribution", back_populates="section")
