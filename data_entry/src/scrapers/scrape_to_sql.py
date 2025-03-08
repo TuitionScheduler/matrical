@@ -41,53 +41,24 @@ async def write_to_database_task(
     while True:
         data = await db_queue.get()
         department = data["department"]
+        logging.info(f"DB Task: Adding {department} to SQL DB")
         term = data["term"]
         year = data["year"]
         async with AsyncSessionLocal() as session:
             with session.no_autoflush:
                 try:
                     for course_code, course_data in data["courses"].items():
-
-                        # Use selectinload to eagerly load sections and meetings
-                        course_query = (
-                            select(Course)
-                            .options(
-                                selectinload(Course.sections).selectinload(
-                                    Section.meetings
-                                )
-                            )
-                            .filter_by(course_code=course_code, year=year, term=term)
+                        course = Course(
+                            course_code=course_code,
+                            course_name=course_data["courseName"],
+                            year=year,
+                            term=term,
+                            credits=course_data["credits"],
+                            department=course_data["department"],
+                            prerequisites=course_data["prerequisites"],
+                            corequisites=course_data["corequisites"],
                         )
-                        result = await session.execute(course_query)
-                        course = result.scalar_one_or_none()
 
-                        if not course:
-                            course = Course(
-                                course_code=course_code,
-                                course_name=course_data["courseName"],
-                                year=year,
-                                term=term,
-                                credits=course_data["credits"],
-                                department=course_data["department"],
-                                prerequisites=course_data["prerequisites"],
-                                corequisites=course_data["corequisites"],
-                            )
-                            session.add(course)
-                        else:
-                            # Update existing course data
-                            course.course_name = course_data["courseName"]
-                            course.credits = course_data["credits"]
-                            course.department = course_data["department"]
-                            course.prerequisites = course_data["prerequisites"]
-                            course.corequisites = course_data["corequisites"]
-
-                        # Remove existing sections and their meetings
-                        if course.sections:
-                            for section in course.sections:
-                                for meeting in section.meetings:
-                                    await session.delete(meeting)
-                                await session.delete(section)
-                            await session.flush()
                         # Add new sections and meetings
                         for section_data in course_data["sections"]:
                             section = Section(
@@ -118,17 +89,24 @@ async def write_to_database_task(
                                     end_time=meetingDict["end_time"],
                                 )
                                 section.meetings.append(meeting)
-                    await session.merge(course)
+                        await session.merge(course)
+                    try:
+                        await asyncio.wait_for(session.commit(), timeout=30)
+                        logging.info(f"DB Task: Saved {department} to SQL DB")
+                    except asyncio.TimeoutError:
+                        logging.warning(f"DB Task: Commit timeout for {department}.")
                 except IntegrityError as e:
-                    logging.error(f"IntegrityError for course {course_code}: {str(e)}")
+                    logging.exception(
+                        f"DB Task: IntegrityError for course {course_code}: {str(e)}"
+                    )
                     await session.rollback()
                 except Exception as e:
-                    logging.error(f"Error saving course {course_code} to DB: {str(e)}")
+                    logging.exception(
+                        f"DB Task: Error saving course {course_code} to DB: {str(e)}"
+                    )
                     await session.rollback()
-                else:
-                    await session.commit()
-                    logging.info(f"Saved {department} to SQL DB")
-        db_queue.task_done()
+                finally:
+                    db_queue.task_done()
 
 
 async def pass_through_queue_task(
@@ -216,10 +194,13 @@ async def scrape_to_sql(db_term, year, ssh_tasks, disable_ssh=False):
     )
 
     await web_queue.join()
+    logging.info("All web scraper tasks have completed.")
     web_scrape_time = time.time()
     await ssh_queue.join()
+    logging.info("All ssh scraper tasks have completed.")
     ssh_scrape_time = time.time()
     await db_queue.join()
+    logging.info("All db tasks have completed.")
     db_save_time = time.time()
 
     logging.info(
