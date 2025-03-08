@@ -32,3 +32,12 @@ rumad_to_db_terms = {
 }
 
 db_to_rumad_terms = {value: key for (key, value) in rumad_to_db_terms.items()}
+
+# Empirically determined based on how many courses there tend to be per department
+ideal_ssh_tasks = {
+    "Fall": 24,
+    "Spring": 24,
+    "FirstSummer": 10,
+    "SecondSummer": 5,
+    "ExtendedSummer": 5,
+}

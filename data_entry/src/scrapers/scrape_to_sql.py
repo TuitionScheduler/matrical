@@ -1,16 +1,13 @@
 import json
 import logging
-import os
 import datetime
-from sqlite3 import IntegrityError
 import sys
 import time
-import aiohttp
-import re
+import argparse
 import asyncio
 from aiolimiter import AsyncLimiter
 from paramiko import SSHClient
-from sqlalchemy import select
+from sqlalchemy import delete
 from src.parsers.schedule_parser import parse_schedule
 from src.scrapers.log_utils import ScraperTarget, configure_logging
 from src.scrapers.ssh_scraper import (
@@ -18,13 +15,8 @@ from src.scrapers.ssh_scraper import (
     ssh_scraper_task,
 )
 from src.database import Course, Section, Meeting, Base
-from src.parsers.schedule_parser import parse_schedule
-from src.constants import db_to_rumad_terms
-from src.database import Base, Course, Section, Meeting
-
-from sqlalchemy import select
+from src.constants import db_to_rumad_terms, ideal_ssh_tasks
 from sqlalchemy.exc import IntegrityError
-
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncSession,
@@ -32,7 +24,6 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
 )
 from sqlalchemy.orm import selectinload
-
 from src.scrapers.web_scraper import web_scraper_task
 
 
@@ -43,56 +34,33 @@ async def write_to_database_task(
     AsyncSessionLocal = async_sessionmaker(
         async_engine, class_=AsyncSession, expire_on_commit=False
     )
+    # define these vars so they aren't unbound later on
+    course = None
+    course_code = None
+
     while True:
         data = await db_queue.get()
         department = data["department"]
+        logging.info(f"DB Task: Adding {department} to SQL DB")
         term = data["term"]
         year = data["year"]
         async with AsyncSessionLocal() as session:
             with session.no_autoflush:
                 try:
+                    # Go through all the courses, delete existing db records, then batch add all the new records
+                    courses = []
                     for course_code, course_data in data["courses"].items():
-
-                        # Use selectinload to eagerly load sections and meetings
-                        course_query = (
-                            select(Course)
-                            .options(
-                                selectinload(Course.sections).selectinload(
-                                    Section.meetings
-                                )
-                            )
-                            .filter_by(course_code=course_code, year=year, term=term)
+                        course = Course(
+                            course_code=course_code,
+                            course_name=course_data["courseName"],
+                            year=year,
+                            term=term,
+                            credits=course_data["credits"],
+                            department=course_data["department"],
+                            prerequisites=course_data["prerequisites"],
+                            corequisites=course_data["corequisites"],
                         )
-                        result = await session.execute(course_query)
-                        course = result.scalar_one_or_none()
 
-                        if not course:
-                            course = Course(
-                                course_code=course_code,
-                                course_name=course_data["courseName"],
-                                year=year,
-                                term=term,
-                                credits=course_data["credits"],
-                                department=course_data["department"],
-                                prerequisites=course_data["prerequisites"],
-                                corequisites=course_data["corequisites"],
-                            )
-                            session.add(course)
-                        else:
-                            # Update existing course data
-                            course.course_name = course_data["courseName"]
-                            course.credits = course_data["credits"]
-                            course.department = course_data["department"]
-                            course.prerequisites = course_data["prerequisites"]
-                            course.corequisites = course_data["corequisites"]
-
-                        # Remove existing sections and their meetings
-                        if course.sections:
-                            for section in course.sections:
-                                for meeting in section.meetings:
-                                    await session.delete(meeting)
-                                await session.delete(section)
-                            await session.flush()
                         # Add new sections and meetings
                         for section_data in course_data["sections"]:
                             section = Section(
@@ -123,17 +91,34 @@ async def write_to_database_task(
                                     end_time=meetingDict["end_time"],
                                 )
                                 section.meetings.append(meeting)
-                    await session.merge(course)
+
+                        # delete the existing version of the course and add the new one to the db
+                        course_delete_query = delete(Course).where(
+                            Course.course_code == course_code
+                            and Course.term == term
+                            and Course.year == year
+                        )
+                        await session.execute(course_delete_query)
+                        courses.append(course)
+                    try:
+                        logging.info(
+                            f"DB Task: Adding {len(courses)} courses to SQL DB"
+                        )
+                        session.add_all(courses)
+                        await asyncio.wait_for(session.commit(), timeout=30)
+                        logging.info(f"DB Task: Saved {department} to SQL DB")
+                    except asyncio.TimeoutError:
+                        logging.warning(f"DB Task: Commit timeout for {department}.")
                 except IntegrityError as e:
-                    logging.error(f"IntegrityError for course {course_code}: {str(e)}")
+                    logging.exception(f"DB Task: IntegrityError for {course}: {str(e)}")
                     await session.rollback()
                 except Exception as e:
-                    logging.error(f"Error saving course {course_code} to DB: {str(e)}")
+                    logging.exception(
+                        f"DB Task: Error saving course {course_code} to DB: {str(e)}"
+                    )
                     await session.rollback()
-                else:
-                    await session.commit()
-                    logging.info(f"Saved {department} to SQL DB")
-        db_queue.task_done()
+                finally:
+                    db_queue.task_done()
 
 
 async def pass_through_queue_task(
@@ -145,7 +130,13 @@ async def pass_through_queue_task(
         await destination_queue.put(data)
 
 
-async def scrape_to_sql(db_term, year, ssh_tasks):
+async def scrape_to_sql(db_term, year, ssh_tasks, disable_ssh=False):
+    # if invalid db_term, disable ssh
+    if db_term not in db_to_rumad_terms:
+        logging.warning(
+            f"Term {db_term} not found in db_to_rumad_terms. SSH scraping will be skipped."
+        )
+        disable_ssh = True
     # Set up logging
     configure_logging(ScraperTarget.SQLite)
     start_time = time.time()
@@ -162,11 +153,13 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
     web_queue: asyncio.Queue[str] = asyncio.Queue()
     ssh_queue: asyncio.Queue[dict] = asyncio.Queue()
     db_queue: asyncio.Queue[dict] = asyncio.Queue()
-    clients = [SSHClient() for _ in range(ssh_tasks)]
+    clients = [SSHClient() for _ in range(ssh_tasks)] if not disable_ssh else []
     web_request_limiter = AsyncLimiter(4, 1)
+
     # populate Web Queue
     for department in departments:
         web_queue.put_nowait(department)
+
     # Create and queue up tasks to scrape course data from UPRM course offering website
     web_scraper_tasks = [
         asyncio.create_task(
@@ -183,8 +176,8 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
     ]
 
     # Create and queue up tasks to scrape section availability from UPRM enrollment server
-    channels = await initialize_ssh_channels(clients=clients)
-    if db_term not in db_to_rumad_terms:
+    if disable_ssh:
+        logging.info("SSH scraping disabled. Only using web data.")
         ssh_scraper_tasks = [
             asyncio.create_task(
                 pass_through_queue_task(
@@ -192,7 +185,9 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
                 )
             )
         ]
+        channels = []
     else:
+        channels = await initialize_ssh_channels(clients=clients)
         ssh_scraper_tasks = [
             asyncio.create_task(
                 ssh_scraper_task(
@@ -211,16 +206,20 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
     )
 
     await web_queue.join()
+    logging.info("All web scraper tasks have completed.")
     web_scrape_time = time.time()
     await ssh_queue.join()
+    logging.info("All ssh scraper tasks have completed.")
     ssh_scrape_time = time.time()
     await db_queue.join()
+    logging.info("All db tasks have completed.")
     db_save_time = time.time()
+
     logging.info(
         f"""
 Time Breakdown:
 Course Offering Web Scraping: {round(web_scrape_time-start_time, 2)} seconds
-Section Availability SSH Scraping: {round(ssh_scrape_time-web_scrape_time, 2)} seconds
+{"Section Availability SSH Scraping" if not disable_ssh else "SSH Scraping (disabled)"}: {round(ssh_scrape_time-web_scrape_time, 2)} seconds
 Database Storing: {round(db_save_time-ssh_scrape_time, 2)} seconds
 Total Time: {round(db_save_time-start_time, 2)} seconds
           """
@@ -238,8 +237,147 @@ Total Time: {round(db_save_time-start_time, 2)} seconds
         task.cancel()
 
 
+def get_available_terms():
+    """Return a list of available terms from the db_to_rumad_terms dictionary."""
+    return list(db_to_rumad_terms.keys())
+
+
+def interactive_mode():
+    """Run the scraper in interactive mode, prompting for parameters."""
+    print("\n🔍 UPRM Course Scraper 🔍\n")
+
+    available_terms = get_available_terms()
+    print("Available terms:")
+    for i, term in enumerate(available_terms, 1):
+        print(f"  {i}. {term}")
+
+    while True:
+        try:
+            term_choice = int(input("\nSelect term (number): "))
+            if 1 <= term_choice <= len(available_terms):
+                db_term = available_terms[term_choice - 1]
+                break
+            else:
+                print(f"Please enter a number between 1 and {len(available_terms)}")
+        except ValueError:
+            print("Please enter a valid number")
+
+    # Get year
+    current_year = datetime.datetime.now().year
+    year = int(input(f"\nEnter year [{current_year}]: ") or current_year)
+
+    # Get SSH tasks
+    while True:
+        try:
+            ssh_tasks = int(input("\nEnter number of SSH tasks [4]: ") or "4")
+            if 1 <= ssh_tasks <= 30:  # Reasonable range check
+                break
+            else:
+                print("Please enter a number between 1 and 30")
+        except ValueError:
+            print("Please enter a valid number")
+
+    disable_ssh = input("\nDisable SSH scraping? (y/N): ").lower() in ("y", "yes")
+
+    ssh_status = "disabled" if disable_ssh else f"enabled with {ssh_tasks} tasks"
+    print(
+        f"\nStarting scraper with term={db_term}, year={year}, SSH scraping: {ssh_status}"
+    )
+    print("Working...\n")
+
+    # Run the scraper with the provided parameters
+    asyncio.run(
+        scrape_to_sql(
+            db_term=db_term, year=year, ssh_tasks=ssh_tasks, disable_ssh=disable_ssh
+        )
+    )
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="UPRM Course Scraper - Collects and stores course information from UPRM systems",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    parser.add_argument(
+        "-t",
+        "--term",
+        choices=get_available_terms(),
+        help=f"Academic term to scrape (e.g., {', '.join(get_available_terms())})",
+    )
+
+    current_year = datetime.datetime.now().year
+    parser.add_argument(
+        "-y",
+        "--year",
+        type=int,
+        default=current_year,
+        help=f"Academic year to scrape (e.g., {current_year})",
+    )
+
+    parser.add_argument(
+        "-s",
+        "--ssh-tasks",
+        type=int,
+        default=0,
+        help="Number of SSH connections to use for concurrent scraping",
+    )
+
+    parser.add_argument(
+        "--no-ssh",
+        action="store_true",
+        help="Disable SSH scraping (only get data from web sources)",
+    )
+
+    parser.add_argument(
+        "--list-terms", action="store_true", help="List all available terms and exit"
+    )
+
+    parser.add_argument(
+        "-i",
+        "--interactive",
+        action="store_true",
+        help="Run in interactive mode (ignores other arguments)",
+    )
+
+    args = parser.parse_args()
+
+    # List terms if requested
+    if args.list_terms:
+        print("Available terms:")
+        for i, term in enumerate(get_available_terms()):
+            print(f"{i+1}. {term}")
+        return
+
+    # Check if interactive mode is requested or no args provided
+    if args.interactive or (not args.term and len(sys.argv) == 1):
+        interactive_mode()
+        return
+
+    if not args.term:
+        parser.error("the following arguments are required: -t/--term")
+
+    ssh_tasks = args.ssh_tasks
+    if not ssh_tasks:
+        ssh_tasks = ideal_ssh_tasks[args.term]
+
+    ssh_status = "disabled" if args.no_ssh else f"enabled with {args.ssh_tasks} tasks"
+    print(
+        f"Starting scraper with term={args.term}, year={args.year}, SSH scraping: {ssh_status}"
+    )
+    asyncio.run(
+        scrape_to_sql(
+            db_term=args.term,
+            year=args.year,
+            ssh_tasks=ssh_tasks,
+            disable_ssh=args.no_ssh,
+        )
+    )
+
+
 if __name__ == "__main__":
-    db_term = sys.argv[1]
-    year = int(sys.argv[2])
-    ssh_tasks = int(sys.argv[3])
-    asyncio.run(scrape_to_sql(db_term=db_term, year=year, ssh_tasks=ssh_tasks))
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user. Exiting...")
+        sys.exit(0)

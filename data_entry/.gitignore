@@ -1,7 +1,7 @@
 credentials.json
 *.pyc
 curriculum_output.txt
-courses.db
+*courses.db
 output_files/
 parser.out
 parsetab.py
