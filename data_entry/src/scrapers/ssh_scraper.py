@@ -11,6 +11,8 @@ from src.parsers.ansi_parser import parse_department_page
 from src.constants import TERMS
 from pathlib import Path
 
+from src.scrapers.log_utils import get_scraper_run_id
+
 MAX_RETRIES = 1
 
 
@@ -59,7 +61,7 @@ async def setup(chan: Channel, term: str):
 
 
 def log_department_page(channel_id: str, dept: str, raw_content: str) -> None:
-    file_path = Path(f"output_files/{channel_id}/{dept}.ansi")
+    file_path = Path(f"output_files/{get_scraper_run_id()}/{channel_id}/{dept}.ansi")
     logging.debug(
         f"SSH Task: Logging department page for {dept} to {file_path.as_posix()}"
     )
