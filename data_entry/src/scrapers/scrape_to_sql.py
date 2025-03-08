@@ -2,11 +2,9 @@ import json
 import logging
 import os
 import datetime
-from sqlite3 import IntegrityError
 import sys
 import time
-import aiohttp
-import re
+import argparse
 import asyncio
 from aiolimiter import AsyncLimiter
 from paramiko import SSHClient
@@ -18,13 +16,8 @@ from src.scrapers.ssh_scraper import (
     ssh_scraper_task,
 )
 from src.database import Course, Section, Meeting, Base
-from src.parsers.schedule_parser import parse_schedule
 from src.constants import db_to_rumad_terms
-from src.database import Base, Course, Section, Meeting
-
-from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncSession,
@@ -32,7 +25,6 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
 )
 from sqlalchemy.orm import selectinload
-
 from src.scrapers.web_scraper import web_scraper_task
 
 
@@ -238,8 +230,122 @@ Total Time: {round(db_save_time-start_time, 2)} seconds
         task.cancel()
 
 
-if __name__ == "__main__":
-    db_term = sys.argv[1]
-    year = int(sys.argv[2])
-    ssh_tasks = int(sys.argv[3])
+def get_available_terms():
+    """Return a list of available terms from the db_to_rumad_terms dictionary."""
+    return list(db_to_rumad_terms.keys())
+
+
+def interactive_mode():
+    """Run the scraper in interactive mode, prompting for parameters."""
+    print("\n🔍 UPRM Course Scraper🔍\n")
+
+    available_terms = get_available_terms()
+    print("Available terms:")
+    for i, term in enumerate(available_terms, 1):
+        print(f"  {i}. {term}")
+
+    while True:
+        try:
+            term_choice = int(input("\nSelect term (number): "))
+            if 1 <= term_choice <= len(available_terms):
+                db_term = available_terms[term_choice - 1]
+                break
+            else:
+                print(f"Please enter a number between 1 and {len(available_terms)}")
+        except ValueError:
+            print("Please enter a valid number")
+
+    # Get year
+    current_year = datetime.datetime.now().year
+    year = int(input(f"\nEnter year [{current_year}]: ") or current_year)
+
+    # Get SSH tasks
+    while True:
+        try:
+            ssh_tasks = int(input("\nEnter number of SSH tasks [4]: ") or "4")
+            if 1 <= ssh_tasks <= 30:  # Reasonable range check
+                break
+            else:
+                print("Please enter a number between 1 and 30")
+        except ValueError:
+            print("Please enter a valid number")
+
+    print(f"\nStarting scraper with term={db_term}, year={year}, ssh_tasks={ssh_tasks}")
+    print("Working...\n")
+
+    # Run the scraper with the provided parameters
     asyncio.run(scrape_to_sql(db_term=db_term, year=year, ssh_tasks=ssh_tasks))
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="UPRM Course Scraper - Collects and stores course information from UPRM systems",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    parser.add_argument(
+        "-t",
+        "--term",
+        choices=get_available_terms(),
+        help="Academic term to scrape (e.g., 'S1', 'S2', 'Verano1')",
+    )
+
+    current_year = datetime.datetime.now().year
+    parser.add_argument(
+        "-y",
+        "--year",
+        type=int,
+        default=current_year,
+        help=f"Academic year to scrape (e.g., {current_year})",
+    )
+
+    parser.add_argument(
+        "-s",
+        "--ssh-tasks",
+        type=int,
+        default=3,
+        help="Number of SSH connections to use for concurrent scraping",
+    )
+
+    parser.add_argument(
+        "--list-terms", action="store_true", help="List all available terms and exit"
+    )
+
+    parser.add_argument(
+        "-i",
+        "--interactive",
+        action="store_true",
+        help="Run in interactive mode (ignores other arguments)",
+    )
+
+    args = parser.parse_args()
+
+    # List terms if requested
+    if args.list_terms:
+        print("Available terms:")
+        for term in get_available_terms():
+            print(f"  {term}")
+        return
+
+    # Check if interactive mode is requested or no args provided
+    if args.interactive or (not args.term and len(sys.argv) == 1):
+        interactive_mode()
+        return
+
+    if not args.term:
+        parser.error("the following arguments are required: -t/--term")
+
+    print(
+        f"Starting scraper with term={args.term}, year={args.year}, ssh_tasks={args.ssh_tasks}"
+    )
+    asyncio.run(
+        scrape_to_sql(db_term=args.term, year=args.year, ssh_tasks=args.ssh_tasks)
+    )
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user. Exiting...")
+        sys.exit(0)
