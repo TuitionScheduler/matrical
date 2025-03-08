@@ -137,7 +137,13 @@ async def pass_through_queue_task(
         await destination_queue.put(data)
 
 
-async def scrape_to_sql(db_term, year, ssh_tasks):
+async def scrape_to_sql(db_term, year, ssh_tasks, disable_ssh=False):
+    # if invalid db_term, disable ssh
+    if db_term not in db_to_rumad_terms:
+        logging.warning(
+            f"Term {db_term} not found in db_to_rumad_terms. SSH scraping will be skipped."
+        )
+        disable_ssh = True
     # Set up logging
     configure_logging(ScraperTarget.SQLite)
     start_time = time.time()
@@ -154,11 +160,13 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
     web_queue: asyncio.Queue[str] = asyncio.Queue()
     ssh_queue: asyncio.Queue[dict] = asyncio.Queue()
     db_queue: asyncio.Queue[dict] = asyncio.Queue()
-    clients = [SSHClient() for _ in range(ssh_tasks)]
+    clients = [SSHClient() for _ in range(ssh_tasks)] if not disable_ssh else []
     web_request_limiter = AsyncLimiter(4, 1)
+
     # populate Web Queue
     for department in departments:
         web_queue.put_nowait(department)
+
     # Create and queue up tasks to scrape course data from UPRM course offering website
     web_scraper_tasks = [
         asyncio.create_task(
@@ -175,8 +183,8 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
     ]
 
     # Create and queue up tasks to scrape section availability from UPRM enrollment server
-    channels = await initialize_ssh_channels(clients=clients)
-    if db_term not in db_to_rumad_terms:
+    if disable_ssh:
+        logging.info("SSH scraping disabled. Only using web data.")
         ssh_scraper_tasks = [
             asyncio.create_task(
                 pass_through_queue_task(
@@ -184,7 +192,9 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
                 )
             )
         ]
+        channels = []
     else:
+        channels = await initialize_ssh_channels(clients=clients)
         ssh_scraper_tasks = [
             asyncio.create_task(
                 ssh_scraper_task(
@@ -208,11 +218,12 @@ async def scrape_to_sql(db_term, year, ssh_tasks):
     ssh_scrape_time = time.time()
     await db_queue.join()
     db_save_time = time.time()
+
     logging.info(
         f"""
 Time Breakdown:
 Course Offering Web Scraping: {round(web_scrape_time-start_time, 2)} seconds
-Section Availability SSH Scraping: {round(ssh_scrape_time-web_scrape_time, 2)} seconds
+{"Section Availability SSH Scraping" if not disable_ssh else "SSH Scraping (disabled)"}: {round(ssh_scrape_time-web_scrape_time, 2)} seconds
 Database Storing: {round(db_save_time-ssh_scrape_time, 2)} seconds
 Total Time: {round(db_save_time-start_time, 2)} seconds
           """
@@ -237,7 +248,7 @@ def get_available_terms():
 
 def interactive_mode():
     """Run the scraper in interactive mode, prompting for parameters."""
-    print("\n🔍 UPRM Course Scraper🔍\n")
+    print("\n🔍 UPRM Course Scraper 🔍\n")
 
     available_terms = get_available_terms()
     print("Available terms:")
@@ -270,11 +281,20 @@ def interactive_mode():
         except ValueError:
             print("Please enter a valid number")
 
-    print(f"\nStarting scraper with term={db_term}, year={year}, ssh_tasks={ssh_tasks}")
+    disable_ssh = input("\nDisable SSH scraping? (y/N): ").lower() in ("y", "yes")
+
+    ssh_status = "disabled" if disable_ssh else f"enabled with {ssh_tasks} tasks"
+    print(
+        f"\nStarting scraper with term={db_term}, year={year}, SSH scraping: {ssh_status}"
+    )
     print("Working...\n")
 
     # Run the scraper with the provided parameters
-    asyncio.run(scrape_to_sql(db_term=db_term, year=year, ssh_tasks=ssh_tasks))
+    asyncio.run(
+        scrape_to_sql(
+            db_term=db_term, year=year, ssh_tasks=ssh_tasks, disable_ssh=disable_ssh
+        )
+    )
 
 
 def main():
@@ -287,7 +307,7 @@ def main():
         "-t",
         "--term",
         choices=get_available_terms(),
-        help="Academic term to scrape (e.g., 'S1', 'S2', 'Verano1')",
+        help=f"Academic term to scrape (e.g., {', '.join(get_available_terms())})",
     )
 
     current_year = datetime.datetime.now().year
@@ -305,6 +325,12 @@ def main():
         type=int,
         default=3,
         help="Number of SSH connections to use for concurrent scraping",
+    )
+
+    parser.add_argument(
+        "--no-ssh",
+        action="store_true",
+        help="Disable SSH scraping (only get data from web sources)",
     )
 
     parser.add_argument(
@@ -335,11 +361,17 @@ def main():
     if not args.term:
         parser.error("the following arguments are required: -t/--term")
 
+    ssh_status = "disabled" if args.no_ssh else f"enabled with {args.ssh_tasks} tasks"
     print(
-        f"Starting scraper with term={args.term}, year={args.year}, ssh_tasks={args.ssh_tasks}"
+        f"Starting scraper with term={args.term}, year={args.year}, SSH scraping: {ssh_status}"
     )
     asyncio.run(
-        scrape_to_sql(db_term=args.term, year=args.year, ssh_tasks=args.ssh_tasks)
+        scrape_to_sql(
+            db_term=args.term,
+            year=args.year,
+            ssh_tasks=args.ssh_tasks,
+            disable_ssh=args.no_ssh,
+        )
     )
 
 
