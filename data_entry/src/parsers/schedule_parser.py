@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def convert_to_24_hour(time):
+def convert_to_24_hour(time: str):
     hours, minutes, meridian = re.split(r"[:\s]", time)
     hours = int(hours)
     if meridian.lower() == "pm" and hours < 12:
@@ -22,7 +22,7 @@ schedule_regex = (
 )
 
 
-def parse_schedule(input_string) -> dict | None:
+def parse_schedule(input_string: str) -> dict[str, str] | None:
     match = re.search(schedule_regex, input_string)
     if match:
         times = match.group(1).split("-")

@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import datetime
 import sys
 import time
@@ -35,6 +34,10 @@ async def write_to_database_task(
     AsyncSessionLocal = async_sessionmaker(
         async_engine, class_=AsyncSession, expire_on_commit=False
     )
+    # define these vars so they aren't unbound later on
+    course = None
+    course_code = None
+
     while True:
         data = await db_queue.get()
         department = data["department"]

@@ -3,9 +3,7 @@ from typing import Tuple
 from paramiko import AutoAddPolicy, SSHClient, Channel, SSHConfig
 from paramiko.auth_strategy import Password, AuthStrategy
 import re
-import sys
 from datetime import datetime
-from time import time
 import asyncio
 import socket
 from src.models.enums import Term
