@@ -7,3 +7,4 @@ parser.out
 parsetab.py
 dist/
 logs/
+.env
