@@ -15,7 +15,7 @@ from src.scrapers.ssh_scraper import (
     ssh_scraper_task,
 )
 from src.database import Course, Section, Meeting, Base
-from src.constants import db_to_rumad_terms
+from src.constants import db_to_rumad_terms, ideal_ssh_tasks
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -326,7 +326,7 @@ def main():
         "-s",
         "--ssh-tasks",
         type=int,
-        default=3,
+        default=0,
         help="Number of SSH connections to use for concurrent scraping",
     )
 
@@ -352,8 +352,8 @@ def main():
     # List terms if requested
     if args.list_terms:
         print("Available terms:")
-        for term in get_available_terms():
-            print(f"  {term}")
+        for i, term in enumerate(get_available_terms()):
+            print(f"{i+1}. {term}")
         return
 
     # Check if interactive mode is requested or no args provided
@@ -364,6 +364,10 @@ def main():
     if not args.term:
         parser.error("the following arguments are required: -t/--term")
 
+    ssh_tasks = args.ssh_tasks
+    if not ssh_tasks:
+        ssh_tasks = ideal_ssh_tasks[args.term]
+
     ssh_status = "disabled" if args.no_ssh else f"enabled with {args.ssh_tasks} tasks"
     print(
         f"Starting scraper with term={args.term}, year={args.year}, SSH scraping: {ssh_status}"
@@ -372,7 +376,7 @@ def main():
         scrape_to_sql(
             db_term=args.term,
             year=args.year,
-            ssh_tasks=args.ssh_tasks,
+            ssh_tasks=ssh_tasks,
             disable_ssh=args.no_ssh,
         )
     )
