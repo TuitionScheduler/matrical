@@ -278,7 +278,7 @@ def interactive_mode():
         except ValueError:
             print("Please enter a valid number")
 
-    disable_ssh = input("\nDisable SSH scraping? (y/N): ").lower() in ("y", "yes")
+    disable_ssh = input("\nDisable SSH scraping? (y/N) [N]: ").lower() in ("y", "yes")
 
     ssh_status = "disabled" if disable_ssh else f"enabled with {ssh_tasks} tasks"
     print(
