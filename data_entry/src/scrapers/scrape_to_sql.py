@@ -361,7 +361,7 @@ def main():
     if not ssh_tasks:
         ssh_tasks = ideal_ssh_tasks[args.term]
 
-    ssh_status = "disabled" if args.no_ssh else f"enabled with {args.ssh_tasks} tasks"
+    ssh_status = "disabled" if args.no_ssh else f"enabled with {ssh_tasks} tasks"
     print(
         f"Starting scraper with term={args.term}, year={args.year}, SSH scraping: {ssh_status}"
     )

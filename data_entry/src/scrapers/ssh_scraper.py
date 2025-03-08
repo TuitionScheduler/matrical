@@ -8,7 +8,8 @@ import asyncio
 import socket
 from src.models.enums import Term
 from src.parsers.ansi_parser import parse_department_page
-from src.constants import rumad_to_db_terms, TERMS
+from src.constants import TERMS
+from pathlib import Path
 
 MAX_RETRIES = 1
 
@@ -57,10 +58,13 @@ async def setup(chan: Channel, term: str):
     )
 
 
-def log_department_page(dept: str, raw_content: str) -> None:
-    file_path = f"output_files/{dept}.ansi"
-    logging.debug(f"SSH Task: Logging department page for {dept} to {file_path}")
-    with open(file_path, "a") as f:
+def log_department_page(channel_id: str, dept: str, raw_content: str) -> None:
+    file_path = Path(f"output_files/{channel_id}/{dept}.ansi")
+    logging.debug(
+        f"SSH Task: Logging department page for {dept} to {file_path.as_posix()}"
+    )
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    with file_path.open("a") as f:
         f.write(raw_content)
         f.write("\n")
     logging.debug(f"SSH Task: Successfully logged department page for {dept}")
@@ -110,6 +114,7 @@ async def scrape_department_availability(channel, department_data: dict):
         logging.warning(
             f"SSH Task: No section availability data found for {department} on channel {channel_id}"
         )
+        log_department_page(channel_id, department, raw_department_result)
         return department_data
 
     courses = {}
