@@ -108,6 +108,7 @@ async def scrape_to_firebase(db_term, year, ssh_tasks, disable_ssh=False):
     cred = credentials.Certificate("credentials.json")
     app = initialize_app(cred)
     client = firestore_async.client(app)
+    logging.info(f"Starting scraping of {db_term} {year}-{year+1}")
     start_time = time.time()
 
     dept_stats: list[DeptStats] = []

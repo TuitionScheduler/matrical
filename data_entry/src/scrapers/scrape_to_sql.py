@@ -139,6 +139,7 @@ async def scrape_to_sql(db_term, year, ssh_tasks, disable_ssh=False):
         disable_ssh = True
     # Set up logging
     configure_logging(ScraperTarget.SQLite)
+    logging.info(f"Starting scraping of {db_term} {year}-{year+1}")
     start_time = time.time()
     engine = create_async_engine("sqlite+aiosqlite:///courses.db", echo=False)
     async with engine.begin() as conn:
