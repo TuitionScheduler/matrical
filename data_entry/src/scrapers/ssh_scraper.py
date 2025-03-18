@@ -5,6 +5,7 @@ from paramiko.auth_strategy import Password, AuthStrategy
 import re
 from datetime import datetime
 import asyncio
+import os
 import socket
 from src.models.enums import Term
 from src.parsers.ansi_parser import parse_department_page
@@ -14,6 +15,7 @@ from pathlib import Path
 from src.scrapers.log_utils import get_scraper_run_id
 
 MAX_RETRIES = 1
+SSH_ENCODING = "mbcs" if os.name == "nt" else "latin_1"
 
 
 def get_term_year(term: str | None = None) -> Tuple[str, int]:
@@ -30,7 +32,7 @@ def get_term_year(term: str | None = None) -> Tuple[str, int]:
 async def send_input(chan: Channel, inputs: list[Tuple[str, float]]) -> bool:
     res = 0
     for x in inputs:
-        res = chan.send(x[0].encode("ansi"))
+        res = chan.send(x[0].encode(SSH_ENCODING))
         if x[1] >= 0:
             await asyncio.sleep(x[1])
     return res != 0
@@ -42,7 +44,7 @@ async def read_channel(chan: Channel) -> str:
     while chan.recv_ready():
         result.append(chan.recv(1000))
         await asyncio.sleep(0.03)
-    return "".join(map(lambda b: b.decode("ansi"), result))
+    return "".join(map(lambda b: b.decode(SSH_ENCODING), result))
 
 
 async def setup(chan: Channel, term: str):
