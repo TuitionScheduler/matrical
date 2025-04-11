@@ -29,6 +29,7 @@ rumad_to_db_terms = {
     Term.SECOND_SEMESTER.value: "Spring",
     Term.FIRST_SUMMER.value: "FirstSummer",
     Term.SECOND_SUMMER.value: "SecondSummer",
+    Term.EXTENDED_SUMMER.value: "ExtendedSummer",
 }
 
 db_to_rumad_terms = {value: key for (key, value) in rumad_to_db_terms.items()}
