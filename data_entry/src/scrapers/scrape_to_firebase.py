@@ -1,4 +1,5 @@
 import logging
+import firebase_admin
 import firebase_admin.firestore_async as firestore_async
 import sys
 import time
@@ -105,7 +106,7 @@ async def scrape_to_firebase(db_term, year, ssh_tasks, disable_ssh=False):
     configure_logging(ScraperTarget.Firebase)
 
     # Setup Firebase access
-    cred = credentials.Certificate("credentials.json")
+    cred = credentials.Certificate(json.loads(os.environ["CREDENTIALS_JSON"]))
     app = initialize_app(cred)
     client = firestore_async.client(app)
     logging.info(f"Starting scraping of {db_term} {year}-{year+1}")
@@ -117,7 +118,7 @@ async def scrape_to_firebase(db_term, year, ssh_tasks, disable_ssh=False):
     with open("input_files/professor_ids.txt") as file:
         professor_ids = json.load(file)
     with open("input_files/departments.txt") as file:
-        departments = [department.strip() for department in file]
+        departments = sorted([department.strip() for department in file])
 
     # Departments will travel like so: File -> Web Queue -> SSH Queue -> DB Queue
     # ssh queue and db queue have dictionary representations of all the courses in a department

@@ -6,3 +6,4 @@ class Term(Enum):
     SECOND_SEMESTER = "2doSem"
     FIRST_SUMMER = "1erVer"
     SECOND_SUMMER = "2doVer"
+    EXTENDED_SUMMER = "vex"
