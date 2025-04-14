@@ -2,7 +2,11 @@ name: Scrape Sections Data
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 0 * * 0,3"     # Run Sundays and Wednesdays
+    - cron: "0 0 21-30 4 *"   # Run last week of April
+    - cron: "0 0 1-7 5 *"     # Run first week of May
+    - cron: "0 0 21-30 11 *"  # Run last week of November
+    - cron: "0 0 1-7 12 *"    # Run first week of December
   workflow_dispatch:
 
 jobs:
@@ -10,35 +14,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check if should run
-        env:
-          TRIGGERING_EVENT: ${{ github.event_name }}
-        run: |
-          if [[ "$TRIGGERING_EVENT" == "workflow_dispatch" ]]; then
-            echo "Manual run detected, running..."
-            exit 0
-          fi
-
-          SPRING_START="04-21"
-          SPRING_END="05-07"
-          FALL_START="11-21"
-          FALL_END="12-07"
-          WEEKLY_DAYS="3,7"
-
-          NOW_DATE=$(date -u +%m-%d)
-          NOW_DAY=$(date -u +%u)
-          WEEKLY_DAYS_CHECK=",${WEEKLY_DAYS},"
-
-          if [[ ("$NOW_DATE" < "$SPRING_START" || "$NOW_DATE" > "$SPRING_END") && \
-                ("$NOW_DATE" < "$FALL_START" || "$NOW_DATE" > "$FALL_END") && \
-                "$WEEKLY_DAYS_CHECK" != *",$NOW_DAY,"* ]]; then
-            echo "Date does not meet run criteria, skipping..."
-            exit 1
-          else
-            echo "Date meets criteria, running..."
-            exit 0
-          fi
-
       - name: Checkout code
         uses: actions/checkout@v4
 
